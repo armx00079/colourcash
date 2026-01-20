@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <title>K3</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 
 <style>
 body{
@@ -12,84 +12,31 @@ body{
   color:#fff;
   font-family:Arial;
 }
-.header{
-  padding:14px;
-  text-align:center;
-  font-size:22px;
-}
-.top{
-  display:flex;
-  justify-content:space-between;
-  padding:0 15px;
-  color:#aaa;
-}
-.timer{
-  text-align:center;
-  font-size:34px;
-  color:#ff4081;
-  margin:10px 0;
-}
-.box{
-  background:#1c1c1c;
-  margin:15px;
-  padding:15px;
-  border-radius:14px;
-}
-input{
-  width:100%;
-  padding:12px;
-  font-size:16px;
-  border-radius:8px;
-  border:none;
-  text-align:center;
-}
-.row{
-  display:flex;
-  gap:10px;
-  margin-top:12px;
-}
-.btn{
-  flex:1;
-  padding:14px;
-  border-radius:10px;
-  text-align:center;
-  font-weight:bold;
-  cursor:pointer;
-}
-.big{background:#f4a261}
-.small{background:#4dabf7}
-.even{background:#43a047}
-.odd{background:#e53935}
+.header{text-align:center;font-size:22px;padding:12px;}
+.top{display:flex;justify-content:space-between;padding:0 15px;color:#aaa;}
+.timer{text-align:center;font-size:34px;color:#ff4081;margin:8px 0;}
+.box{background:#1c1c1c;margin:15px;padding:15px;border-radius:14px;}
+input{width:100%;padding:12px;border-radius:8px;border:none;font-size:16px;text-align:center}
+.row{display:flex;gap:10px;margin-top:10px}
+.btn{flex:1;padding:14px;border-radius:10px;font-weight:bold;text-align:center;cursor:pointer}
+.big{background:#f4a261}.small{background:#4dabf7}
+.even{background:#43a047}.odd{background:#e53935}
 .disabled{opacity:.4;pointer-events:none}
-
-.numbers{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:10px;
-  margin-top:15px;
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
+.num{background:#2a2a2a;padding:14px;border-radius:10px;text-align:center;cursor:pointer}
+.history{margin:15px}
+table{width:100%;border-collapse:collapse}
+th,td{padding:8px;border-bottom:1px solid #333;text-align:center}
+.diceBox{display:flex;justify-content:center;gap:10px;margin:10px}
+.dice{
+  width:50px;height:50px;
+  background:#e53935;
+  border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;font-weight:bold;
+  animation:roll .6s ease
 }
-.num{
-  background:#2a2a2a;
-  padding:14px;
-  border-radius:10px;
-  text-align:center;
-}
-
-.history{
-  margin:15px;
-}
-.history h3{
-  margin-bottom:8px;
-}
-table{
-  width:100%;
-  border-collapse:collapse;
-}
-th,td{
-  padding:8px;
-  border-bottom:1px solid #333;
-  text-align:center;
-}
+@keyframes roll{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
 </style>
 </head>
 
@@ -104,118 +51,125 @@ th,td{
 
 <div class="timer">⏳ <span id="time"></span>s</div>
 
+<div class="diceBox">
+  <div class="dice" id="d1">?</div>
+  <div class="dice" id="d2">?</div>
+  <div class="dice" id="d3">?</div>
+</div>
+
 <div class="box">
-  <input id="betAmount" type="number" placeholder="Min ₹1" />
-  
-  <div class="row">
-    <div class="btn big" onclick="bet('BIG')">BIG (11–18)</div>
-    <div class="btn small" onclick="bet('SMALL')">SMALL (3–10)</div>
-  </div>
+<input id="betAmt" type="number" placeholder="Min ₹1">
 
-  <div class="row">
-    <div class="btn even" onclick="bet('EVEN')">EVEN</div>
-    <div class="btn odd" onclick="bet('ODD')">ODD</div>
-  </div>
+<div class="row">
+  <div class="btn big" onclick="placeBet('BIG')">BIG (11-18)</div>
+  <div class="btn small" onclick="placeBet('SMALL')">SMALL (3-10)</div>
+</div>
+<div class="row">
+  <div class="btn even" onclick="placeBet('EVEN')">EVEN</div>
+  <div class="btn odd" onclick="placeBet('ODD')">ODD</div>
+</div>
 
-  <div class="numbers">
-    <div class="num" onclick="betNum(3)">3</div>
-    <div class="num" onclick="betNum(4)">4</div>
-    <div class="num" onclick="betNum(5)">5</div>
-    <div class="num" onclick="betNum(6)">6</div>
-    <div class="num" onclick="betNum(7)">7</div>
-    <div class="num" onclick="betNum(8)">8</div>
-    <div class="num" onclick="betNum(9)">9</div>
-    <div class="num" onclick="betNum(10)">10</div>
-    <div class="num" onclick="betNum(11)">11</div>
-    <div class="num" onclick="betNum(12)">12</div>
-    <div class="num" onclick="betNum(13)">13</div>
-    <div class="num" onclick="betNum(14)">14</div>
-    <div class="num" onclick="betNum(15)">15</div>
-    <div class="num" onclick="betNum(16)">16</div>
-    <div class="num" onclick="betNum(17)">17</div>
-    <div class="num" onclick="betNum(18)">18</div>
-  </div>
+<div class="grid">
+  <div class="num" onclick="placeBet('NUM:3')">3</div>
+  <div class="num" onclick="placeBet('NUM:4')">4</div>
+  <div class="num" onclick="placeBet('NUM:5')">5</div>
+  <div class="num" onclick="placeBet('NUM:6')">6</div>
+  <div class="num" onclick="placeBet('NUM:7')">7</div>
+  <div class="num" onclick="placeBet('NUM:8')">8</div>
+  <div class="num" onclick="placeBet('NUM:9')">9</div>
+  <div class="num" onclick="placeBet('NUM:10')">10</div>
+  <div class="num" onclick="placeBet('NUM:11')">11</div>
+  <div class="num" onclick="placeBet('NUM:12')">12</div>
+  <div class="num" onclick="placeBet('NUM:13')">13</div>
+  <div class="num" onclick="placeBet('NUM:14')">14</div>
+  <div class="num" onclick="placeBet('NUM:15')">15</div>
+  <div class="num" onclick="placeBet('NUM:16')">16</div>
+  <div class="num" onclick="placeBet('NUM:17')">17</div>
+  <div class="num" onclick="placeBet('NUM:18')">18</div>
+</div>
 </div>
 
 <div class="history">
-  <h3>Last 10 Results</h3>
-  <table>
-    <thead>
-      <tr><th>Period</th><th>Sum</th><th>Result</th></tr>
-    </thead>
-    <tbody id="history"></tbody>
-  </table>
+<h3>Last 10 Results</h3>
+<table>
+<thead><tr><th>Period</th><th>Sum</th><th>Result</th></tr></thead>
+<tbody id="hist"></tbody>
+</table>
 </div>
 
 <script>
-let time=30;
-let period=Number(localStorage.getItem("k3_period"))||1;
-let wallet=Number(localStorage.getItem("k3_wallet"))||100;
-let history=JSON.parse(localStorage.getItem("k3_history")||"[]");
-let bets=[];
+const DAY= new Date().toISOString().slice(0,10).replace(/-/g,'');
+let state=JSON.parse(localStorage.getItem("k3_state"))||{
+  wallet:100,
+  period:1,
+  start:Date.now(),
+  history:[],
+  bets:[]
+};
 
-function save(){
-  localStorage.setItem("k3_period",period);
-  localStorage.setItem("k3_wallet",wallet);
-  localStorage.setItem("k3_history",JSON.stringify(history));
+function save(){localStorage.setItem("k3_state",JSON.stringify(state))}
+
+function currentPeriod(){return DAY+String(state.period).padStart(4,'0')}
+
+function updateUI(){
+  period.innerText=currentPeriod();
+  wallet.innerText=state.wallet;
 }
 
-function render(){
-  periodEl.innerText=period;
-  walletEl.innerText=wallet;
-  timeEl.innerText=time;
-  histEl.innerHTML=history.map(h=>`
-    <tr><td>${h.p}</td><td>${h.sum}</td><td>${h.res}</td></tr>
-  `).join("");
+function placeBet(type){
+  if(timeLeft()<=5)return alert("Bet closed");
+  let amt=+betAmt.value;
+  if(amt<1||amt>state.wallet)return;
+  state.bets.push({type,amt});
+  state.wallet-=amt;
+  save();updateUI();
 }
 
-const periodEl=document.getElementById("period");
-const walletEl=document.getElementById("wallet");
-const timeEl=document.getElementById("time");
-const histEl=document.getElementById("history");
-
-function bet(type){
-  if(time<=5) return alert("Bet closed");
-  const amt=Number(betAmount.value);
-  if(amt<1||amt>wallet) return;
-  bets.push({type,amt});
-  wallet-=amt;
-  save();render();
+function timeLeft(){
+  return 30-Math.floor((Date.now()-state.start)/1000)%30
 }
-function betNum(n){ bet("NUM:"+n); }
 
 setInterval(()=>{
-  time--;
-  if(time<=5) document.querySelectorAll(".btn,.num").forEach(b=>b.classList.add("disabled"));
-  if(time<=0){
-    // result
-    const d1=1+Math.floor(Math.random()*6);
-    const d2=1+Math.floor(Math.random()*6);
-    const d3=1+Math.floor(Math.random()*6);
-    const sum=d1+d2+d3;
+  let t=timeLeft();
+  time.innerText=t;
+  if(t===0){
+    let d1=1+Math.random()*6|0;
+    let d2=1+Math.random()*6|0;
+    let d3=1+Math.random()*6|0;
+    d1El.innerText=d1;d2El.innerText=d2;d3El.innerText=d3;
+    let sum=d1+d2+d3;
 
-    bets.forEach(b=>{
+    state.bets.forEach(b=>{
       let win=false;
-      if(b.type==="BIG"&&sum>=11) win=true;
-      if(b.type==="SMALL"&&sum<=10) win=true;
-      if(b.type==="EVEN"&&sum%2===0) win=true;
-      if(b.type==="ODD"&&sum%2===1) win=true;
-      if(b.type==="NUM:"+sum) win=true;
-      if(win) wallet+=b.amt*2;
+      if(b.type==="BIG"&&sum>=11)win=true;
+      if(b.type==="SMALL"&&sum<=10)win=true;
+      if(b.type==="EVEN"&&sum%2===0)win=true;
+      if(b.type==="ODD"&&sum%2===1)win=true;
+      if(b.type==="NUM:"+sum)win=true;
+      if(win)state.wallet+=b.amt*2;
     });
 
-    history.unshift({p:period,sum,res:sum>=11?"BIG":"SMALL"});
-    history=history.slice(0,10);
-    bets=[];
-    period++;
-    time=30;
-    document.querySelectorAll(".btn,.num").forEach(b=>b.classList.remove("disabled"));
+    state.history.unshift({p:currentPeriod(),sum,res:sum>=11?"BIG":"SMALL"});
+    state.history=state.history.slice(0,10);
+    state.bets=[];
+    state.period++;
+    state.start=Date.now();
     save();
   }
-  render();
+  hist.innerHTML=state.history.map(h=>`<tr><td>${h.p}</td><td>${h.sum}</td><td>${h.res}</td></tr>`).join('');
+  updateUI();
 },1000);
 
-render();
+const period=document.getElementById("period");
+const wallet=document.getElementById("wallet");
+const time=document.getElementById("time");
+const hist=document.getElementById("hist");
+const betAmt=document.getElementById("betAmt");
+const d1El=document.getElementById("d1");
+const d2El=document.getElementById("d2");
+const d3El=document.getElementById("d3");
+
+updateUI();
 </script>
 
 </body>
