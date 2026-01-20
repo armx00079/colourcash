@@ -6,112 +6,38 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body{
-  margin:0;
-  font-family:Arial, sans-serif;
-  background:#0f0f0f;
-  color:#fff;
-}
-.header{
-  text-align:center;
-  padding:12px;
-  font-size:22px;
-  font-weight:bold;
-}
-.center{text-align:center;}
-.timer{font-size:34px;color:#ff4d8d;font-weight:bold;margin:8px 0}
-.box{
-  background:#1c1c1c;
-  margin:12px;
-  padding:15px;
-  border-radius:14px;
-}
-.dice{
-  display:flex;
-  justify-content:center;
-  gap:10px;
-}
-.die{
-  width:55px;
-  height:55px;
-  background:#e53935;
-  border-radius:10px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:24px;
-  font-weight:bold;
-}
-input{
-  width:100%;
-  padding:12px;
-  font-size:18px;
-  border-radius:10px;
-  border:none;
-  text-align:center;
-}
-.grid{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:10px;
-}
-.btn{
-  padding:14px;
-  border-radius:12px;
-  text-align:center;
-  font-weight:bold;
-  cursor:pointer;
-}
-.big{background:#f4a261;}
-.small{background:#4dabf7;}
-.even{background:#4caf50;}
-.odd{background:#e53935;}
-.num{
-  background:#2a2a2a;
-  padding:14px;
-  border-radius:10px;
-  text-align:center;
-  cursor:pointer;
-}
-.tabs{
-  display:flex;
-  gap:10px;
-  margin:12px;
-}
-.tab{
-  flex:1;
-  background:#ff6f7d;
-  padding:12px;
-  border-radius:12px;
-  text-align:center;
-  font-weight:bold;
-  cursor:pointer;
-}
-.table{
-  width:100%;
-  border-collapse:collapse;
-}
-th,td{
-  padding:10px;
-  border-bottom:1px solid #333;
-  text-align:center;
-}
+body{margin:0;font-family:Arial;background:#0f0f0f;color:#fff}
+.header{text-align:center;padding:12px;font-size:22px;font-weight:bold}
+.center{text-align:center}
+.timer{font-size:34px;color:#ff4d8d;font-weight:bold}
+.box{background:#1c1c1c;margin:12px;padding:15px;border-radius:14px}
+.dice{display:flex;justify-content:center;gap:10px}
+.die{width:55px;height:55px;background:#e53935;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:bold}
+input{width:100%;padding:12px;font-size:18px;border-radius:10px;border:none;text-align:center}
 
-/* BLUR */
-.bet-wrap{position:relative;}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.grid3{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+
+.btn{padding:14px;border-radius:12px;font-weight:bold;text-align:center;cursor:pointer}
+.big{background:#f4a261}
+.small{background:#4dabf7}
+.even{background:#4caf50}
+.odd{background:#e53935}
+.num{background:#2a2a2a;padding:14px;border-radius:10px;text-align:center;cursor:pointer}
+
+.tabs{display:flex;gap:10px;margin:12px}
+.tab{flex:1;background:#ff6f7d;padding:12px;border-radius:12px;text-align:center;font-weight:bold;cursor:pointer}
+
+.table{width:100%;border-collapse:collapse}
+th,td{padding:10px;border-bottom:1px solid #333;text-align:center}
+
 .blur{
-  position:absolute;
-  inset:0;
-  background:rgba(0,0,0,.65);
+  position:absolute;inset:0;background:rgba(0,0,0,.65);
   backdrop-filter:blur(6px);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  font-size:22px;
-  color:#ff4d8d;
-  border-radius:14px;
-  z-index:9;
+  display:none;align-items:center;justify-content:center;
+  font-size:22px;color:#ff4d8d;border-radius:14px
 }
+.betwrap{position:relative}
 </style>
 </head>
 
@@ -138,20 +64,35 @@ th,td{
   <input id="amount" type="number" placeholder="Min ₹1" value="1">
 </div>
 
-<div class="box bet-wrap">
+<div class="box betwrap">
   <div class="blur" id="blur">Bet Closed</div>
 
-  <div class="grid">
-    <div class="btn big" onclick="bet('BIG')">BIG (11–18)</div>
-    <div class="btn small" onclick="bet('SMALL')">SMALL (3–10)</div>
-    <div class="btn even" onclick="bet('EVEN')">EVEN</div>
-    <div class="btn odd" onclick="bet('ODD')">ODD</div>
+  <div class="grid4">
+    <div class="btn big" onclick="placeBet('BIG')">BIG (11–18)</div>
+    <div class="btn small" onclick="placeBet('SMALL')">SMALL (3–10)</div>
+    <div class="btn even" onclick="placeBet('EVEN')">EVEN</div>
+    <div class="btn odd" onclick="placeBet('ODD')">ODD</div>
   </div>
 
   <br>
 
-  <div class="grid">
-    ${[...Array(16)].map((_,i)=>`<div class="num" onclick="bet(${i+3})">${i+3}</div>`).join("")}
+  <div class="grid3">
+    <div class="num" onclick="placeBet(3)">3</div>
+    <div class="num" onclick="placeBet(4)">4</div>
+    <div class="num" onclick="placeBet(5)">5</div>
+    <div class="num" onclick="placeBet(6)">6</div>
+    <div class="num" onclick="placeBet(7)">7</div>
+    <div class="num" onclick="placeBet(8)">8</div>
+    <div class="num" onclick="placeBet(9)">9</div>
+    <div class="num" onclick="placeBet(10)">10</div>
+    <div class="num" onclick="placeBet(11)">11</div>
+    <div class="num" onclick="placeBet(12)">12</div>
+    <div class="num" onclick="placeBet(13)">13</div>
+    <div class="num" onclick="placeBet(14)">14</div>
+    <div class="num" onclick="placeBet(15)">15</div>
+    <div class="num" onclick="placeBet(16)">16</div>
+    <div class="num" onclick="placeBet(17)">17</div>
+    <div class="num" onclick="placeBet(18)">18</div>
   </div>
 </div>
 
@@ -162,102 +103,78 @@ th,td{
 
 <div class="box" id="historyBox">
   <table class="table">
-    <thead>
-      <tr><th>Period</th><th>Sum</th><th>Result</th></tr>
-    </thead>
+    <thead><tr><th>Period</th><th>Sum</th><th>Result</th></tr></thead>
     <tbody id="history"></tbody>
   </table>
 </div>
 
 <div class="box" id="betsBox" style="display:none">
   <table class="table">
-    <thead>
-      <tr><th>Period</th><th>Bet</th><th>Amount</th></tr>
-    </thead>
+    <thead><tr><th>Period</th><th>Bet</th><th>Amount</th></tr></thead>
     <tbody id="bets"></tbody>
   </table>
 </div>
 
 <script>
-let period = Number(localStorage.k3_period || 202601200001);
-let wallet = Number(localStorage.k3_wallet || 100);
-let history = JSON.parse(localStorage.k3_history || "[]");
-let bets = JSON.parse(localStorage.k3_bets || "[]");
-let time = 30;
-let locked = false;
+let period=Number(localStorage.k3p||202601200001);
+let wallet=Number(localStorage.k3w||100);
+let history=JSON.parse(localStorage.k3h||"[]");
+let bets=JSON.parse(localStorage.k3b||"[]");
+let time=30,locked=false;
 
 function save(){
-  localStorage.k3_period = period;
-  localStorage.k3_wallet = wallet;
-  localStorage.k3_history = JSON.stringify(history);
-  localStorage.k3_bets = JSON.stringify(bets);
+  localStorage.k3p=period;
+  localStorage.k3w=wallet;
+  localStorage.k3h=JSON.stringify(history);
+  localStorage.k3b=JSON.stringify(bets);
 }
 
 function tick(){
   time--;
-  document.getElementById("time").innerText = time+"s";
-  document.getElementById("period").innerText = period;
-  document.getElementById("wallet").innerText = wallet;
-
-  if(time<=5){
-    locked=true;
-    blur.style.display="flex";
-  }
-
-  if(time<=0){
-    resolve();
-  }
+  timeEl.innerText=time+"s";
+  if(time<=5){locked=true;blur.style.display="flex";}
+  if(time<=0) result();
 }
 
-function resolve(){
+function result(){
   let a=1+Math.floor(Math.random()*6);
   let b=1+Math.floor(Math.random()*6);
   let c=1+Math.floor(Math.random()*6);
   let sum=a+b+c;
-
-  d1.innerText=a; d2.innerText=b; d3.innerText=c;
-
-  history.unshift({
-    p:period,
-    s:sum,
-    r: sum>=11 ? "BIG" : "SMALL"
-  });
-  history = history.slice(0,10);
-
-  period++;
-  time=30;
-  locked=false;
-  blur.style.display="none";
-  save();
-  render();
+  d1.innerText=a;d2.innerText=b;d3.innerText=c;
+  history.unshift({p:period,s:sum,r:sum>=11?"BIG":"SMALL"});
+  history=history.slice(0,10);
+  period++;time=30;locked=false;blur.style.display="none";
+  save();render();
 }
 
-function bet(type){
-  let amt = Number(amount.value);
+function placeBet(b){
+  let amt=Number(amount.value);
   if(locked) return alert("Bet closed");
-  if(amt<1) return alert("Minimum bet ₹1");
+  if(amt<1) return alert("Min ₹1");
   if(amt>wallet) return alert("Low balance");
-
-  wallet -= amt;
-  bets.unshift({p:period,b:type,a:amt});
-  save();
-  render();
+  wallet-=amt;
+  bets.unshift({p:period,b,amt});
+  save();render();
 }
 
 function render(){
-  history.innerHTML = history.map(x=>
-    `<tr><td>${x.p}</td><td>${x.s}</td><td>${x.r}</td></tr>`
-  ).join("");
-
-  betsEl.innerHTML = bets.map(x=>
-    `<tr><td>${x.p}</td><td>${x.b}</td><td>₹${x.a}</td></tr>`
-  ).join("");
+  periodEl.innerText=period;
+  walletEl.innerText=wallet;
+  history.innerHTML=history.map(x=>`<tr><td>${x.p}</td><td>${x.s}</td><td>${x.r}</td></tr>`).join("");
+  betsEl.innerHTML=bets.map(x=>`<tr><td>${x.p}</td><td>${x.b}</td><td>₹${x.amt}</td></tr>`).join("");
 }
 
 function showTab(t){
-  historyBox.style.display = t==="history"?"block":"none";
-  betsBox.style.display = t==="bets"?"block":"none";
+  historyBox.style.display=t==="history"?"block":"none";
+  betsBox.style.display=t==="bets"?"block":"none";
 }
+
+let periodEl=document.getElementById("period");
+let walletEl=document.getElementById("wallet");
+let timeEl=document.getElementById("time");
+let blur=document.getElementById("blur");
+let betsEl=document.getElementById("bets");
 
 render();
 setInterval(tick,1000);
