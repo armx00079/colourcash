@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Mines Game</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:#0e0e0e;
+  color:#fff;
+}
+.header{
+  padding:15px;
+  font-size:20px;
+  font-weight:bold;
+  text-align:center;
+}
+.wallet{
+  text-align:center;
+  margin:10px 0;
+  font-size:16px;
+}
+.container{
+  padding:15px;
+}
+.controls{
+  background:#1c1c1c;
+  padding:15px;
+  border-radius:12px;
+}
+.controls input, .controls select{
+  width:100%;
+  padding:12px;
+  margin-top:8px;
+  border-radius:8px;
+  border:none;
+  font-size:16px;
+}
+.btn{
+  margin-top:10px;
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:8px;
+  font-size:16px;
+  cursor:pointer;
+}
+.start{background:#4caf50;color:#fff}
+.cashout{background:#ff4081;color:#fff}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:8px;
+  margin-top:15px;
+}
+.cell{
+  background:#2a2a2a;
+  aspect-ratio:1/1;
+  border-radius:8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:20px;
+  cursor:pointer;
+}
+.cell.open.safe{background:#4caf50}
+.cell.open.mine{background:#e53935}
+.history{
+  margin-top:15px;
+  background:#1c1c1c;
+  padding:12px;
+  border-radius:12px;
+}
+.history h3{
+  margin:0 0 8px;
+  color:#ff4081;
+}
+.history-item{
+  font-size:14px;
+  border-bottom:1px solid #333;
+  padding:6px 0;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">💣 MINES</div>
+<div class="wallet">Wallet: ₹<span id="wallet">100</span></div>
+
+<div class="container">
+
+  <div class="controls">
+    <label>Bet Amount</label>
+    <input type="number" id="betAmount" value="10" min="1">
+
+    <label>Mines (1–24)</label>
+    <select id="mineCount"></select>
+
+    <button class="btn start" onclick="startGame()">Start Game</button>
+    <button class="btn cashout" onclick="cashOut()" disabled id="cashBtn">
+      Cashout (x<span id="multi">1.00</span>)
+    </button>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="history">
+    <h3>My Bets</h3>
+    <div id="betHistory"></div>
+  </div>
+
+</div>
+
+<script>
+/* ===== STATE ===== */
+let wallet = Number(localStorage.getItem("wallet")) || 100;
+let bet = 0;
+let mines = 3;
+let opened = 0;
+let multiplier = 1;
+let minePositions = [];
+let active = false;
+const HOUSE_EDGE = 0.10;
+
+/* ===== INIT ===== */
+walletEl();
+const mineSelect = document.getElementById("mineCount");
+for(let i=1;i<=24;i++){
+  mineSelect.innerHTML += `<option value="${i}">${i} Mines</option>`;
+}
+createGrid();
+
+/* ===== FUNCTIONS ===== */
+function walletEl(){
+  document.getElementById("wallet").innerText = wallet;
+  localStorage.setItem("wallet",wallet);
+}
+
+function createGrid(){
+  const grid = document.getElementById("grid");
+  grid.innerHTML="";
+  for(let i=0;i<25;i++){
+    const d=document.createElement("div");
+    d.className="cell";
+    d.onclick=()=>clickCell(i,d);
+    grid.appendChild(d);
+  }
+}
+
+function startGame(){
+  bet = Number(document.getElementById("betAmount").value);
+  mines = Number(document.getElementById("mineCount").value);
+
+  if(bet < 1) return alert("Minimum bet ₹1");
+  if(bet > wallet) return alert("Insufficient balance");
+
+  wallet -= bet;
+  walletEl();
+
+  opened = 0;
+  multiplier = 1;
+  minePositions = [];
+  active = true;
+
+  document.getElementById("multi").innerText = multiplier.toFixed(2);
+  document.getElementById("cashBtn").disabled = false;
+
+  while(minePositions.length < mines){
+    let r = Math.floor(Math.random()*25);
+    if(!minePositions.includes(r)) minePositions.push(r);
+  }
+
+  createGrid();
+}
+
+function clickCell(i,el){
+  if(!active || el.classList.contains("open")) return;
+
+  el.classList.add("open");
+
+  if(minePositions.includes(i)){
+    el.classList.add("mine");
+    el.innerText="💣";
+    endGame(false);
+  }else{
+    el.classList.add("safe");
+    el.innerText="💎";
+    opened++;
+    calcMultiplier();
+  }
+}
+
+function calcMultiplier(){
+  const safe = 25 - mines;
+  multiplier = ((safe / (safe - opened)) * (1 - HOUSE_EDGE));
+  document.getElementById("multi").innerText = multiplier.toFixed(2);
+}
+
+function cashOut(){
+  if(!active) return;
+  const win = Math.floor(bet * multiplier);
+  wallet += win;
+  walletEl();
+  addHistory("WIN",win);
+  endGame(true);
+}
+
+function endGame(win){
+  active=false;
+  document.getElementById("cashBtn").disabled=true;
+
+  if(!win){
+    addHistory("LOSS",-bet);
+    document.querySelectorAll(".cell").forEach((c,i)=>{
+      if(minePositions.includes(i)){
+        c.classList.add("open","mine");
+        c.innerText="💣";
+      }
+    });
+  }
+}
+
+function addHistory(type,amt){
+  const h=document.getElementById("betHistory");
+  const d=document.createElement("div");
+  d.className="history-item";
+  d.innerText = `${type} | ${amt>0?"+₹"+amt:"₹"+amt}`;
+  h.prepend(d);
+}
+</script>
+
+</body>
+</html>
