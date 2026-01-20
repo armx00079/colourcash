@@ -1,35 +1,123 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>WIN GO</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
 <style>
-body{margin:0;font-family:Arial;background:#0f0f0f;color:#fff}
-.header{text-align:center;padding:14px;font-size:20px;font-weight:bold}
-.top{display:flex;justify-content:space-between;padding:0 15px;color:#bbb;font-size:13px}
-.timer{text-align:center;font-size:34px;color:#ff4081;margin:10px 0}
-.box{background:#1c1c1c;margin:12px;padding:15px;border-radius:14px}
-input{width:100%;padding:12px;border-radius:8px;border:none;font-size:16px;text-align:center;margin-bottom:12px}
-.colors,.numbers{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.numbers{grid-template-columns:repeat(5,1fr);margin-top:10px}
-.btn{padding:12px;border:none;border-radius:10px;font-weight:bold;color:#fff}
-.red{background:#e53935}.green{background:#43a047}.violet{background:#8e24aa}
-.num{background:#333}
-.multi{display:flex;gap:8px;margin:12px}
-.multi div{flex:1;background:#fff;color:#444;padding:8px;border-radius:8px;text-align:center}
-.multi .active{background:#43a047;color:#fff}
-.bigsmall{display:flex;margin:12px;border-radius:30px;overflow:hidden}
-.big{flex:1;background:#f4a261;padding:12px;text-align:center}
-.small{flex:1;background:#5dade2;padding:12px;text-align:center}
-.tabs{display:flex;gap:10px;margin:12px}
-.tabs div{flex:1;background:#fff;color:#666;padding:10px;border-radius:10px;text-align:center}
-.tabs .active{background:#ff6a6a;color:#fff}
-.history{background:#fff;margin:12px;border-radius:12px;overflow:hidden}
-.h-head,.h-row{display:grid;grid-template-columns:2.3fr 1fr 1.3fr 0.7fr;padding:10px;font-size:13px}
-.h-head{background:#ff6a6a;color:#fff;font-weight:bold}
-.h-row{border-bottom:1px solid #eee;color:#333}
-.g{color:#2ecc71;font-size:18px}.r{color:#e74c3c;font-size:18px}.v{color:#9b59b6;font-size:18px}
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:#0f0f0f;
+  color:#fff;
+}
+.header{
+  text-align:center;
+  padding:14px;
+  font-size:22px;
+  font-weight:bold;
+}
+.top{
+  display:flex;
+  justify-content:space-between;
+  padding:0 15px;
+  font-size:14px;
+  color:#ccc;
+}
+.timer{
+  text-align:center;
+  font-size:36px;
+  margin:10px 0;
+  color:#ff4081;
+}
+.box{
+  background:#1c1c1c;
+  margin:15px;
+  padding:15px;
+  border-radius:14px;
+}
+input{
+  width:100%;
+  padding:12px;
+  font-size:16px;
+  border-radius:8px;
+  border:none;
+  text-align:center;
+}
+.colors, .numbers{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  margin-top:12px;
+}
+.numbers{
+  grid-template-columns:repeat(5,1fr);
+}
+button{
+  padding:14px 0;
+  border:none;
+  border-radius:10px;
+  font-size:16px;
+  font-weight:bold;
+  color:#fff;
+}
+.red{background:#e53935}
+.green{background:#43a047}
+.violet{background:#8e24aa}
+.num{background:#2c2c2c}
+.multis{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:8px;
+  margin-top:12px;
+}
+.multi{
+  background:#2c2c2c;
+}
+.multi.active{background:#43a047}
+.bs{
+  display:flex;
+  margin-top:12px;
+}
+.big{flex:1;background:#f4a261}
+.small{flex:1;background:#4dabf7}
+.tabs{
+  display:flex;
+  gap:10px;
+  margin:15px;
+}
+.tab{
+  flex:1;
+  padding:12px;
+  border-radius:10px;
+  background:#2c2c2c;
+  text-align:center;
+}
+.tab.active{background:#ff6b6b}
+.table{
+  margin:15px;
+}
+.row{
+  display:grid;
+  grid-template-columns:2fr 1fr 1fr 1fr;
+  padding:8px 0;
+  border-bottom:1px solid #333;
+  font-size:14px;
+}
+.dot{
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  margin:auto;
+}
+.greenDot{background:#43a047}
+.redDot{background:#e53935}
+.violetDot{background:#8e24aa}
+.disabled{
+  opacity:.4;
+  pointer-events:none;
+}
 </style>
 </head>
 
@@ -38,113 +126,163 @@ input{width:100%;padding:12px;border-radius:8px;border:none;font-size:16px;text-
 <div class="header">🎨 WIN GO</div>
 
 <div class="top">
-  <div>Period: <span id="period"></span></div>
-  <div>Wallet: ₹<span id="wallet"></span></div>
+  <div>Period: <span id="period">20260120100001</span></div>
+  <div>Wallet: ₹<span id="wallet">100</span></div>
 </div>
 
-<div class="timer">⏳ <span id="time"></span>s</div>
+<div class="timer">⏳ <span id="time">30</span>s</div>
 
 <div class="box">
-<input id="amount" type="number" placeholder="Min ₹10">
+  <input type="number" id="betAmount" placeholder="Min ₹10">
 
-<div class="colors">
-<button class="btn red" onclick="bet.color='RED'">RED</button>
-<button class="btn green" onclick="bet.color='GREEN'">GREEN</button>
-<button class="btn violet" onclick="bet.color='VIOLET'">VIOLET</button>
-</div>
+  <div class="colors">
+    <button class="red" data-color="RED">RED</button>
+    <button class="green" data-color="GREEN">GREEN</button>
+    <button class="violet" data-color="VIOLET">VIOLET</button>
+  </div>
 
-<div class="numbers">
-<button class="btn num" onclick="bet.number=0">0</button>
-<button class="btn num" onclick="bet.number=1">1</button>
-<button class="btn num" onclick="bet.number=2">2</button>
-<button class="btn num" onclick="bet.number=3">3</button>
-<button class="btn num" onclick="bet.number=4">4</button>
-<button class="btn num" onclick="bet.number=5">5</button>
-<button class="btn num" onclick="bet.number=6">6</button>
-<button class="btn num" onclick="bet.number=7">7</button>
-<button class="btn num" onclick="bet.number=8">8</button>
-<button class="btn num" onclick="bet.number=9">9</button>
-</div>
-</div>
+  <div class="numbers">
+    <button class="num" data-num="0">0</button>
+    <button class="num" data-num="1">1</button>
+    <button class="num" data-num="2">2</button>
+    <button class="num" data-num="3">3</button>
+    <button class="num" data-num="4">4</button>
+    <button class="num" data-num="5">5</button>
+    <button class="num" data-num="6">6</button>
+    <button class="num" data-num="7">7</button>
+    <button class="num" data-num="8">8</button>
+    <button class="num" data-num="9">9</button>
+  </div>
 
-<div class="multi">
-<div class="active" onclick="mult=1">X1</div>
-<div onclick="mult=5">X5</div>
-<div onclick="mult=10">X10</div>
-<div onclick="mult=20">X20</div>
-</div>
+  <div class="multis">
+    <button class="multi active" data-m="1">X1</button>
+    <button class="multi" data-m="5">X5</button>
+    <button class="multi" data-m="10">X10</button>
+    <button class="multi" data-m="20">X20</button>
+  </div>
 
-<div class="bigsmall">
-<div class="big" onclick="bet.bs='Big'">Big</div>
-<div class="small" onclick="bet.bs='Small'">Small</div>
+  <div class="bs">
+    <button class="big" data-bs="Big">Big</button>
+    <button class="small" data-bs="Small">Small</button>
+  </div>
 </div>
 
 <div class="tabs">
-<div class="active">Game history</div>
-<div>Chart</div>
-<div>Follow Strategy</div>
+  <div class="tab active">Game history</div>
+  <div class="tab">Chart</div>
+  <div class="tab">Follow Strategy</div>
 </div>
 
-<div class="history">
-<div class="h-head">
-<div>Period</div><div>Number</div><div>Big Small</div><div>Color</div>
-</div>
-<div id="list"></div>
+<div class="table" id="history">
+  <div class="row" style="color:#ff6b6b">
+    <b>Period</b><b>Number</b><b>Big/Small</b><b>Color</b>
+  </div>
 </div>
 
 <script>
-let time=30;
+let time=30, timer;
 let period=20260120100001;
 let wallet=100;
-let mult=1;
-let bet={};
+let bets=[];
+let multiplier=1;
+let betOpen=true;
 let history=[];
 
-function start(){
-  setInterval(()=>{
+const walletEl=walletSpan=document.getElementById("wallet");
+
+function startRound(){
+  time=30;
+  betOpen=true;
+  bets=[];
+  document.getElementById("period").innerText=period;
+  timer=setInterval(()=>{
     time--;
-    if(time<=0){resolve();time=30;}
     document.getElementById("time").innerText=time;
+    if(time<=5){betOpen=false;lockButtons(true);}
+    if(time===0){
+      clearInterval(timer);
+      settle();
+    }
   },1000);
 }
 
-function resolve(){
-  const num=Math.floor(Math.random()*10);
-  const color=num==0||num==5?"VIOLET":num%2==0?"RED":"GREEN";
-  const bs=num>=5?"Big":"Small";
-  const amt=Number(amount.value||0);
-
-  let win=0;
-  if(bet.number===num) win=amt*10;
-  else if(bet.color===color) win=amt*(color==="VIOLET"?5:2);
-  else if(bet.bs===bs) win=amt*2;
-
-  wallet+=win-amt;
-  history.unshift({p:period,n:num,bs,color});
-  history=history.slice(0,10);
-  bet={};
-  period++;
-  render();
-}
-
-function render(){
-  walletEl.innerText=wallet;
-  periodEl.innerText=period;
-  let html="";
-  history.forEach(x=>{
-    html+=`<div class="h-row">
-    <div>${x.p}</div><div>${x.n}</div><div>${x.bs}</div>
-    <div class="${x.color=='GREEN'?'g':x.color=='RED'?'r':'v'}">●</div>
-    </div>`;
+function lockButtons(lock){
+  document.querySelectorAll("button").forEach(b=>{
+    if(lock && !b.classList.contains("multi")) b.classList.add("disabled");
+    else b.classList.remove("disabled");
   });
-  list.innerHTML=html;
 }
 
-const walletEl=document.getElementById("wallet");
-const periodEl=document.getElementById("period");
+function placeBet(type,value,winMult){
+  if(!betOpen) return alert("Betting closed");
+  let amt=Number(betAmount.value);
+  if(amt<10) return alert("Min ₹10");
+  amt*=multiplier;
+  if(wallet<amt) return alert("No balance");
+  wallet-=amt;
+  walletEl.innerText=wallet;
+  bets.push({type,value,amt,winMult});
+}
 
-render();
-start();
+document.querySelectorAll("[data-color]").forEach(b=>{
+  b.onclick=()=>placeBet("color",b.dataset.color,2);
+});
+document.querySelectorAll("[data-num]").forEach(b=>{
+  b.onclick=()=>placeBet("num",Number(b.dataset.num),10);
+});
+document.querySelectorAll("[data-bs]").forEach(b=>{
+  b.onclick=()=>placeBet("bs",b.dataset.bs,2);
+});
+document.querySelectorAll(".multi").forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll(".multi").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");
+    multiplier=Number(b.dataset.m);
+  };
+});
+
+function settle(){
+  const num=Math.floor(Math.random()*10);
+  const color=(num===0||num===5)?"VIOLET":(num%2?"GREEN":"RED");
+  const bs=num>=5?"Big":"Small";
+  let win=0;
+  bets.forEach(b=>{
+    if(
+      (b.type==="color"&&b.value===color)||
+      (b.type==="num"&&b.value===num)||
+      (b.type==="bs"&&b.value===bs)
+    ){
+      win+=b.amt*b.winMult;
+    }
+  });
+  wallet+=win;
+  walletEl.innerText=wallet;
+  history.unshift({period,num,bs,color});
+  if(history.length>10) history.pop();
+  renderHistory();
+  period++;
+  lockButtons(false);
+  setTimeout(startRound,2000);
+}
+
+function renderHistory(){
+  const h=document.getElementById("history");
+  h.innerHTML=`
+    <div class="row" style="color:#ff6b6b">
+      <b>Period</b><b>Number</b><b>Big/Small</b><b>Color</b>
+    </div>`;
+  history.forEach(x=>{
+    h.innerHTML+=`
+      <div class="row">
+        <div>${x.period}</div>
+        <div>${x.num}</div>
+        <div>${x.bs}</div>
+        <div class="dot ${x.color.toLowerCase()}Dot"></div>
+      </div>`;
+  });
+}
+
+startRound();
 </script>
 
 </body>
