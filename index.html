@@ -37,32 +37,32 @@ body{
   transform:scale(0.97);
 }
 .game-card h3{
-  margin:0;
+  margin:6px 0 0;
   font-size:18px;
 }
 .game-card p{
   font-size:13px;
-  color:#aaa;
+  color:#ddd;
+  opacity:0.8;
 }
 
-/* 🔥 ACTIVE GAMES */
+/* 🔥 GAME COLORS */
 .wingo{
   background:linear-gradient(135deg,#2196f3,#21cbf3);
 }
 .mines{
   background:linear-gradient(135deg,#ff5252,#ff1744);
 }
+.aviator{
+  background:linear-gradient(135deg,#ff9800,#ff5722);
+}
 .trx{
   background:linear-gradient(135deg,#7e57c2,#9575cd);
 }
-.d5{
-  background:linear-gradient(135deg,#26a69a,#2bbbad);
-}
 
-/* 🎨 ICON STYLE (WIN GO + MINES) */
+/* ICON */
 .icon{
-  font-size:28px;
-  margin-bottom:6px;
+  font-size:30px;
 }
 </style>
 </head>
@@ -73,7 +73,7 @@ body{
 
 <div class="menu">
 
-  <!-- ✅ WIN GO -->
+  <!-- 🎨 WIN GO -->
   <div class="game-card wingo" onclick="location.href='wingo.html'">
     <div class="icon">🎨</div>
     <h3>WIN GO</h3>
@@ -87,14 +87,16 @@ body{
     <p>Spribe Style Game</p>
   </div>
 
-  <!-- 🔢 5D -->
-  <div class="game-card d5" onclick="location.href='5d.html'">
-    <h3>5D</h3>
-    <p>Number Lottery</p>
+  <!-- ✈️ AVIATOR (5D REMOVED) -->
+  <div class="game-card aviator" onclick="location.href='aviator.html'">
+    <div class="icon">✈️</div>
+    <h3>AVIATOR</h3>
+    <p>Crash Multiplier Game</p>
   </div>
 
   <!-- 🪙 TRX WINGO -->
   <div class="game-card trx" onclick="location.href='trxwingo.html'">
+    <div class="icon">🪙</div>
     <h3>TRX WINGO</h3>
     <p>Crypto Colour Game</p>
   </div>
