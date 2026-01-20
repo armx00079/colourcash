@@ -1,19 +1,19 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <title>WIN GO</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <style>
 body{margin:0;font-family:Arial;background:#0f0f0f;color:#fff}
-.header{text-align:center;font-size:22px;padding:14px}
+.header{text-align:center;padding:14px;font-size:22px}
 .top{display:flex;justify-content:space-between;padding:0 15px;color:#bbb}
-.timer{text-align:center;font-size:34px;color:#ff4081;margin:10px 0}
+.timer{text-align:center;font-size:34px;color:#ff4081;margin:10px}
 .card{background:#1c1c1c;margin:15px;padding:15px;border-radius:12px}
 input{width:100%;padding:12px;font-size:18px;border-radius:8px;border:none;text-align:center}
-.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
-.grid5{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px}
+.grid3,.grid5{display:grid;gap:8px;margin-top:10px}
+.grid3{grid-template-columns:repeat(3,1fr)}
+.grid5{grid-template-columns:repeat(5,1fr)}
 .btn{padding:14px;border:none;border-radius:10px;font-weight:bold;color:#fff}
 .red{background:#e53935}
 .green{background:#43a047}
@@ -27,8 +27,8 @@ input{width:100%;padding:12px;font-size:18px;border-radius:8px;border:none;text-
 .small{background:#4dabf7}
 .tabs{display:flex;gap:10px;margin:15px}
 .tab{flex:1;padding:12px;border-radius:10px;text-align:center;font-weight:bold;cursor:pointer}
-.tab.active{background:#ff6f6f}
-.tab.inactive{background:#333}
+.active{background:#ff6f6f}
+.inactive{background:#333}
 table{width:100%;border-collapse:collapse;font-size:14px}
 th,td{padding:8px;text-align:center}
 th{background:#ff6f6f}
@@ -49,26 +49,26 @@ th{background:#ff6f6f}
 
 <div class="timer">⏳ <span id="time"></span>s</div>
 
-<div class="card" id="betArea">
-  <input id="amount" placeholder="Min ₹10" type="number">
+<div class="card" id="betBox">
+  <input id="amount" placeholder="Min ₹1" type="number">
 
   <div class="grid3">
-    <button class="btn red" onclick="place('color','RED')">RED</button>
-    <button class="btn green" onclick="place('color','GREEN')">GREEN</button>
-    <button class="btn violet" onclick="place('color','VIOLET')">VIOLET</button>
+    <button class="btn red" onclick="bet('color','RED')">RED</button>
+    <button class="btn green" onclick="bet('color','GREEN')">GREEN</button>
+    <button class="btn violet" onclick="bet('color','VIOLET')">VIOLET</button>
   </div>
 
   <div class="grid5">
-    <button class="btn dark" onclick="place('number',0)">0</button>
-    <button class="btn dark" onclick="place('number',1)">1</button>
-    <button class="btn dark" onclick="place('number',2)">2</button>
-    <button class="btn dark" onclick="place('number',3)">3</button>
-    <button class="btn dark" onclick="place('number',4)">4</button>
-    <button class="btn dark" onclick="place('number',5)">5</button>
-    <button class="btn dark" onclick="place('number',6)">6</button>
-    <button class="btn dark" onclick="place('number',7)">7</button>
-    <button class="btn dark" onclick="place('number',8)">8</button>
-    <button class="btn dark" onclick="place('number',9)">9</button>
+    <button class="btn dark" onclick="bet('number',0)">0</button>
+    <button class="btn dark" onclick="bet('number',1)">1</button>
+    <button class="btn dark" onclick="bet('number',2)">2</button>
+    <button class="btn dark" onclick="bet('number',3)">3</button>
+    <button class="btn dark" onclick="bet('number',4)">4</button>
+    <button class="btn dark" onclick="bet('number',5)">5</button>
+    <button class="btn dark" onclick="bet('number',6)">6</button>
+    <button class="btn dark" onclick="bet('number',7)">7</button>
+    <button class="btn dark" onclick="bet('number',8)">8</button>
+    <button class="btn dark" onclick="bet('number',9)">9</button>
   </div>
 
   <div class="grid5">
@@ -80,8 +80,8 @@ th{background:#ff6f6f}
   </div>
 
   <div class="bigsmall">
-    <button class="big" onclick="place('bs','BIG')">Big</button>
-    <button class="small" onclick="place('bs','SMALL')">Small</button>
+    <button class="big" onclick="bet('bs','BIG')">Big</button>
+    <button class="small" onclick="bet('bs','SMALL')">Small</button>
   </div>
 </div>
 
@@ -92,36 +92,25 @@ th{background:#ff6f6f}
 
 <div class="card">
   <table>
-    <thead>
-      <tr>
-        <th>Period</th>
-        <th>Bet</th>
-        <th>Amount</th>
-        <th>Result</th>
-      </tr>
-    </thead>
-    <tbody id="table"></tbody>
+    <thead id="thead"></thead>
+    <tbody id="tbody"></tbody>
   </table>
 </div>
 
 <script>
-let data = JSON.parse(localStorage.getItem("wingo")) || {
-  period:20260120100001,
-  time:30,
-  wallet:100,
-  bets:[],
-  history:[]
+let store = JSON.parse(localStorage.getItem("wingo")) || {
+  period:20260120100001,time:30,wallet:28,
+  bets:[],gameHistory:[],myBets:[]
 };
-
 let multi=1,locked=false,tab="game";
 
-function save(){localStorage.setItem("wingo",JSON.stringify(data))}
-function $(id){return document.getElementById(id)}
+const save=()=>localStorage.setItem("wingo",JSON.stringify(store));
+const $=id=>document.getElementById(id);
 
-function render(){
-  period.innerText=data.period;
-  wallet.innerText=data.wallet;
-  time.innerText=data.time;
+function renderTop(){
+  period.innerText=store.period;
+  wallet.innerText=store.wallet;
+  time.innerText=store.time;
 }
 
 function setMulti(x,el){
@@ -130,55 +119,72 @@ function setMulti(x,el){
   el.classList.add('active');
 }
 
-function place(type,val){
+function bet(type,val){
   if(locked) return alert("Bet closed");
   let amt=Number(amount.value);
-  if(amt<10) return alert("Min ₹10");
+  if(amt<1) return alert("Min ₹1");
   let total=amt*multi;
-  if(total>data.wallet) return alert("Low balance");
-  data.wallet-=total;
-  data.bets.push({type,val,amt:total,period:data.period});
-  save(); render();
+  if(total>store.wallet) return alert("Low balance");
+  store.wallet-=total;
+  store.bets.push({type,val,amt:total,period:store.period});
+  save();renderTop();
 }
 
-function finish(){
+function finishRound(){
   let num=Math.floor(Math.random()*10);
   let color=num==0||num==5?'VIOLET':num%2?'GREEN':'RED';
   let bs=num>=5?'BIG':'SMALL';
 
-  data.bets.forEach(b=>{
+  store.gameHistory.unshift({period:store.period,num,bs,color});
+  store.gameHistory=store.gameHistory.slice(0,10);
+
+  store.bets.forEach(b=>{
     let win=0;
-    if(b.type=='number'&&b.val==num) win=b.amt*10;
+    if(b.type=='number'&&b.val==num) win=b.amt*1;
     if(b.type=='color'&&b.val==color) win=b.amt*(color=='VIOLET'?5:2);
     if(b.type=='bs'&&b.val==bs) win=b.amt*2;
-    data.wallet+=win;
-    data.history.unshift({
-      period:b.period,bet:b.type+":"+b.val,
-      amt:b.amt,res:win>0?"+₹"+win:"-₹"+b.amt,
+    store.wallet+=win;
+    store.myBets.unshift({
+      period:b.period,
+      bet:b.type+":"+b.val,
+      amt:b.amt,
+      res:win>0?"+₹"+win:"-₹"+b.amt,
       win:win>0
     });
   });
 
-  data.history=data.history.slice(0,10);
-  data.bets=[];
-  data.period++;
-  data.time=30;
+  store.myBets=store.myBets.slice(0,50);
+  store.bets=[];
+  store.period++;
+  store.time=30;
   locked=false;
-  save(); draw();
+  save();draw();
 }
 
 function draw(){
-  table.innerHTML="";
-  let list = tab=="game"?data.history:data.history;
-  list.forEach(h=>{
-    table.innerHTML+=`
-    <tr>
-      <td>${h.period}</td>
-      <td>${h.bet}</td>
-      <td>₹${h.amt}</td>
-      <td class="${h.win?'win':'loss'}">${h.res}</td>
-    </tr>`;
-  });
+  let th=$("thead"),tb=$("tbody");
+  th.innerHTML=tb.innerHTML="";
+  if(tab=="game"){
+    th.innerHTML="<tr><th>Period</th><th>Number</th><th>Big/Small</th><th>Color</th></tr>";
+    store.gameHistory.forEach(r=>{
+      tb.innerHTML+=`<tr>
+        <td>${r.period}</td>
+        <td>${r.num}</td>
+        <td>${r.bs}</td>
+        <td>${r.color}</td>
+      </tr>`;
+    });
+  }else{
+    th.innerHTML="<tr><th>Period</th><th>Bet</th><th>Amount</th><th>Result</th></tr>";
+    store.myBets.forEach(b=>{
+      tb.innerHTML+=`<tr>
+        <td>${b.period}</td>
+        <td>${b.bet}</td>
+        <td>₹${b.amt}</td>
+        <td class="${b.win?'win':'loss'}">${b.res}</td>
+      </tr>`;
+    });
+  }
 }
 
 function switchTab(t){
@@ -189,13 +195,13 @@ function switchTab(t){
 }
 
 setInterval(()=>{
-  data.time--;
-  if(data.time<=5) locked=true;
-  if(data.time<=0) finish();
-  save(); render();
+  store.time--;
+  if(store.time<=5) locked=true;
+  if(store.time<=0) finishRound();
+  save();renderTop();
 },1000);
 
-draw(); render();
+renderTop();draw();
 </script>
 
 </body>
