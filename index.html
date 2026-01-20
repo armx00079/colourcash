@@ -1,22 +1,171 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Colour Cash</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8">
+<title>Colour Cash</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:#0f0f0f;
+  color:#fff;
+  text-align:center;
+}
+.header{
+  padding:15px;
+  font-size:22px;
+  font-weight:bold;
+}
+.timer{
+  font-size:36px;
+  margin:10px 0;
+  color:#ff4081;
+}
+.balance{
+  margin:10px 0;
+  font-size:16px;
+}
+.game-box{
+  background:#1c1c1c;
+  margin:15px;
+  padding:15px;
+  border-radius:12px;
+}
+.colors{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  margin-top:15px;
+}
+.color-btn{
+  padding:18px 0;
+  border-radius:10px;
+  font-size:18px;
+  font-weight:bold;
+  color:#fff;
+  border:none;
+}
+.red{background:#e53935}
+.green{background:#43a047}
+.violet{background:#8e24aa}
+
+.bet-box{
+  margin-top:15px;
+}
+input{
+  width:100%;
+  padding:12px;
+  border-radius:8px;
+  border:none;
+  font-size:16px;
+  text-align:center;
+}
+
+.result{
+  margin-top:15px;
+  font-size:18px;
+  min-height:24px;
+}
+</style>
 </head>
-<body style="margin:0;font-family:Arial;background:#111;color:#fff;text-align:center">
 
-  <div style="padding:60px 20px">
-    <h1>🎨 Colour Cash</h1>
-    <p>Colour Trading Game</p>
+<body>
 
-    <div style="margin-top:30px">
-      <button style="padding:14px 30px;font-size:18px;border:none;border-radius:8px;background:#e91e63;color:#fff">
-        Game Coming Soon
-      </button>
-    </div>
+<div class="header">🎨 Colour Cash</div>
+
+<div class="timer">
+  ⏳ <span id="time">30</span>s
+</div>
+
+<div class="balance">
+  Wallet: ₹<span id="balance">100</span>
+</div>
+
+<div class="game-box">
+  <div>Enter Bet Amount</div>
+  <div class="bet-box">
+    <input type="number" id="betAmount" placeholder="Min ₹10" />
   </div>
+
+  <div class="colors">
+    <button class="color-btn red" onclick="placeBet('RED')">RED</button>
+    <button class="color-btn green" onclick="placeBet('GREEN')">GREEN</button>
+    <button class="color-btn violet" onclick="placeBet('VIOLET')">VIOLET</button>
+  </div>
+
+  <div class="result" id="result"></div>
+</div>
+
+<script>
+let time = 30;
+let timer;
+let currentBet = null;
+let wallet = 100;
+
+function startTimer(){
+  time = 30;
+  document.getElementById("time").innerText = time;
+
+  timer = setInterval(()=>{
+    time--;
+    document.getElementById("time").innerText = time;
+
+    if(time === 0){
+      clearInterval(timer);
+      showResult();
+    }
+  },1000);
+}
+
+function placeBet(color){
+  const amt = Number(document.getElementById("betAmount").value);
+
+  if(amt < 10){
+    alert("Minimum bet ₹10");
+    return;
+  }
+  if(amt > wallet){
+    alert("Insufficient balance");
+    return;
+  }
+
+  currentBet = { color, amt };
+  document.getElementById("result").innerText =
+    "Bet placed on " + color + " (₹" + amt + ")";
+}
+
+function showResult(){
+  if(!currentBet){
+    document.getElementById("result").innerText = "No bet placed";
+    startTimer();
+    return;
+  }
+
+  // TEMP RANDOM (backend logic baad me)
+  const colors = ["RED","GREEN","VIOLET"];
+  const result = colors[Math.floor(Math.random()*3)];
+
+  if(result === currentBet.color){
+    let win = currentBet.amt * (result==="VIOLET" ? 4.5 : 2);
+    wallet += win;
+    document.getElementById("result").innerText =
+      "🎉 " + result + " WON! +₹" + win;
+  }else{
+    wallet -= currentBet.amt;
+    document.getElementById("result").innerText =
+      "❌ " + result + " LOST!";
+  }
+
+  document.getElementById("balance").innerText = wallet;
+  currentBet = null;
+
+  setTimeout(startTimer,2000);
+}
+
+startTimer();
+</script>
 
 </body>
 </html>
