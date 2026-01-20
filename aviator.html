@@ -13,64 +13,83 @@ body{
   color:#fff;
   text-align:center;
 }
+
 .header{
-  padding:12px;
-  font-size:20px;
+  padding:14px;
+  font-size:22px;
   font-weight:bold;
 }
-.card{
-  background:#1c1c1c;
-  margin:12px;
-  border-radius:14px;
-  padding:12px;
+
+/* ✈️ FLIGHT AREA */
+.flight-area{
+  position:relative;
+  height:150px;
+  margin:10px;
+  overflow:hidden;
+  border-bottom:1px solid #333;
 }
+
+.plane{
+  position:absolute;
+  left:-50px;
+  bottom:15px;
+  font-size:46px;
+  transition:transform 0.08s linear;
+}
+
+/* MULTIPLIER */
 .multiplier{
-  font-size:42px;
+  font-size:34px;
+  margin-top:10px;
   color:#00e676;
   font-weight:bold;
 }
-.crashed{
-  color:#ff5252;
+
+/* CONTROLS */
+.controls{
+  margin:15px;
 }
-button{
-  padding:12px;
-  border:none;
-  border-radius:10px;
-  font-size:16px;
-  width:100%;
-  margin-top:8px;
-}
-.bet-btn{ background:#ff9800; color:#000; }
-.cashout-btn{ background:#00e676; color:#000; }
+
 input{
-  width:100%;
+  width:80%;
   padding:12px;
-  border-radius:10px;
   border:none;
-  margin-top:8px;
-  font-size:16px;
-}
-.history span{
-  display:inline-block;
-  background:#333;
-  padding:6px 10px;
   border-radius:8px;
-  margin:4px;
-  font-size:13px;
+  font-size:16px;
+  text-align:center;
 }
+
+button{
+  margin-top:12px;
+  width:80%;
+  padding:14px;
+  border:none;
+  border-radius:10px;
+  font-size:18px;
+  background:#ff5252;
+  color:#fff;
+}
+
+/* POPUP */
 .popup{
+  display:none;
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.7);
-  display:none;
+  background:rgba(0,0,0,0.7);
   align-items:center;
   justify-content:center;
 }
+
 .popup-box{
   background:#1c1c1c;
-  padding:20px;
+  padding:25px;
   border-radius:14px;
   width:80%;
+}
+
+.popup-box h2{
+  margin:0 0 10px;
+  color:#00e676;
 }
 </style>
 </head>
@@ -79,121 +98,126 @@ input{
 
 <div class="header">✈️ AVIATOR</div>
 
-<div class="card">
-  Wallet: ₹<span id="wallet">100</span>
+<div class="flight-area">
+  <div class="plane" id="plane">✈️</div>
 </div>
 
-<div class="card">
-  <div id="multiplier" class="multiplier">1.00x</div>
-  <div id="status">Waiting…</div>
-</div>
+<div class="multiplier" id="multi">1.00x</div>
 
-<div class="card">
-  <input type="number" id="betAmount" placeholder="Min ₹1" value="1">
-  <button class="bet-btn" id="betBtn">PLACE BET</button>
-  <button class="cashout-btn" id="cashoutBtn" style="display:none">CASHOUT</button>
-</div>
-
-<div class="card">
-  <b>Last Crashes</b>
-  <div class="history" id="history"></div>
+<div class="controls">
+  <input type="number" id="bet" placeholder="Enter Bet (Min ₹1)">
+  <button onclick="cashOut()">CASH OUT</button>
 </div>
 
 <!-- POPUP -->
 <div class="popup" id="popup">
   <div class="popup-box">
-    <h3 id="popupText"></h3>
+    <h2 id="popupTitle"></h2>
+    <p id="popupText"></p>
     <button onclick="closePopup()">OK</button>
   </div>
 </div>
 
 <script>
-let wallet = Number(localStorage.getItem("aviator_wallet")) || 100;
-let history = JSON.parse(localStorage.getItem("aviator_history")) || [];
-let running=false, bet=0, currentX=1, crashX=0;
+let multiplier = 1.00;
+let running = false;
+let crashAt = 0;
+let timer;
 
-const walletEl=document.getElementById("wallet");
-const multEl=document.getElementById("multiplier");
-const histEl=document.getElementById("history");
-walletEl.innerText=wallet;
+let xPos = 0;
+let yPos = 0;
 
-function save(){
-  localStorage.setItem("aviator_wallet",wallet);
-  localStorage.setItem("aviator_history",JSON.stringify(history));
-}
+const plane = document.getElementById("plane");
 
-function renderHistory(){
-  histEl.innerHTML="";
-  history.slice(-10).reverse().forEach(x=>{
-    histEl.innerHTML+=`<span>${x}x</span>`;
-  });
-}
-renderHistory();
-
+/* START ROUND */
 function startRound(){
-  currentX=1;
-  crashX=(Math.random()*5+1).toFixed(2); // house edge inside
-  running=true;
-  document.getElementById("status").innerText="Flying...";
-  let interval=setInterval(()=>{
-    if(!running){ clearInterval(interval); return; }
-    currentX+=0.02;
-    multEl.innerText=currentX.toFixed(2)+"x";
-    if(currentX>=crashX){
-      clearInterval(interval);
+  multiplier = 1.00;
+  running = true;
+
+  xPos = 0;
+  yPos = 0;
+
+  plane.style.opacity = "1";
+  plane.style.transform = "translate(0,0)";
+  document.getElementById("multi").innerText = "1.00x";
+
+  // 🔒 OWNER CONTROLLED CRASH (1.2x – 6x)
+  crashAt = (Math.random()*4.8 + 1.2).toFixed(2);
+
+  timer = setInterval(()=>{
+    multiplier += 0.03;
+
+    /* 🚀 SPEED INCREASE WITH MULTIPLIER */
+    let speedX = 2 + multiplier * 1.2;
+    let speedY = 0.6 + multiplier * 0.4;
+
+    xPos += speedX;
+    yPos += speedY;
+
+    plane.style.transform =
+      `translate(${xPos}px, -${yPos}px)`;
+
+    document.getElementById("multi").innerText =
+      multiplier.toFixed(2) + "x";
+
+    if(multiplier >= crashAt){
       crash();
     }
-  },100);
+  },80);
 }
 
+/* CRASH */
 function crash(){
-  running=false;
-  multEl.classList.add("crashed");
-  document.getElementById("status").innerText="CRASHED";
-  history.push(crashX);
-  save();
-  renderHistory();
-  document.getElementById("cashoutBtn").style.display="none";
-  setTimeout(resetRound,2000);
+  clearInterval(timer);
+  running = false;
+  plane.style.opacity = "0.3";
+
+  showPopup(
+    "💥 CRASH!",
+    "Plane crashed at " + crashAt + "x"
+  );
+
+  setTimeout(startRound,3000);
 }
 
-function resetRound(){
-  multEl.classList.remove("crashed");
-  multEl.innerText="1.00x";
-  document.getElementById("status").innerText="Waiting…";
-}
-
-document.getElementById("betBtn").onclick=()=>{
-  bet=Number(betAmount.value);
-  if(bet<1){ showPopup("Minimum bet ₹1"); return; }
-  if(bet>wallet){ showPopup("Insufficient balance"); return; }
-  wallet-=bet;
-  walletEl.innerText=wallet;
-  save();
-  document.getElementById("cashoutBtn").style.display="block";
-  startRound();
-};
-
-document.getElementById("cashoutBtn").onclick=()=>{
+/* CASH OUT */
+function cashOut(){
   if(!running) return;
-  running=false;
-  let win=(bet*currentX*0.9).toFixed(2); // 10% house edge
-  wallet+=Number(win);
-  walletEl.innerText=wallet;
-  save();
-  showPopup("You Won ₹"+win);
-  history.push(currentX.toFixed(2));
-  renderHistory();
-  document.getElementById("cashoutBtn").style.display="none";
-};
 
-function showPopup(text){
-  document.getElementById("popupText").innerText=text;
-  document.getElementById("popup").style.display="flex";
+  const bet = Number(document.getElementById("bet").value);
+  if(bet < 1){
+    alert("Minimum bet ₹1");
+    return;
+  }
+
+  clearInterval(timer);
+  running = false;
+
+  let win = (bet * multiplier).toFixed(2);
+
+  showPopup(
+    "🎉 YOU WIN!",
+    "Cashed out at " + multiplier.toFixed(2) +
+    "x\nWin ₹" + win
+  );
+
+  plane.style.opacity = "0.4";
+  setTimeout(startRound,3000);
 }
+
+/* POPUP */
+function showPopup(title,text){
+  document.getElementById("popupTitle").innerText = title;
+  document.getElementById("popupText").innerText = text;
+  document.getElementById("popup").style.display = "flex";
+}
+
 function closePopup(){
-  document.getElementById("popup").style.display="none";
+  document.getElementById("popup").style.display = "none";
 }
+
+/* AUTO START */
+startRound();
 </script>
 
 </body>
