@@ -1,16 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <title>K3</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <style>
 body{margin:0;font-family:Arial;background:#0f0f0f;color:#fff}
 .header{text-align:center;padding:15px;font-size:22px}
 .card{background:#1c1c1c;margin:12px;border-radius:14px;padding:15px}
 .timer{text-align:center;font-size:34px;color:#ff4d88}
-.dice{display:flex;justify-content:center;gap:12px;margin-top:10px}
+.dice{display:flex;justify-content:center;gap:12px;margin:12px}
 .dice div{width:55px;height:55px;background:#e53935;border-radius:10px;
 display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:bold}
 
@@ -31,7 +30,16 @@ text-align:center;font-weight:bold;cursor:pointer}
 
 table{width:100%;border-collapse:collapse}
 th,td{padding:8px;border-bottom:1px solid #333;text-align:center}
-.hidden{display:none}
+
+.popup{
+position:fixed;inset:0;background:rgba(0,0,0,.6);
+display:none;align-items:center;justify-content:center;z-index:10}
+.popup-box{
+background:#1c1c1c;padding:20px;border-radius:14px;
+width:80%;text-align:center}
+.popup-box button{
+margin-top:12px;padding:10px 20px;border:none;
+border-radius:10px;background:#ff6f6f;color:#fff;font-size:16px}
 </style>
 </head>
 
@@ -41,7 +49,7 @@ th,td{padding:8px;border-bottom:1px solid #333;text-align:center}
 
 <div class="card">
   <div id="info"></div>
-  <div class="timer" id="timer">30s</div>
+  <div class="timer" id="timer"></div>
   <div class="dice" id="dice"></div>
 </div>
 
@@ -49,10 +57,10 @@ th,td{padding:8px;border-bottom:1px solid #333;text-align:center}
   <input id="amount" type="number" placeholder="Min ₹1">
 
   <div class="actions">
-    <div class="btn big" onclick="placeBet('BIG')">BIG (11–18)</div>
-    <div class="btn small" onclick="placeBet('SMALL')">SMALL (3–10)</div>
-    <div class="btn even" onclick="placeBet('EVEN')">EVEN</div>
-    <div class="btn odd" onclick="placeBet('ODD')">ODD</div>
+    <div class="btn big" onclick="bet('BIG')">BIG (11–18)</div>
+    <div class="btn small" onclick="bet('SMALL')">SMALL (3–10)</div>
+    <div class="btn even" onclick="bet('EVEN')">EVEN</div>
+    <div class="btn odd" onclick="bet('ODD')">ODD</div>
   </div>
 
   <div class="numbers" id="numbers"></div>
@@ -64,114 +72,90 @@ th,td{padding:8px;border-bottom:1px solid #333;text-align:center}
 </div>
 
 <div class="card">
-  <table id="gameTable"></table>
-  <div id="betsBox" class="hidden"></div>
+  <table id="table"></table>
+</div>
+
+<!-- POPUP -->
+<div class="popup" id="popup">
+  <div class="popup-box">
+    <div id="popupText"></div>
+    <button onclick="closePopup()">OK</button>
+  </div>
 </div>
 
 <script>
-const KEY="K3_STATE";
+const BASE_TIME = 1700000000000;
+const BASE_PERIOD = 2026012000137;
+let wallet = 100;
+let bets=[];
+let history=[];
+let dice=[0,0,0];
 
-// 🔥 PERIOD BASE + COUNTER
-const PERIOD_BASE = "2026012000";
-
-let state = JSON.parse(localStorage.getItem(KEY)) || {
-  counter:137,
-  time:30,
-  dice:[null,null,null],
-  history:[],
-  bets:[]
-};
-
-function save(){localStorage.setItem(KEY,JSON.stringify(state));}
-
-function getPeriod(){
-  return PERIOD_BASE + state.counter;
-}
-
-function drawDice(){
-  let d=state.dice.map(v=>v??"?");
-  document.getElementById("dice").innerHTML=
-    `<div>${d[0]}</div><div>${d[1]}</div><div>${d[2]}</div>`;
-}
-
-function roll(){
-  state.dice=[
-    Math.ceil(Math.random()*6),
-    Math.ceil(Math.random()*6),
-    Math.ceil(Math.random()*6)
-  ];
-  let sum=state.dice.reduce((a,b)=>a+b,0);
-  state.history.unshift({
-    period:getPeriod(),
-    sum,
-    result:sum>=11?"BIG":"SMALL"
-  });
-  state.history=state.history.slice(0,10);
+function period(){
+  return BASE_PERIOD + Math.floor((Date.now()-BASE_TIME)/30000);
 }
 
 function tick(){
-  state.time--;
-
-  if(state.time<=0){
-    roll();
-    state.counter++;   // ✅ PERIOD INCREMENT
-    state.time=30;
-  }
-
-  document.getElementById("timer").innerText=state.time+"s";
+  let remain = 30 - Math.floor((Date.now()-BASE_TIME)/1000)%30;
+  document.getElementById("timer").innerText=remain+"s";
   document.getElementById("info").innerText=
-    "Period: "+getPeriod()+" | Wallet: ₹100";
+    "Period: "+period()+" | Wallet: ₹"+wallet;
 
-  if(state.time<=5)
+  if(remain<=5)
     document.getElementById("betArea").classList.add("lock");
   else
     document.getElementById("betArea").classList.remove("lock");
 
-  drawDice();
-  save();
+  if(remain===0){
+    dice=[r(),r(),r()];
+    let sum=dice[0]+dice[1]+dice[2];
+    history.unshift({p:period(),s:sum,r:sum>=11?"BIG":"SMALL"});
+    history=history.slice(0,10);
+  }
+  draw();
 }
 
-function placeBet(type){
-  let amt=Number(document.getElementById("amount").value);
-  if(amt<1){
-    alert("Minimum bet ₹1");
-    return;
-  }
-  state.bets.unshift({
-    period:getPeriod(),
-    bet:type,
-    amount:amt
-  });
-  alert("Bet placed on "+type+" ₹"+amt);
-  save();
+function r(){return Math.ceil(Math.random()*6)}
+
+function draw(){
+  document.getElementById("dice").innerHTML=
+    `<div>${dice[0]||"?"}</div><div>${dice[1]||"?"}</div><div>${dice[2]||"?"}</div>`;
 }
+
+function bet(type){
+  let amt=Number(amount.value);
+  if(amt<1) return popup("Minimum bet ₹1");
+  if(wallet<amt) return popup("Insufficient balance");
+  wallet-=amt;
+  bets.unshift({p:period(),b:type,a:amt});
+  popup("Bet placed successfully");
+}
+
+function popup(t){
+  popupText.innerText=t;
+  popupEl.style.display="flex";
+}
+function closePopup(){popupEl.style.display="none"}
 
 function showGame(){
-  document.getElementById("betsBox").classList.add("hidden");
-  let t=document.getElementById("gameTable");
-  t.innerHTML="<tr><th>Period</th><th>Sum</th><th>Result</th></tr>";
-  state.history.forEach(h=>{
-    t.innerHTML+=`<tr><td>${h.period}</td><td>${h.sum}</td><td>${h.result}</td></tr>`;
+  table.innerHTML="<tr><th>Period</th><th>Sum</th><th>Result</th></tr>";
+  history.forEach(h=>{
+    table.innerHTML+=`<tr><td>${h.p}</td><td>${h.s}</td><td>${h.r}</td></tr>`;
   });
 }
 
 function showBets(){
-  document.getElementById("gameTable").innerHTML="";
-  let b=document.getElementById("betsBox");
-  b.classList.remove("hidden");
-  b.innerHTML="";
-  state.bets.forEach(x=>{
-    b.innerHTML+=`<div>${x.period} | ${x.bet} | ₹${x.amount}</div>`;
+  table.innerHTML="<tr><th>Period</th><th>Bet</th><th>Amount</th></tr>";
+  bets.forEach(b=>{
+    table.innerHTML+=`<tr><td>${b.p}</td><td>${b.b}</td><td>₹${b.a}</td></tr>`;
   });
 }
 
 let nums="";
 for(let i=3;i<=18;i++)
-  nums+=`<div class="num" onclick="placeBet(${i})">${i}</div>`;
-document.getElementById("numbers").innerHTML=nums;
+ nums+=`<div class="num" onclick="bet(${i})">${i}</div>`;
+numbers.innerHTML=nums;
 
-drawDice();
-showGame();
 setInterval(tick,1000);
 </script>
 
