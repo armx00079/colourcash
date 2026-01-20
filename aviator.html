@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <title>Aviator</title>
@@ -8,48 +8,36 @@
 <style>
 body{
   margin:0;
-  font-family:Arial, sans-serif;
   background:#0f0f0f;
   color:#fff;
+  font-family:Arial;
   text-align:center;
 }
-
 .header{
   padding:14px;
   font-size:22px;
   font-weight:bold;
 }
-
-/* ✈️ FLIGHT AREA */
-.flight-area{
+.timer{color:#ff5252;font-size:22px;margin-bottom:5px;}
+.flight{
   position:relative;
-  height:150px;
-  margin:10px;
+  height:160px;
   overflow:hidden;
   border-bottom:1px solid #333;
 }
-
 .plane{
   position:absolute;
   left:-50px;
-  bottom:15px;
+  bottom:20px;
   font-size:46px;
   transition:transform 0.08s linear;
 }
-
-/* MULTIPLIER */
-.multiplier{
-  font-size:34px;
-  margin-top:10px;
+.multi{
+  font-size:36px;
   color:#00e676;
+  margin:8px 0;
   font-weight:bold;
 }
-
-/* CONTROLS */
-.controls{
-  margin:15px;
-}
-
 input{
   width:80%;
   padding:12px;
@@ -58,10 +46,9 @@ input{
   font-size:16px;
   text-align:center;
 }
-
 button{
-  margin-top:12px;
   width:80%;
+  margin-top:10px;
   padding:14px;
   border:none;
   border-radius:10px;
@@ -69,155 +56,186 @@ button{
   background:#ff5252;
   color:#fff;
 }
-
-/* POPUP */
+.locked{background:#555 !important;}
+.section{
+  margin:15px;
+  background:#1c1c1c;
+  border-radius:12px;
+  padding:10px;
+}
+table{
+  width:100%;
+  font-size:13px;
+  border-collapse:collapse;
+}
+th,td{
+  padding:6px;
+  border-bottom:1px solid #333;
+}
 .popup{
   display:none;
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,0.7);
+  background:rgba(0,0,0,0.75);
   align-items:center;
   justify-content:center;
 }
-
 .popup-box{
   background:#1c1c1c;
-  padding:25px;
+  padding:22px;
   border-radius:14px;
   width:80%;
 }
-
-.popup-box h2{
-  margin:0 0 10px;
-  color:#00e676;
-}
+.popup-box h2{margin:0;color:#00e676;}
 </style>
 </head>
 
 <body>
 
 <div class="header">✈️ AVIATOR</div>
+<div>Period: <span id="period"></span> | Wallet ₹<span id="wallet"></span></div>
+<div class="timer">⏱ <span id="time">30</span>s</div>
 
-<div class="flight-area">
+<div class="flight">
   <div class="plane" id="plane">✈️</div>
 </div>
 
-<div class="multiplier" id="multi">1.00x</div>
+<div class="multi" id="multi">1.00x</div>
 
-<div class="controls">
-  <input type="number" id="bet" placeholder="Enter Bet (Min ₹1)">
-  <button onclick="cashOut()">CASH OUT</button>
+<input id="bet" type="number" placeholder="Min ₹1">
+<button id="cashBtn" onclick="cashOut()">CASH OUT</button>
+
+<div class="section">
+<b>Last 10 Games</b>
+<table id="gameHistory"></table>
+</div>
+
+<div class="section">
+<b>My Bets</b>
+<table id="betHistory"></table>
 </div>
 
 <!-- POPUP -->
 <div class="popup" id="popup">
   <div class="popup-box">
-    <h2 id="popupTitle"></h2>
-    <p id="popupText"></p>
+    <h2 id="pTitle"></h2>
+    <p id="pText"></p>
     <button onclick="closePopup()">OK</button>
   </div>
 </div>
 
 <script>
-let multiplier = 1.00;
-let running = false;
-let crashAt = 0;
-let timer;
+/* ---------- STORAGE ---------- */
+let wallet = Number(localStorage.wallet || 100);
+let period = Number(localStorage.period || Date.now());
+let gameHistory = JSON.parse(localStorage.gameHistory || "[]");
+let betHistory = JSON.parse(localStorage.betHistory || "[]");
 
-let xPos = 0;
-let yPos = 0;
+/* ---------- STATE ---------- */
+let multiplier=1, running=false, crashX=0;
+let x=0,y=0,time=30, betLocked=false, timerInt, flyInt;
 
-const plane = document.getElementById("plane");
-
-/* START ROUND */
-function startRound(){
-  multiplier = 1.00;
-  running = true;
-
-  xPos = 0;
-  yPos = 0;
-
-  plane.style.opacity = "1";
-  plane.style.transform = "translate(0,0)";
-  document.getElementById("multi").innerText = "1.00x";
-
-  // 🔒 OWNER CONTROLLED CRASH (1.2x – 6x)
-  crashAt = (Math.random()*4.8 + 1.2).toFixed(2);
-
-  timer = setInterval(()=>{
-    multiplier += 0.03;
-
-    /* 🚀 SPEED INCREASE WITH MULTIPLIER */
-    let speedX = 2 + multiplier * 1.2;
-    let speedY = 0.6 + multiplier * 0.4;
-
-    xPos += speedX;
-    yPos += speedY;
-
-    plane.style.transform =
-      `translate(${xPos}px, -${yPos}px)`;
-
-    document.getElementById("multi").innerText =
-      multiplier.toFixed(2) + "x";
-
-    if(multiplier >= crashAt){
-      crash();
-    }
-  },80);
-}
-
-/* CRASH */
-function crash(){
-  clearInterval(timer);
-  running = false;
-  plane.style.opacity = "0.3";
-
-  showPopup(
-    "💥 CRASH!",
-    "Plane crashed at " + crashAt + "x"
-  );
-
-  setTimeout(startRound,3000);
-}
-
-/* CASH OUT */
-function cashOut(){
-  if(!running) return;
-
-  const bet = Number(document.getElementById("bet").value);
-  if(bet < 1){
-    alert("Minimum bet ₹1");
-    return;
-  }
-
-  clearInterval(timer);
-  running = false;
-
-  let win = (bet * multiplier).toFixed(2);
-
-  showPopup(
-    "🎉 YOU WIN!",
-    "Cashed out at " + multiplier.toFixed(2) +
-    "x\nWin ₹" + win
-  );
-
-  plane.style.opacity = "0.4";
-  setTimeout(startRound,3000);
-}
-
-/* POPUP */
-function showPopup(title,text){
-  document.getElementById("popupTitle").innerText = title;
-  document.getElementById("popupText").innerText = text;
-  document.getElementById("popup").style.display = "flex";
-}
-
-function closePopup(){
-  document.getElementById("popup").style.display = "none";
-}
-
-/* AUTO START */
+/* ---------- INIT ---------- */
+document.getElementById("wallet").innerText=wallet;
+document.getElementById("period").innerText=period;
+renderTables();
 startRound();
+
+/* ---------- ROUND ---------- */
+function startRound(){
+  multiplier=1; x=0; y=0; time=30; betLocked=false;
+  crashX=(Math.random()*4+1.2).toFixed(2);
+  document.getElementById("multi").innerText="1.00x";
+  document.getElementById("cashBtn").classList.remove("locked");
+  document.getElementById("plane").style.opacity="1";
+
+  running=true;
+  flyInt=setInterval(fly,80);
+  timerInt=setInterval(tick,1000);
+}
+
+function fly(){
+  multiplier+=0.03;
+  x+=2+multiplier*1.2;
+  y+=0.6+multiplier*0.4;
+  plane.style.transform=`translate(${x}px,-${y}px)`;
+  multi.innerText=multiplier.toFixed(2)+"x";
+  if(multiplier>=crashX) crash();
+}
+
+function tick(){
+  time--;
+  document.getElementById("time").innerText=time;
+  if(time<=5){
+    betLocked=true;
+    cashBtn.classList.add("locked");
+  }
+}
+
+function crash(){
+  clearInterval(flyInt);
+  clearInterval(timerInt);
+  running=false;
+  plane.style.opacity="0.3";
+
+  gameHistory.unshift({p:period,x:crashX});
+  gameHistory=gameHistory.slice(0,10);
+  localStorage.gameHistory=JSON.stringify(gameHistory);
+
+  showPopup("💥 CRASH","Crashed at "+crashX+"x");
+
+  nextRound();
+}
+
+function cashOut(){
+  if(!running || betLocked) return;
+  let bet=Number(bet.value);
+  if(bet<1){showPopup("❌ Error","Minimum bet ₹1");return;}
+  let win=(bet*multiplier).toFixed(2);
+  wallet+=Number(win);
+  betHistory.unshift({p:period,res:"WIN",amt:"+"+win});
+  save();
+  showPopup("🎉 WIN","You won ₹"+win);
+  endRound();
+}
+
+function endRound(){
+  clearInterval(flyInt);
+  clearInterval(timerInt);
+  running=false;
+  nextRound();
+}
+
+function nextRound(){
+  period++;
+  localStorage.period=period;
+  localStorage.wallet=wallet;
+  setTimeout(startRound,3000);
+}
+
+/* ---------- UI ---------- */
+function renderTables(){
+  gameHistory.innerHTML="<tr><th>Period</th><th>X</th></tr>"+
+    gameHistory.map(g=>`<tr><td>${g.p}</td><td>${g.x}x</td></tr>`).join("");
+  betHistory.innerHTML="<tr><th>Period</th><th>Result</th><th>Amt</th></tr>"+
+    betHistory.map(b=>`<tr><td>${b.p}</td><td>${b.res}</td><td>${b.amt}</td></tr>`).join("");
+}
+function save(){
+  localStorage.wallet=wallet;
+  localStorage.betHistory=JSON.stringify(betHistory);
+  renderTables();
+  document.getElementById("wallet").innerText=wallet;
+}
+
+/* ---------- POPUP ---------- */
+function showPopup(t,m){
+  pTitle.innerText=t;
+  pText.innerText=m;
+  popup.style.display="flex";
+}
+function closePopup(){
+  popup.style.display="none";
+}
 </script>
 
 </body>
