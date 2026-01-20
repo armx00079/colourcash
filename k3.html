@@ -16,12 +16,12 @@ display:flex;align-items:center;justify-content:center;font-size:22px;font-weigh
 
 input{width:100%;padding:12px;border:none;border-radius:10px;font-size:18px}
 .actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
-.btn{padding:14px;border-radius:12px;text-align:center;font-weight:bold}
+.btn{padding:14px;border-radius:12px;text-align:center;font-weight:bold;cursor:pointer}
 .big{background:#f4a261}.small{background:#4dabf7}
 .even{background:#4caf50}.odd{background:#e53935}
 
 .numbers{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
-.num{background:#2a2a2a;padding:14px;text-align:center;border-radius:10px}
+.num{background:#2a2a2a;padding:14px;text-align:center;border-radius:10px;cursor:pointer}
 
 .lock{filter:blur(3px);pointer-events:none}
 
@@ -49,10 +49,10 @@ th,td{padding:8px;border-bottom:1px solid #333;text-align:center}
   <input id="amount" type="number" placeholder="Min ₹1">
 
   <div class="actions">
-    <div class="btn big">BIG (11–18)</div>
-    <div class="btn small">SMALL (3–10)</div>
-    <div class="btn even">EVEN</div>
-    <div class="btn odd">ODD</div>
+    <div class="btn big" onclick="placeBet('BIG')">BIG (11–18)</div>
+    <div class="btn small" onclick="placeBet('SMALL')">SMALL (3–10)</div>
+    <div class="btn even" onclick="placeBet('EVEN')">EVEN</div>
+    <div class="btn odd" onclick="placeBet('ODD')">ODD</div>
   </div>
 
   <div class="numbers" id="numbers"></div>
@@ -65,21 +65,28 @@ th,td{padding:8px;border-bottom:1px solid #333;text-align:center}
 
 <div class="card">
   <table id="gameTable"></table>
-  <div id="betsBox" class="hidden" style="text-align:center;color:#aaa">
-    No bets yet
-  </div>
+  <div id="betsBox" class="hidden"></div>
 </div>
 
 <script>
 const KEY="K3_STATE";
+
+// 🔥 PERIOD BASE + COUNTER
+const PERIOD_BASE = "2026012000";
+
 let state = JSON.parse(localStorage.getItem(KEY)) || {
-  period: Date.now(),
+  counter:137,
   time:30,
   dice:[null,null,null],
-  history:[]
+  history:[],
+  bets:[]
 };
 
 function save(){localStorage.setItem(KEY,JSON.stringify(state));}
+
+function getPeriod(){
+  return PERIOD_BASE + state.counter;
+}
 
 function drawDice(){
   let d=state.dice.map(v=>v??"?");
@@ -95,7 +102,7 @@ function roll(){
   ];
   let sum=state.dice.reduce((a,b)=>a+b,0);
   state.history.unshift({
-    period:state.period,
+    period:getPeriod(),
     sum,
     result:sum>=11?"BIG":"SMALL"
   });
@@ -104,14 +111,16 @@ function roll(){
 
 function tick(){
   state.time--;
+
   if(state.time<=0){
     roll();
-    state.period+=30000;
+    state.counter++;   // ✅ PERIOD INCREMENT
     state.time=30;
   }
+
   document.getElementById("timer").innerText=state.time+"s";
   document.getElementById("info").innerText=
-    "Period: "+state.period+" | Wallet: ₹100";
+    "Period: "+getPeriod()+" | Wallet: ₹100";
 
   if(state.time<=5)
     document.getElementById("betArea").classList.add("lock");
@@ -119,6 +128,21 @@ function tick(){
     document.getElementById("betArea").classList.remove("lock");
 
   drawDice();
+  save();
+}
+
+function placeBet(type){
+  let amt=Number(document.getElementById("amount").value);
+  if(amt<1){
+    alert("Minimum bet ₹1");
+    return;
+  }
+  state.bets.unshift({
+    period:getPeriod(),
+    bet:type,
+    amount:amt
+  });
+  alert("Bet placed on "+type+" ₹"+amt);
   save();
 }
 
@@ -133,11 +157,17 @@ function showGame(){
 
 function showBets(){
   document.getElementById("gameTable").innerHTML="";
-  document.getElementById("betsBox").classList.remove("hidden");
+  let b=document.getElementById("betsBox");
+  b.classList.remove("hidden");
+  b.innerHTML="";
+  state.bets.forEach(x=>{
+    b.innerHTML+=`<div>${x.period} | ${x.bet} | ₹${x.amount}</div>`;
+  });
 }
 
 let nums="";
-for(let i=3;i<=18;i++) nums+=`<div class="num">${i}</div>`;
+for(let i=3;i<=18;i++)
+  nums+=`<div class="num" onclick="placeBet(${i})">${i}</div>`;
 document.getElementById("numbers").innerHTML=nums;
 
 drawDice();
