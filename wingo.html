@@ -2,121 +2,103 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>WIN GO</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
 body{
   margin:0;
-  background:#0f0f0f;
   font-family:Arial, sans-serif;
+  background:#0f0f0f;
   color:#fff;
 }
 
+/* HEADER */
 .header{
-  padding:15px;
+  padding:14px;
   text-align:center;
-  font-size:22px;
+  font-size:20px;
   font-weight:bold;
 }
 
+/* TOP INFO */
+.top{
+  display:flex;
+  justify-content:space-between;
+  padding:12px 15px;
+  font-size:14px;
+  color:#ccc;
+}
+
+/* TIMER */
 .timer{
   text-align:center;
-  font-size:28px;
-  color:#ff4d4d;
-  margin-top:5px;
+  font-size:36px;
+  color:#ff4081;
+  margin:10px 0;
 }
 
-.period{
-  text-align:center;
-  font-size:14px;
-  color:#aaa;
-}
-
-.box{
+/* BET PANEL */
+.panel{
   background:#1c1c1c;
   margin:15px;
   padding:15px;
-  border-radius:14px;
+  border-radius:12px;
 }
 
-.wallet{
-  text-align:center;
-  font-size:18px;
-  margin-bottom:12px;
-}
-
-.bet-input{
+/* AMOUNT */
+input{
   width:100%;
   padding:12px;
-  border-radius:10px;
+  border-radius:8px;
   border:none;
-  font-size:18px;
   text-align:center;
-  margin-bottom:12px;
+  font-size:16px;
 }
 
+/* COLOR BUTTONS */
 .colors{
-  display:flex;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
   gap:10px;
-}
-
-.color-btn{
-  flex:1;
-  padding:14px;
-  border-radius:12px;
-  text-align:center;
-  font-weight:bold;
-  cursor:pointer;
-}
-
-.red{background:#e53935;}
-.green{background:#43a047;}
-.violet{background:#8e24aa;}
-
-.amounts{
-  display:flex;
-  gap:8px;
   margin-top:15px;
 }
-
-.amt{
-  flex:1;
-  padding:10px;
-  background:#333;
+.btn{
+  padding:16px 0;
   border-radius:10px;
-  text-align:center;
-  cursor:pointer;
-}
-
-.bet-btn{
-  margin-top:15px;
-  background:#ff4081;
-  padding:14px;
-  text-align:center;
-  border-radius:12px;
   font-size:18px;
   font-weight:bold;
+  border:none;
+  color:#fff;
 }
+.red{background:#e53935}
+.green{background:#43a047}
+.violet{background:#8e24aa}
 
-.msg{
-  margin-top:10px;
+/* RESULT */
+.result{
   text-align:center;
-  color:#00e676;
-}
-
-.results{
   margin-top:15px;
-  display:flex;
-  gap:6px;
-  justify-content:center;
+  min-height:22px;
+  font-size:16px;
 }
 
-.dot{
-  width:14px;
-  height:14px;
-  border-radius:50%;
-  background:#555;
+/* HISTORY */
+.history{
+  margin:15px;
+}
+.history h3{
+  font-size:16px;
+  margin-bottom:8px;
+}
+.item{
+  background:#1c1c1c;
+  padding:10px;
+  border-radius:8px;
+  margin-bottom:6px;
+  font-size:14px;
+  display:flex;
+  justify-content:space-between;
 }
 </style>
 </head>
@@ -125,76 +107,97 @@ body{
 
 <div class="header">🎨 WIN GO</div>
 
-<div class="timer" id="timer">30s</div>
-<div class="period">Period: <span id="period">100001</span></div>
+<div class="top">
+  <div>Period: <span id="period">20260120001</span></div>
+  <div>Wallet: ₹<span id="wallet">100</span></div>
+</div>
 
-<div class="box">
-  <div class="wallet">Wallet: ₹<span id="wallet">120</span></div>
+<div class="timer">
+  ⏳ <span id="time">30</span>s
+</div>
 
-  <input class="bet-input" id="betAmount" type="number" value="100" placeholder="Enter Bet Amount">
+<div class="panel">
+  <input type="number" id="amount" placeholder="Min ₹10">
 
   <div class="colors">
-    <div class="color-btn red" onclick="selectColor('RED')">RED</div>
-    <div class="color-btn green" onclick="selectColor('GREEN')">GREEN</div>
-    <div class="color-btn violet" onclick="selectColor('VIOLET')">VIOLET</div>
+    <button class="btn red" onclick="bet('RED')">RED</button>
+    <button class="btn green" onclick="bet('GREEN')">GREEN</button>
+    <button class="btn violet" onclick="bet('VIOLET')">VIOLET</button>
   </div>
 
-  <div class="amounts">
-    <div class="amt" onclick="setAmt(10)">₹10</div>
-    <div class="amt" onclick="setAmt(50)">₹50</div>
-    <div class="amt" onclick="setAmt(100)">₹100</div>
-    <div class="amt" onclick="setAmt(500)">₹500</div>
-  </div>
+  <div class="result" id="result"></div>
+</div>
 
-  <div class="bet-btn" onclick="placeBet()">Place Bet</div>
-
-  <div class="msg" id="msg"></div>
-
-  <div class="results">
-    <div class="dot"></div>
-    <div class="dot"></div>
-    <div class="dot"></div>
-    <div class="dot"></div>
-    <div class="dot"></div>
-  </div>
+<div class="history">
+  <h3>📜 Recent Results</h3>
+  <div id="history"></div>
 </div>
 
 <script>
-let selectedColor = "";
 let time = 30;
-let period = 100001;
+let wallet = 100;
+let currentBet = null;
+let period = 20260120001;
 
-function setAmt(a){
-  document.getElementById("betAmount").value = a;
+function start(){
+  time = 30;
+  document.getElementById("time").innerText = time;
+
+  let t = setInterval(()=>{
+    time--;
+    document.getElementById("time").innerText = time;
+
+    if(time === 0){
+      clearInterval(t);
+      result();
+    }
+  },1000);
 }
 
-function selectColor(c){
-  selectedColor = c;
-  document.getElementById("msg").innerText = "Selected: " + c;
+function bet(color){
+  let amt = Number(document.getElementById("amount").value);
+  if(amt < 10) return alert("Min ₹10");
+  if(amt > wallet) return alert("Low balance");
+
+  currentBet = {color, amt};
+  document.getElementById("result").innerText =
+    "Bet on " + color + " ₹" + amt;
 }
 
-function placeBet(){
-  if(!selectedColor){
-    alert("Select color first");
-    return;
+function result(){
+  const colors = ["RED","GREEN","VIOLET"];
+  const win = colors[Math.floor(Math.random()*3)];
+
+  if(currentBet && currentBet.color === win){
+    let winAmt = currentBet.amt * (win==="VIOLET"?4.5:2);
+    wallet += winAmt;
+    document.getElementById("result").innerText =
+      "🎉 " + win + " WIN +₹" + winAmt;
+  }else if(currentBet){
+    wallet -= currentBet.amt;
+    document.getElementById("result").innerText =
+      "❌ LOST (" + win + ")";
   }
-  const amt = document.getElementById("betAmount").value;
-  document.getElementById("msg").innerText =
-    `Bet placed on ${selectedColor} (₹${amt})`;
+
+  document.getElementById("wallet").innerText = wallet;
+  addHistory(win);
+
+  currentBet = null;
+  period++;
+  document.getElementById("period").innerText = period;
+
+  setTimeout(start,2000);
 }
 
-// ⏱️ 30 second timer (UI only)
-setInterval(()=>{
-  time--;
-  if(time<=0){
-    time = 30;
-    period++;
-    document.getElementById("period").innerText = period;
-    document.getElementById("msg").innerText = "";
-    selectedColor = "";
-  }
-  document.getElementById("timer").innerText = time + "s";
-},1000);
+function addHistory(color){
+  const h = document.getElementById("history");
+  const div = document.createElement("div");
+  div.className="item";
+  div.innerHTML = `<span>${period}</span><b>${color}</b>`;
+  h.prepend(div);
+}
+
+start();
 </script>
 
 </body>
