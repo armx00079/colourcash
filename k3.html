@@ -6,111 +6,32 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body{
-  margin:0;
-  font-family:Arial;
-  background:#0f0f0f;
-  color:#fff;
-}
-.header{
-  text-align:center;
-  padding:15px;
-  font-size:22px;
-}
-.card{
-  background:#1c1c1c;
-  margin:12px;
-  border-radius:14px;
-  padding:15px;
-}
-.timer{
-  text-align:center;
-  font-size:36px;
-  color:#ff4d88;
-}
-.dice{
-  display:flex;
-  justify-content:center;
-  gap:10px;
-  margin-top:10px;
-}
-.dice div{
-  width:55px;
-  height:55px;
-  background:#e53935;
-  border-radius:10px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:22px;
-  font-weight:bold;
-}
-input{
-  width:100%;
-  padding:12px;
-  border:none;
-  border-radius:10px;
-  font-size:18px;
-}
-.actions{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-  margin-top:12px;
-}
-.btn{
-  padding:14px;
-  border-radius:12px;
-  text-align:center;
-  font-weight:bold;
-}
-.big{background:#f4a261}
-.small{background:#4dabf7}
-.even{background:#4caf50}
-.odd{background:#e53935}
+body{margin:0;font-family:Arial;background:#0f0f0f;color:#fff}
+.header{text-align:center;padding:15px;font-size:22px}
+.card{background:#1c1c1c;margin:12px;border-radius:14px;padding:15px}
+.timer{text-align:center;font-size:34px;color:#ff4d88}
+.dice{display:flex;justify-content:center;gap:12px;margin-top:10px}
+.dice div{width:55px;height:55px;background:#e53935;border-radius:10px;
+display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:bold}
 
-.numbers{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:10px;
-  margin-top:12px;
-}
-.num{
-  background:#2a2a2a;
-  padding:14px;
-  text-align:center;
-  border-radius:10px;
-}
+input{width:100%;padding:12px;border:none;border-radius:10px;font-size:18px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.btn{padding:14px;border-radius:12px;text-align:center;font-weight:bold}
+.big{background:#f4a261}.small{background:#4dabf7}
+.even{background:#4caf50}.odd{background:#e53935}
 
-.lock{
-  filter:blur(3px);
-  pointer-events:none;
-}
+.numbers{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
+.num{background:#2a2a2a;padding:14px;text-align:center;border-radius:10px}
 
-.tabs{
-  display:flex;
-  gap:10px;
-  margin:12px;
-}
-.tab{
-  flex:1;
-  background:#ff6f6f;
-  padding:12px;
-  border-radius:12px;
-  text-align:center;
-  font-weight:bold;
-  cursor:pointer;
-}
+.lock{filter:blur(3px);pointer-events:none}
 
-table{
-  width:100%;
-  border-collapse:collapse;
-}
-th,td{
-  padding:8px;
-  border-bottom:1px solid #333;
-  text-align:center;
-}
+.tabs{display:flex;gap:10px;margin:12px}
+.tab{flex:1;background:#ff6f6f;padding:12px;border-radius:12px;
+text-align:center;font-weight:bold;cursor:pointer}
+
+table{width:100%;border-collapse:collapse}
+th,td{padding:8px;border-bottom:1px solid #333;text-align:center}
+.hidden{display:none}
 </style>
 </head>
 
@@ -120,11 +41,8 @@ th,td{
 
 <div class="card">
   <div id="info"></div>
-  <div class="timer" id="timer">30</div>
-
-  <div class="dice" id="dice">
-    <div>?</div><div>?</div><div>?</div>
-  </div>
+  <div class="timer" id="timer">30s</div>
+  <div class="dice" id="dice"></div>
 </div>
 
 <div class="card" id="betArea">
@@ -141,84 +59,90 @@ th,td{
 </div>
 
 <div class="tabs">
-  <div class="tab" onclick="showHistory()">Game History</div>
-  <div class="tab" onclick="showMyBets()">My Bets</div>
+  <div class="tab" onclick="showGame()">Game History</div>
+  <div class="tab" onclick="showBets()">My Bets</div>
 </div>
 
 <div class="card">
-  <table id="table">
-    <tr><th>Period</th><th>Sum</th><th>Result</th></tr>
-  </table>
+  <table id="gameTable"></table>
+  <div id="betsBox" class="hidden" style="text-align:center;color:#aaa">
+    No bets yet
+  </div>
 </div>
 
 <script>
-let state = JSON.parse(localStorage.getItem("k3")) || {
-  period:2026012000001,
+const KEY="K3_STATE";
+let state = JSON.parse(localStorage.getItem(KEY)) || {
+  period: Date.now(),
   time:30,
+  dice:[null,null,null],
   history:[]
 };
 
-function save(){ localStorage.setItem("k3",JSON.stringify(state)); }
+function save(){localStorage.setItem(KEY,JSON.stringify(state));}
 
-function start(){
-  setInterval(()=>{
-    state.time--;
-    if(state.time<=0){
-      roll();
-      state.time=30;
-      state.period++;
-    }
-    if(state.time<=5){
-      document.getElementById("betArea").classList.add("lock");
-    }else{
-      document.getElementById("betArea").classList.remove("lock");
-    }
-    update();
-    save();
-  },1000);
+function drawDice(){
+  let d=state.dice.map(v=>v??"?");
+  document.getElementById("dice").innerHTML=
+    `<div>${d[0]}</div><div>${d[1]}</div><div>${d[2]}</div>`;
 }
 
 function roll(){
-  let d1=Math.ceil(Math.random()*6);
-  let d2=Math.ceil(Math.random()*6);
-  let d3=Math.ceil(Math.random()*6);
-  let sum=d1+d2+d3;
+  state.dice=[
+    Math.ceil(Math.random()*6),
+    Math.ceil(Math.random()*6),
+    Math.ceil(Math.random()*6)
+  ];
+  let sum=state.dice.reduce((a,b)=>a+b,0);
   state.history.unshift({
     period:state.period,
     sum,
     result:sum>=11?"BIG":"SMALL"
   });
   state.history=state.history.slice(0,10);
-  document.getElementById("dice").innerHTML=
-    `<div>${d1}</div><div>${d2}</div><div>${d3}</div>`;
 }
 
-function update(){
+function tick(){
+  state.time--;
+  if(state.time<=0){
+    roll();
+    state.period+=30000;
+    state.time=30;
+  }
   document.getElementById("timer").innerText=state.time+"s";
   document.getElementById("info").innerText=
     "Period: "+state.period+" | Wallet: ₹100";
+
+  if(state.time<=5)
+    document.getElementById("betArea").classList.add("lock");
+  else
+    document.getElementById("betArea").classList.remove("lock");
+
+  drawDice();
+  save();
 }
 
-function showHistory(){
-  let t=document.getElementById("table");
+function showGame(){
+  document.getElementById("betsBox").classList.add("hidden");
+  let t=document.getElementById("gameTable");
   t.innerHTML="<tr><th>Period</th><th>Sum</th><th>Result</th></tr>";
   state.history.forEach(h=>{
     t.innerHTML+=`<tr><td>${h.period}</td><td>${h.sum}</td><td>${h.result}</td></tr>`;
   });
 }
-function showMyBets(){
-  alert("My Bets ready (logic later)");
+
+function showBets(){
+  document.getElementById("gameTable").innerHTML="";
+  document.getElementById("betsBox").classList.remove("hidden");
 }
 
 let nums="";
-for(let i=3;i<=18;i++){
-  nums+=`<div class="num">${i}</div>`;
-}
+for(let i=3;i<=18;i++) nums+=`<div class="num">${i}</div>`;
 document.getElementById("numbers").innerHTML=nums;
 
-update();
-showHistory();
-start();
+drawDice();
+showGame();
+setInterval(tick,1000);
 </script>
 
 </body>
