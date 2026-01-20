@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <title>K3</title>
@@ -10,13 +10,11 @@ body{margin:0;font-family:Arial;background:#0f0f0f;color:#fff}
 .card{background:#1c1c1c;border-radius:14px;padding:15px;margin:12px}
 .timer{font-size:36px;color:#ff4081;text-align:center}
 .dice{display:flex;justify-content:center;gap:10px;margin:10px}
-.dice div{width:55px;height:55px;border-radius:10px;
-background:#e53935;display:flex;align-items:center;
-justify-content:center;font-size:26px}
+.dice div{width:55px;height:55px;border-radius:10px;background:#e53935;
+display:flex;align-items:center;justify-content:center;font-size:26px}
 input{width:100%;padding:12px;border-radius:10px;border:none}
 .row{display:flex;gap:10px;margin-top:10px}
-.btn{flex:1;padding:12px;border-radius:10px;
-text-align:center;font-weight:bold}
+.btn{flex:1;padding:12px;border-radius:10px;text-align:center;font-weight:bold}
 .big{background:#f4a261}
 .small{background:#4dabf7}
 .even{background:#4caf50}
@@ -42,26 +40,22 @@ display:none;align-items:center;justify-content:center}
 <div class="card">
   <div id="info"></div>
   <div class="timer" id="timer">30s</div>
-
-  <div class="dice" id="dice">
+  <div class="dice" id="diceBox">
     <div>?</div><div>?</div><div>?</div>
   </div>
 </div>
 
 <div class="card" id="betArea">
   <input id="amount" placeholder="Min ₹1">
-
   <div class="row">
-    <div class="btn big" onclick="placeBet('BIG')">BIG (11-18)</div>
-    <div class="btn small" onclick="placeBet('SMALL')">SMALL (3-10)</div>
+    <div class="btn big" onclick="bet('BIG')">BIG (11-18)</div>
+    <div class="btn small" onclick="bet('SMALL')">SMALL (3-10)</div>
   </div>
-
   <div class="row">
-    <div class="btn even" onclick="placeBet('EVEN')">EVEN</div>
-    <div class="btn odd" onclick="placeBet('ODD')">ODD</div>
+    <div class="btn even" onclick="bet('EVEN')">EVEN</div>
+    <div class="btn odd" onclick="bet('ODD')">ODD</div>
   </div>
-
-  <div class="grid" id="numbers"></div>
+  <div class="grid" id="nums"></div>
 </div>
 
 <div class="tabs">
@@ -76,64 +70,78 @@ display:none;align-items:center;justify-content:center}
 <div class="popup" id="popup">
   <div class="pop">
     <div id="popupText"></div>
-    <button onclick="closePop()">OK</button>
+    <button onclick="popup.style.display='none'">OK</button>
   </div>
 </div>
 
 <script>
-const ROUND = 30;
-const BASE_TIME = 1700000000000;
-const BASE_PERIOD = 2026012000137;
-
-let wallet = Number(localStorage.wallet)||100;
-let bets = JSON.parse(localStorage.bets||"[]");
-let history = JSON.parse(localStorage.history||"[]");
-
+const ROUND=30;
+const BASE=Date.now();
+let wallet=Number(localStorage.wallet)||100;
+let bets=JSON.parse(localStorage.bets||"[]");
+let history=JSON.parse(localStorage.history||"[]");
+let currentBets=[];
 let dice=[0,0,0],lastRound=-1;
 
 function period(){
- return BASE_PERIOD + Math.floor((Date.now()-BASE_TIME)/(ROUND*1000));
+ return Math.floor((Date.now()-BASE)/1000/ROUND)+202601200000;
 }
 
-function tick(){
- let now=Date.now();
- let elapsed=Math.floor((now-BASE_TIME)/1000);
- let remain=ROUND-(elapsed%ROUND);
- let round=Math.floor(elapsed/ROUND);
+function roll(){
+ dice=[1+rand(),1+rand(),1+rand()];
+ diceBox.innerHTML=dice.map(d=>`<div>${d}</div>`).join("");
+}
 
+function rand(){return Math.floor(Math.random()*6)}
+
+function tick(){
+ let elapsed=Math.floor((Date.now()-BASE)/1000);
+ let remain=ROUND-(elapsed%ROUND);
  timer.innerText=remain+"s";
  info.innerText="Period: "+period()+" | Wallet: ₹"+wallet;
 
  if(remain<=5) betArea.classList.add("lock");
  else betArea.classList.remove("lock");
 
- if(round!==lastRound){
+ let round=Math.floor(elapsed/ROUND);
+ if(round!==lastRound && remain===0){
    lastRound=round;
-   dice=[r(),r(),r()];
-   let sum=dice[0]+dice[1]+dice[2];
-   history.unshift({p:period(),s:sum,r:sum>=11?"BIG":"SMALL"});
-   history=history.slice(0,10);
-   localStorage.history=JSON.stringify(history);
+   roll();
+   settle();
  }
- diceEl();
 }
 
-function r(){return Math.floor(Math.random()*6)+1;}
-
-function diceEl(){
- diceBox.innerHTML=`<div>${dice[0]}</div><div>${dice[1]}</div><div>${dice[2]}</div>`;
-}
-
-function placeBet(type){
+function bet(type){
  let amt=Number(amount.value);
  if(amt<1) return pop("Minimum ₹1");
- if(wallet<amt) return pop("Low balance");
-
  wallet-=amt;
  localStorage.wallet=wallet;
- bets.unshift({p:period(),b:type,a:amt});
+ currentBets.push({type,amt,period:period()});
+ pop("Bet Placed");
+}
+
+function settle(){
+ let sum=dice.reduce((a,b)=>a+b,0);
+ let res=sum>=11?"BIG":"SMALL";
+ history.unshift({p:period(),s:sum,r:res});
+ history=history.slice(0,10);
+ localStorage.history=JSON.stringify(history);
+
+ currentBets.forEach(b=>{
+   let win=false;
+   if(b.type===res) win=true;
+   if(b.type==="EVEN" && sum%2===0) win=true;
+   if(b.type==="ODD" && sum%2===1) win=true;
+   if(Number(b.type)===sum) win=true;
+
+   let profit=win?b.amt*2:-b.amt;
+   if(win) wallet+=b.amt*2;
+   bets.unshift({...b,profit});
+ });
+
+ currentBets=[];
+ localStorage.wallet=wallet;
  localStorage.bets=JSON.stringify(bets);
- pop("Bet placed");
 }
 
 function showHistory(){
@@ -144,21 +152,17 @@ function showHistory(){
 }
 
 function showBets(){
- table.innerHTML="<tr><th>Period</th><th>Bet</th><th>Amount</th></tr>";
- bets.forEach(b=>{
- table.innerHTML+=`<tr><td>${b.p}</td><td>${b.b}</td><td>₹${b.a}</td></tr>`;
+ table.innerHTML="<tr><th>Period</th><th>Bet</th><th>Profit</th></tr>";
+ bets.slice(0,10).forEach(b=>{
+ table.innerHTML+=`<tr><td>${b.period}</td><td>${b.type}</td><td>${b.profit}</td></tr>`;
  });
 }
 
-function pop(msg){popupText.innerText=msg;popup.style.display="flex";}
-function closePop(){popup.style.display="none";}
+function pop(t){popupText.innerText=t;popup.style.display="flex"}
 
-let nums="";
-for(let i=3;i<=18;i++) nums+=`<div class="num" onclick="placeBet(${i})">${i}</div>`;
-numbers.innerHTML=nums;
+nums.innerHTML=[...Array(16)].map((_,i)=>`<div class="num" onclick="bet(${i+3})">${i+3}</div>`).join("");
 
 setInterval(tick,1000);
 </script>
-
 </body>
 </html>
