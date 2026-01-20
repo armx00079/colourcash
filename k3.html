@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>K3 Dice</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{
+  margin:0;
+  background:#0f0f0f;
+  font-family:Arial;
+  color:#fff;
+  text-align:center;
+}
+.header{
+  padding:14px;
+  font-size:22px;
+  font-weight:bold;
+}
+.timer{
+  font-size:32px;
+  color:#ff4081;
+}
+.box{
+  background:#1c1c1c;
+  margin:15px;
+  padding:15px;
+  border-radius:14px;
+}
+.btn{
+  padding:12px;
+  border-radius:10px;
+  border:none;
+  font-weight:bold;
+}
+.big{background:#f6a55a}
+.small{background:#5aaef6}
+.num{
+  background:#333;
+  width:48px;
+  height:48px;
+  margin:5px;
+  border-radius:10px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+.active{outline:2px solid #4caf50}
+.history{
+  text-align:left;
+  font-size:13px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">🎲 K3</div>
+
+<div>
+  Period: <span id="period"></span> |
+  Wallet: ₹<span id="wallet">100</span>
+</div>
+
+<div class="timer">⏳ <span id="time">30</span>s</div>
+
+<div class="box">
+  <input id="amount" type="number" value="10" min="1"
+    style="width:100%;padding:12px;border-radius:8px;border:none;">
+</div>
+
+<div class="box">
+  <button class="btn big" onclick="betType='BIG'">BIG (11–18)</button>
+  <button class="btn small" onclick="betType='SMALL'">SMALL (3–10)</button>
+</div>
+
+<div class="box">
+  <div>Number Bet</div>
+  <div id="nums"></div>
+</div>
+
+<div class="box history">
+  <b>Last 10 Results</b>
+  <ul id="results"></ul>
+</div>
+
+<script>
+let time=30, period=1, wallet=100;
+let betType=null, betNumber=null;
+let results=[];
+
+const nums=document.getElementById("nums");
+for(let i=1;i<=6;i++){
+  let d=document.createElement("div");
+  d.innerText=i;
+  d.className="num";
+  d.onclick=()=>betNumber=i;
+  nums.appendChild(d);
+}
+
+function newRound(){
+  time=30;
+  betType=null; betNumber=null;
+  document.getElementById("period").innerText=period;
+}
+newRound();
+
+setInterval(()=>{
+  time--;
+  document.getElementById("time").innerText=time;
+
+  if(time===0){
+    rollDice();
+    period++;
+    newRound();
+  }
+},1000);
+
+function rollDice(){
+  let d1=1+Math.floor(Math.random()*6);
+  let d2=1+Math.floor(Math.random()*6);
+  let d3=1+Math.floor(Math.random()*6);
+  let sum=d1+d2+d3;
+
+  let win=false;
+  if(betType==="BIG" && sum>=11) win=true;
+  if(betType==="SMALL" && sum<=10) win=true;
+  if(betNumber && (d1===betNumber||d2===betNumber||d3===betNumber)) win=true;
+
+  let amt=Number(document.getElementById("amount").value);
+  if(win) wallet+=amt*2; else wallet-=amt;
+
+  results.unshift(`P${period}: 🎲 ${d1}-${d2}-${d3} = ${sum}`);
+  if(results.length>10) results.pop();
+
+  document.getElementById("wallet").innerText=wallet;
+  document.getElementById("results").innerHTML =
+    results.map(r=>`<li>${r}</li>`).join("");
+}
+</script>
+
+</body>
+</html>
