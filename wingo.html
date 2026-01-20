@@ -1,10 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <title>WIN GO</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
 body{margin:0;font-family:Arial;background:#0f0f0f;color:#fff}
 .header{text-align:center;padding:14px;font-size:20px;font-weight:bold}
@@ -12,35 +11,25 @@ body{margin:0;font-family:Arial;background:#0f0f0f;color:#fff}
 .timer{text-align:center;font-size:34px;color:#ff4081;margin:10px 0}
 .box{background:#1c1c1c;margin:12px;padding:15px;border-radius:14px}
 input{width:100%;padding:12px;border-radius:8px;border:none;font-size:16px;text-align:center;margin-bottom:12px}
-
 .colors,.numbers{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .numbers{grid-template-columns:repeat(5,1fr);margin-top:10px}
-
-.btn{padding:12px;border:none;border-radius:10px;font-weight:bold;color:#fff;font-size:14px}
-.red{background:#e53935}
-.green{background:#43a047}
-.violet{background:#8e24aa}
+.btn{padding:12px;border:none;border-radius:10px;font-weight:bold;color:#fff}
+.red{background:#e53935}.green{background:#43a047}.violet{background:#8e24aa}
 .num{background:#333}
-
 .multi{display:flex;gap:8px;margin:12px}
-.multi div{flex:1;background:#fff;color:#444;padding:8px;border-radius:8px;text-align:center;font-size:13px}
+.multi div{flex:1;background:#fff;color:#444;padding:8px;border-radius:8px;text-align:center}
 .multi .active{background:#43a047;color:#fff}
-
 .bigsmall{display:flex;margin:12px;border-radius:30px;overflow:hidden}
 .big{flex:1;background:#f4a261;padding:12px;text-align:center}
 .small{flex:1;background:#5dade2;padding:12px;text-align:center}
-
 .tabs{display:flex;gap:10px;margin:12px}
 .tabs div{flex:1;background:#fff;color:#666;padding:10px;border-radius:10px;text-align:center}
 .tabs .active{background:#ff6a6a;color:#fff}
-
 .history{background:#fff;margin:12px;border-radius:12px;overflow:hidden}
-.h-head,.h-row{display:grid;grid-template-columns:2.2fr 1fr 1.2fr 0.8fr;padding:10px;font-size:13px}
+.h-head,.h-row{display:grid;grid-template-columns:2.3fr 1fr 1.3fr 0.7fr;padding:10px;font-size:13px}
 .h-head{background:#ff6a6a;color:#fff;font-weight:bold}
 .h-row{border-bottom:1px solid #eee;color:#333}
-.g{color:#2ecc71;font-size:18px}
-.r{color:#e74c3c;font-size:18px}
-.v{color:#9b59b6;font-size:18px}
+.g{color:#2ecc71;font-size:18px}.r{color:#e74c3c;font-size:18px}.v{color:#9b59b6;font-size:18px}
 </style>
 </head>
 
@@ -50,73 +39,71 @@ input{width:100%;padding:12px;border-radius:8px;border:none;font-size:16px;text-
 
 <div class="top">
   <div>Period: <span id="period"></span></div>
-  <div>Wallet: ₹<span id="wallet">100</span></div>
+  <div>Wallet: ₹<span id="wallet"></span></div>
 </div>
 
-<div class="timer">⏳ <span id="time">30</span>s</div>
+<div class="timer">⏳ <span id="time"></span>s</div>
 
 <div class="box">
-  <input id="amount" type="number" placeholder="Min ₹10">
+<input id="amount" type="number" placeholder="Min ₹10">
 
-  <div class="colors">
-    <button class="btn red" onclick="select('color','RED')">RED</button>
-    <button class="btn green" onclick="select('color','GREEN')">GREEN</button>
-    <button class="btn violet" onclick="select('color','VIOLET')">VIOLET</button>
-  </div>
+<div class="colors">
+<button class="btn red" onclick="bet.color='RED'">RED</button>
+<button class="btn green" onclick="bet.color='GREEN'">GREEN</button>
+<button class="btn violet" onclick="bet.color='VIOLET'">VIOLET</button>
+</div>
 
-  <div class="numbers">
-    <button class="btn num" onclick="select('number',0)">0</button>
-    <button class="btn num" onclick="select('number',1)">1</button>
-    <button class="btn num" onclick="select('number',2)">2</button>
-    <button class="btn num" onclick="select('number',3)">3</button>
-    <button class="btn num" onclick="select('number',4)">4</button>
-    <button class="btn num" onclick="select('number',5)">5</button>
-    <button class="btn num" onclick="select('number',6)">6</button>
-    <button class="btn num" onclick="select('number',7)">7</button>
-    <button class="btn num" onclick="select('number',8)">8</button>
-    <button class="btn num" onclick="select('number',9)">9</button>
-  </div>
+<div class="numbers">
+<button class="btn num" onclick="bet.number=0">0</button>
+<button class="btn num" onclick="bet.number=1">1</button>
+<button class="btn num" onclick="bet.number=2">2</button>
+<button class="btn num" onclick="bet.number=3">3</button>
+<button class="btn num" onclick="bet.number=4">4</button>
+<button class="btn num" onclick="bet.number=5">5</button>
+<button class="btn num" onclick="bet.number=6">6</button>
+<button class="btn num" onclick="bet.number=7">7</button>
+<button class="btn num" onclick="bet.number=8">8</button>
+<button class="btn num" onclick="bet.number=9">9</button>
+</div>
 </div>
 
 <div class="multi">
-  <div onclick="mul=1" class="active">X1</div>
-  <div onclick="mul=5">X5</div>
-  <div onclick="mul=10">X10</div>
-  <div onclick="mul=20">X20</div>
+<div class="active" onclick="mult=1">X1</div>
+<div onclick="mult=5">X5</div>
+<div onclick="mult=10">X10</div>
+<div onclick="mult=20">X20</div>
 </div>
 
 <div class="bigsmall">
-  <div class="big" onclick="select('bs','Big')">Big</div>
-  <div class="small" onclick="select('bs','Small')">Small</div>
+<div class="big" onclick="bet.bs='Big'">Big</div>
+<div class="small" onclick="bet.bs='Small'">Small</div>
 </div>
 
 <div class="tabs">
-  <div class="active">Game history</div>
-  <div>Chart</div>
-  <div>Follow Strategy</div>
+<div class="active">Game history</div>
+<div>Chart</div>
+<div>Follow Strategy</div>
 </div>
 
 <div class="history">
-  <div class="h-head">
-    <div>Period</div><div>Number</div><div>Big Small</div><div>Color</div>
-  </div>
-  <div id="list"></div>
+<div class="h-head">
+<div>Period</div><div>Number</div><div>Big Small</div><div>Color</div>
+</div>
+<div id="list"></div>
 </div>
 
 <script>
-let time=30,period=20260120100001,wallet=100,mul=1;
+let time=30;
+let period=20260120100001;
+let wallet=100;
+let mult=1;
 let bet={};
 let history=[];
-
-function select(type,val){ bet[type]=val }
 
 function start(){
   setInterval(()=>{
     time--;
-    if(time<=0){
-      resolve();
-      time=30;
-    }
+    if(time<=0){resolve();time=30;}
     document.getElementById("time").innerText=time;
   },1000);
 }
@@ -125,38 +112,36 @@ function resolve(){
   const num=Math.floor(Math.random()*10);
   const color=num==0||num==5?"VIOLET":num%2==0?"RED":"GREEN";
   const bs=num>=5?"Big":"Small";
+  const amt=Number(amount.value||0);
 
-  let win=false;
-  if(bet.number===num||bet.color===color||bet.bs===bs) win=true;
+  let win=0;
+  if(bet.number===num) win=amt*10;
+  else if(bet.color===color) win=amt*(color==="VIOLET"?5:2);
+  else if(bet.bs===bs) win=amt*2;
 
-  const amt=Number(document.getElementById("amount").value||0);
-  if(win && amt>=10) wallet+=amt*mul;
-  if(!win && amt>=10) wallet-=amt;
-
+  wallet+=win-amt;
   history.unshift({p:period,n:num,bs,color});
   history=history.slice(0,10);
-  render();
-
   bet={};
   period++;
+  render();
 }
 
 function render(){
-  document.getElementById("wallet").innerText=wallet;
-  document.getElementById("period").innerText=period;
-
+  walletEl.innerText=wallet;
+  periodEl.innerText=period;
   let html="";
   history.forEach(x=>{
-    html+=`
-    <div class="h-row">
-      <div>${x.p}</div>
-      <div><b>${x.n}</b></div>
-      <div>${x.bs}</div>
-      <div class="${x.color=='GREEN'?'g':x.color=='RED'?'r':'v'}">●</div>
+    html+=`<div class="h-row">
+    <div>${x.p}</div><div>${x.n}</div><div>${x.bs}</div>
+    <div class="${x.color=='GREEN'?'g':x.color=='RED'?'r':'v'}">●</div>
     </div>`;
   });
-  document.getElementById("list").innerHTML=html;
+  list.innerHTML=html;
 }
+
+const walletEl=document.getElementById("wallet");
+const periodEl=document.getElementById("period");
 
 render();
 start();
