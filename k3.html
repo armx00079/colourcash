@@ -12,16 +12,20 @@ body{
   background:#0f0f0f;
   color:#fff;
 }
-.center{text-align:center}
+.header{
+  text-align:center;
+  padding:12px;
+  font-size:22px;
+  font-weight:bold;
+}
 .box{
   background:#1c1c1c;
-  margin:15px;
+  margin:12px;
   padding:15px;
   border-radius:14px;
 }
-h2{margin:10px 0}
-
-.timer{font-size:36px;color:#ff4d8d}
+.center{text-align:center;}
+.timer{font-size:32px;color:#ff4d8d;font-weight:bold;}
 input{
   width:100%;
   padding:12px;
@@ -30,201 +34,220 @@ input{
   border:none;
   text-align:center;
 }
-
 .btn{
   padding:14px;
   border-radius:12px;
+  text-align:center;
   font-weight:bold;
   cursor:pointer;
-  user-select:none;
 }
-.orange{background:#f6ad55}
-.blue{background:#63b3ed}
-.green{background:#48bb78}
-.red{background:#f56565}
-.gray{background:#2d2d2d}
-
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.grid6{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
-
+.big{background:#f4a261;}
+.small{background:#4dabf7;}
+.even{background:#4caf50;}
+.odd{background:#e53935;}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+}
+.num{
+  background:#2a2a2a;
+  padding:14px;
+  border-radius:10px;
+  text-align:center;
+}
+.tabs{
+  display:flex;
+  gap:10px;
+  margin:12px;
+}
 .tab{
+  flex:1;
+  background:#ff6f7d;
   padding:12px;
   border-radius:12px;
   text-align:center;
+  font-weight:bold;
   cursor:pointer;
 }
-.tab-pink{background:#ff6b6b}
-.tab-dark{background:#2b2b2b}
-
-table{
+.table{
   width:100%;
   border-collapse:collapse;
-  margin-top:10px;
 }
 th,td{
-  padding:8px;
+  padding:10px;
   border-bottom:1px solid #333;
-  font-size:14px;
   text-align:center;
 }
-th{background:#ff6b6b}
-.win{color:#4caf50}
-.loss{color:#ff5252}
-.dice{
-  width:50px;height:50px;
-  background:#e53935;
-  border-radius:10px;
-  display:flex;
+
+/* 🔒 BLUR */
+.bet-container{position:relative;}
+.bet-blur{
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,0.65);
+  backdrop-filter:blur(6px);
+  display:none;
   align-items:center;
   justify-content:center;
   font-size:22px;
-  font-weight:bold;
+  color:#ff4d8d;
+  border-radius:14px;
+  z-index:10;
 }
-.flex{display:flex;gap:10px;justify-content:center}
 </style>
 </head>
 
 <body>
 
+<div class="header">🎲 K3</div>
+
 <div class="center">
-  <h2>🎲 K3</h2>
-  <div>Period: <span id="period"></span> | Wallet: ₹<span id="wallet"></span></div>
-  <div class="timer"><span id="time"></span>s</div>
+  Period: <span id="period"></span> |
+  Wallet: ₹<span id="wallet"></span>
 </div>
 
-<div class="flex">
-  <div class="dice" id="d1">?</div>
-  <div class="dice" id="d2">?</div>
-  <div class="dice" id="d3">?</div>
-</div>
+<div class="center timer" id="time">30s</div>
 
-<div class="box">
-  <input id="amount" placeholder="Min ₹1" type="number">
-</div>
-
-<div class="box grid2">
-  <div class="btn orange" onclick="place('BIG')">BIG (11–18)</div>
-  <div class="btn blue" onclick="place('SMALL')">SMALL (3–10)</div>
-  <div class="btn green" onclick="place('EVEN')">EVEN</div>
-  <div class="btn red" onclick="place('ODD')">ODD</div>
-</div>
-
-<div class="box grid6">
-  <div class="btn gray" onclick="place(3)">3</div>
-  <div class="btn gray" onclick="place(4)">4</div>
-  <div class="btn gray" onclick="place(5)">5</div>
-  <div class="btn gray" onclick="place(6)">6</div>
-  <div class="btn gray" onclick="place(7)">7</div>
-  <div class="btn gray" onclick="place(8)">8</div>
-  <div class="btn gray" onclick="place(9)">9</div>
-  <div class="btn gray" onclick="place(10)">10</div>
-  <div class="btn gray" onclick="place(11)">11</div>
-  <div class="btn gray" onclick="place(12)">12</div>
-  <div class="btn gray" onclick="place(13)">13</div>
-  <div class="btn gray" onclick="place(14)">14</div>
-  <div class="btn gray" onclick="place(15)">15</div>
-  <div class="btn gray" onclick="place(16)">16</div>
-  <div class="btn gray" onclick="place(17)">17</div>
-  <div class="btn gray" onclick="place(18)">18</div>
-</div>
-
-<div class="box grid2">
-  <div class="tab tab-pink" onclick="view='history'">Game History</div>
-  <div class="tab tab-pink" onclick="view='bets'">My Bets</div>
+<div class="box center">
+  <div id="dice">❓ ❓ ❓</div>
 </div>
 
 <div class="box">
-  <table id="table"></table>
+  <input id="amount" type="number" placeholder="Min ₹1" value="1">
+</div>
+
+<div class="box bet-container">
+  <div id="betBlur" class="bet-blur">Bet Closed</div>
+
+  <div class="grid">
+    <div class="btn big" onclick="place('BIG')">BIG (11-18)</div>
+    <div class="btn small" onclick="place('SMALL')">SMALL (3-10)</div>
+    <div class="btn even" onclick="place('EVEN')">EVEN</div>
+    <div class="btn odd" onclick="place('ODD')">ODD</div>
+  </div>
+
+  <br>
+  <div class="grid">
+    <div class="num" onclick="place(3)">3</div>
+    <div class="num" onclick="place(4)">4</div>
+    <div class="num" onclick="place(5)">5</div>
+    <div class="num" onclick="place(6)">6</div>
+    <div class="num" onclick="place(7)">7</div>
+    <div class="num" onclick="place(8)">8</div>
+    <div class="num" onclick="place(9)">9</div>
+    <div class="num" onclick="place(10)">10</div>
+    <div class="num" onclick="place(11)">11</div>
+    <div class="num" onclick="place(12)">12</div>
+    <div class="num" onclick="place(13)">13</div>
+    <div class="num" onclick="place(14)">14</div>
+    <div class="num" onclick="place(15)">15</div>
+    <div class="num" onclick="place(16)">16</div>
+    <div class="num" onclick="place(17)">17</div>
+    <div class="num" onclick="place(18)">18</div>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab" onclick="show('history')">Game History</div>
+  <div class="tab" onclick="show('bets')">My Bets</div>
+</div>
+
+<div class="box" id="historyBox">
+  <table class="table">
+    <thead>
+      <tr><th>Period</th><th>Sum</th><th>Result</th></tr>
+    </thead>
+    <tbody id="history"></tbody>
+  </table>
+</div>
+
+<div class="box" id="betsBox" style="display:none">
+  <table class="table">
+    <thead>
+      <tr><th>Period</th><th>Bet</th><th>Amount</th><th>Result</th></tr>
+    </thead>
+    <tbody id="bets"></tbody>
+  </table>
 </div>
 
 <script>
-let state = JSON.parse(localStorage.getItem("k3")) || {
-  period:202601200001,
-  wallet:100,
-  start:Date.now(),
-  history:[],
-  bets:[]
-};
+let time=30;
+let period=Number(localStorage.k3Period||202601200001);
+let wallet=Number(localStorage.k3Wallet||100);
+let bets=JSON.parse(localStorage.k3Bets||"[]");
+let history=JSON.parse(localStorage.k3History||"[]");
+let locked=false;
 
-let view="history";
-const DURATION=30;
-
-function save(){localStorage.setItem("k3",JSON.stringify(state));}
-
-function left(){
-  return DURATION - Math.floor((Date.now()-state.start)/1000);
+function save(){
+  localStorage.k3Period=period;
+  localStorage.k3Wallet=wallet;
+  localStorage.k3Bets=JSON.stringify(bets);
+  localStorage.k3History=JSON.stringify(history);
 }
 
 function tick(){
-  let t=left();
-  if(t<=0){
-    settle();
-    state.period++;
-    state.start=Date.now();
-    state.bets=[];
-    save();
+  time--;
+  document.getElementById("time").innerText=time+"s";
+  document.getElementById("period").innerText=period;
+  document.getElementById("wallet").innerText=wallet;
+
+  if(time<=5){
+    locked=true;
+    document.getElementById("betBlur").style.display="flex";
   }
-  document.getElementById("time").innerText=Math.max(t,0);
-  document.getElementById("period").innerText=state.period;
-  document.getElementById("wallet").innerText=state.wallet;
-  render();
-}
-setInterval(tick,1000);
 
-function place(type){
-  let a=+amount.value;
-  if(a<1) return alert("Minimum ₹1");
-  if(a>state.wallet) return alert("Insufficient balance");
-  if(left()<=5) return alert("Bet closed");
-
-  state.wallet-=a;
-  state.bets.push({period:state.period,type,amt:a});
-  save();
+  if(time<=0) end();
 }
 
-function settle(){
+function end(){
   let d1=1+Math.floor(Math.random()*6);
   let d2=1+Math.floor(Math.random()*6);
   let d3=1+Math.floor(Math.random()*6);
-  d1el.innerText=d1;d2el.innerText=d2;d3el.innerText=d3;
   let sum=d1+d2+d3;
-  let res = sum>=11?"BIG":"SMALL";
+  document.getElementById("dice").innerText=`${d1} ${d2} ${d3}`;
 
-  state.bets.forEach(b=>{
-    let win=false,pay=0;
-    if(b.type===res||b.type==sum||
-       (b.type==="EVEN"&&sum%2==0)||
-       (b.type==="ODD"&&sum%2==1)){
-      win=true;
-      pay=b.amt*2;
-    }
-    if(win) state.wallet+=pay;
-    state.history.unshift({
-      period:b.period,
-      sum,
-      result:win?`+₹${pay}`:`-₹${b.amt}`
-    });
+  history.unshift({
+    p:period,s:sum,r:sum>=11?"BIG":"SMALL"
   });
-  state.history=state.history.slice(0,10);
+  history=history.slice(0,10);
+
+  period++;
+  time=30;
+  locked=false;
+  document.getElementById("betBlur").style.display="none";
   save();
+  render();
+}
+
+function place(type){
+  if(locked) return alert("Bet closed");
+  let amt=Number(amount.value);
+  if(amt<1) return alert("Minimum bet ₹1");
+  if(amt>wallet) return alert("Low balance");
+
+  wallet-=amt;
+  bets.unshift({p:period,b:type,a:amt});
+  save();render();
 }
 
 function render(){
-  let t=document.getElementById("table");
-  if(view==="history"){
-    t.innerHTML="<tr><th>Period</th><th>Sum</th><th>Result</th></tr>"+
-    state.history.map(r=>`<tr><td>${r.period}</td><td>${r.sum}</td><td>${r.result}</td></tr>`).join("");
-  }else{
-    t.innerHTML="<tr><th>Period</th><th>Bet</th><th>Amount</th></tr>"+
-    state.bets.map(b=>`<tr><td>${b.period}</td><td>${b.type}</td><td>₹${b.amt}</td></tr>`).join("");
-  }
+  historyEl.innerHTML=history.map(x=>
+    `<tr><td>${x.p}</td><td>${x.s}</td><td>${x.r}</td></tr>`
+  ).join("");
+
+  betsEl.innerHTML=bets.map(x=>
+    `<tr><td>${x.p}</td><td>${x.b}</td><td>₹${x.a}</td><td>-</td></tr>`
+  ).join("");
 }
 
-let d1el=document.getElementById("d1");
-let d2el=document.getElementById("d2");
-let d3el=document.getElementById("d3");
-tick();
+function show(t){
+  historyBox.style.display=t==="history"?"block":"none";
+  betsBox.style.display=t==="bets"?"block":"none";
+}
+
+render();
+setInterval(tick,1000);
 </script>
 
 </body>
