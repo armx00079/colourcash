@@ -1,166 +1,230 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>K3</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>K3 - Colour Cash</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
 <style>
-body{margin:0;background:#0f0f0f;color:#fff;font-family:Arial}
-.header{text-align:center;font-size:22px;padding:12px}
-.top{display:flex;justify-content:space-between;padding:0 15px;color:#aaa}
-.timer{text-align:center;font-size:32px;color:#ff4081}
-.box{background:#1c1c1c;margin:15px;padding:15px;border-radius:14px}
-input{width:100%;padding:12px;border-radius:8px;border:none;font-size:16px;text-align:center}
-.row{display:flex;gap:10px;margin-top:10px}
-.btn{flex:1;padding:14px;border-radius:10px;font-weight:bold;text-align:center;cursor:pointer}
-.big{background:#f4a261}.small{background:#4dabf7}
-.even{background:#43a047}.odd{background:#e53935}
-.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
-.num{background:#2a2a2a;padding:14px;border-radius:10px;text-align:center;cursor:pointer}
-.tabs{display:flex;gap:10px;margin:15px}
-.tab{flex:1;padding:12px;border-radius:10px;text-align:center;cursor:pointer}
-.active{background:#ff6b6b}.inactive{background:#333}
-table{width:100%;border-collapse:collapse;margin:15px}
-th,td{padding:8px;border-bottom:1px solid #333;text-align:center}
-.diceRow{display:flex;justify-content:center;gap:10px;margin:10px}
-.dice{width:50px;height:50px;background:#e53935;border-radius:8px;
-display:flex;align-items:center;justify-content:center;font-size:22px}
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:#0f0f0f;
+  color:#fff;
+}
+.center{text-align:center}
+.box{
+  background:#1c1c1c;
+  margin:15px;
+  padding:15px;
+  border-radius:14px;
+}
+h2{margin:10px 0}
+
+.timer{font-size:36px;color:#ff4d8d}
+input{
+  width:100%;
+  padding:12px;
+  font-size:18px;
+  border-radius:10px;
+  border:none;
+  text-align:center;
+}
+
+.btn{
+  padding:14px;
+  border-radius:12px;
+  font-weight:bold;
+  cursor:pointer;
+  user-select:none;
+}
+.orange{background:#f6ad55}
+.blue{background:#63b3ed}
+.green{background:#48bb78}
+.red{background:#f56565}
+.gray{background:#2d2d2d}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.grid6{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+
+.tab{
+  padding:12px;
+  border-radius:12px;
+  text-align:center;
+  cursor:pointer;
+}
+.tab-pink{background:#ff6b6b}
+.tab-dark{background:#2b2b2b}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:10px;
+}
+th,td{
+  padding:8px;
+  border-bottom:1px solid #333;
+  font-size:14px;
+  text-align:center;
+}
+th{background:#ff6b6b}
+.win{color:#4caf50}
+.loss{color:#ff5252}
+.dice{
+  width:50px;height:50px;
+  background:#e53935;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:22px;
+  font-weight:bold;
+}
+.flex{display:flex;gap:10px;justify-content:center}
 </style>
 </head>
 
 <body>
 
-<div class="header">🎲 K3</div>
-
-<div class="top">
-  <div>Period: <span id="period"></span></div>
-  <div>Wallet: ₹<span id="wallet"></span></div>
+<div class="center">
+  <h2>🎲 K3</h2>
+  <div>Period: <span id="period"></span> | Wallet: ₹<span id="wallet"></span></div>
+  <div class="timer"><span id="time"></span>s</div>
 </div>
 
-<div class="timer">⏳ <span id="time"></span>s</div>
-
-<div class="diceRow">
+<div class="flex">
   <div class="dice" id="d1">?</div>
   <div class="dice" id="d2">?</div>
   <div class="dice" id="d3">?</div>
 </div>
 
 <div class="box">
-<input id="amt" type="number" placeholder="Min ₹1">
-
-<div class="row">
-  <div class="btn big" onclick="bet('BIG')">BIG (11-18)</div>
-  <div class="btn small" onclick="bet('SMALL')">SMALL (3-10)</div>
-</div>
-<div class="row">
-  <div class="btn even" onclick="bet('EVEN')">EVEN</div>
-  <div class="btn odd" onclick="bet('ODD')">ODD</div>
+  <input id="amount" placeholder="Min ₹1" type="number">
 </div>
 
-<div class="grid">
-  <div class="num" onclick="bet('NUM:3')">3</div>
-  <div class="num" onclick="bet('NUM:4')">4</div>
-  <div class="num" onclick="bet('NUM:5')">5</div>
-  <div class="num" onclick="bet('NUM:6')">6</div>
-  <div class="num" onclick="bet('NUM:7')">7</div>
-  <div class="num" onclick="bet('NUM:8')">8</div>
-  <div class="num" onclick="bet('NUM:9')">9</div>
-  <div class="num" onclick="bet('NUM:10')">10</div>
-  <div class="num" onclick="bet('NUM:11')">11</div>
-  <div class="num" onclick="bet('NUM:12')">12</div>
-  <div class="num" onclick="bet('NUM:13')">13</div>
-  <div class="num" onclick="bet('NUM:14')">14</div>
-  <div class="num" onclick="bet('NUM:15')">15</div>
-  <div class="num" onclick="bet('NUM:16')">16</div>
-  <div class="num" onclick="bet('NUM:17')">17</div>
-  <div class="num" onclick="bet('NUM:18')">18</div>
-</div>
+<div class="box grid2">
+  <div class="btn orange" onclick="place('BIG')">BIG (11–18)</div>
+  <div class="btn blue" onclick="place('SMALL')">SMALL (3–10)</div>
+  <div class="btn green" onclick="place('EVEN')">EVEN</div>
+  <div class="btn red" onclick="place('ODD')">ODD</div>
 </div>
 
-<div class="tabs">
-  <div class="tab active" onclick="show('history')">Game History</div>
-  <div class="tab inactive" onclick="show('bets')">My Bets</div>
+<div class="box grid6">
+  <div class="btn gray" onclick="place(3)">3</div>
+  <div class="btn gray" onclick="place(4)">4</div>
+  <div class="btn gray" onclick="place(5)">5</div>
+  <div class="btn gray" onclick="place(6)">6</div>
+  <div class="btn gray" onclick="place(7)">7</div>
+  <div class="btn gray" onclick="place(8)">8</div>
+  <div class="btn gray" onclick="place(9)">9</div>
+  <div class="btn gray" onclick="place(10)">10</div>
+  <div class="btn gray" onclick="place(11)">11</div>
+  <div class="btn gray" onclick="place(12)">12</div>
+  <div class="btn gray" onclick="place(13)">13</div>
+  <div class="btn gray" onclick="place(14)">14</div>
+  <div class="btn gray" onclick="place(15)">15</div>
+  <div class="btn gray" onclick="place(16)">16</div>
+  <div class="btn gray" onclick="place(17)">17</div>
+  <div class="btn gray" onclick="place(18)">18</div>
 </div>
 
-<table id="historyTable">
-<thead><tr><th>Period</th><th>Sum</th><th>Result</th></tr></thead>
-<tbody></tbody>
-</table>
+<div class="box grid2">
+  <div class="tab tab-pink" onclick="view='history'">Game History</div>
+  <div class="tab tab-pink" onclick="view='bets'">My Bets</div>
+</div>
 
-<table id="betsTable" style="display:none">
-<thead><tr><th>Period</th><th>Bet</th><th>Amount</th><th>Result</th></tr></thead>
-<tbody></tbody>
-</table>
+<div class="box">
+  <table id="table"></table>
+</div>
 
 <script>
-const today=new Date().toISOString().slice(0,10).replace(/-/g,'');
-
-let state=JSON.parse(localStorage.getItem("k3"))||{
-  wallet:100,period:1,start:Date.now(),bets:[],history:[],mybets:[]
+let state = JSON.parse(localStorage.getItem("k3")) || {
+  period:202601200001,
+  wallet:100,
+  start:Date.now(),
+  history:[],
+  bets:[]
 };
 
-function save(){localStorage.setItem("k3",JSON.stringify(state))}
+let view="history";
+const DURATION=30;
 
-function pid(){return today+String(state.period).padStart(4,'0')}
+function save(){localStorage.setItem("k3",JSON.stringify(state));}
 
-function left(){return 30-Math.floor((Date.now()-state.start)/1000)%30}
+function left(){
+  return DURATION - Math.floor((Date.now()-state.start)/1000);
+}
 
-function bet(type){
-  let a=+amt.value;
-  if(a<1)return alert("Minimum ₹1 required");
-  if(a>state.wallet)return alert("Insufficient balance");
-  if(left()<=5)return alert("Bet closed");
+function tick(){
+  let t=left();
+  if(t<=0){
+    settle();
+    state.period++;
+    state.start=Date.now();
+    state.bets=[];
+    save();
+  }
+  document.getElementById("time").innerText=Math.max(t,0);
+  document.getElementById("period").innerText=state.period;
+  document.getElementById("wallet").innerText=state.wallet;
+  render();
+}
+setInterval(tick,1000);
+
+function place(type){
+  let a=+amount.value;
+  if(a<1) return alert("Minimum ₹1");
+  if(a>state.wallet) return alert("Insufficient balance");
+  if(left()<=5) return alert("Bet closed");
+
   state.wallet-=a;
-  state.bets.push({type,amt:a});
-  save();render();
+  state.bets.push({period:state.period,type,amt:a});
+  save();
+}
+
+function settle(){
+  let d1=1+Math.floor(Math.random()*6);
+  let d2=1+Math.floor(Math.random()*6);
+  let d3=1+Math.floor(Math.random()*6);
+  d1el.innerText=d1;d2el.innerText=d2;d3el.innerText=d3;
+  let sum=d1+d2+d3;
+  let res = sum>=11?"BIG":"SMALL";
+
+  state.bets.forEach(b=>{
+    let win=false,pay=0;
+    if(b.type===res||b.type==sum||
+       (b.type==="EVEN"&&sum%2==0)||
+       (b.type==="ODD"&&sum%2==1)){
+      win=true;
+      pay=b.amt*2;
+    }
+    if(win) state.wallet+=pay;
+    state.history.unshift({
+      period:b.period,
+      sum,
+      result:win?`+₹${pay}`:`-₹${b.amt}`
+    });
+  });
+  state.history=state.history.slice(0,10);
+  save();
 }
 
 function render(){
-  period.innerText=pid();
-  wallet.innerText=state.wallet;
-  time.innerText=left();
-
-  historyTable.tBodies[0].innerHTML=
-  state.history.map(h=>`<tr><td>${h.p}</td><td>${h.sum}</td><td>${h.res}</td></tr>`).join('');
-
-  betsTable.tBodies[0].innerHTML=
-  state.mybets.map(b=>`<tr><td>${b.p}</td><td>${b.type}</td><td>₹${b.amt}</td><td>${b.res}</td></tr>`).join('');
-}
-
-setInterval(()=>{
-  if(left()==0){
-    let d=[1,2,3].map(()=>1+Math.random()*6|0);
-    d1.innerText=d[0];d2.innerText=d[1];d3.innerText=d[2];
-    let sum=d[0]+d[1]+d[2];
-
-    state.bets.forEach(b=>{
-      let win=false;
-      if(b.type=="BIG"&&sum>=11)win=true;
-      if(b.type=="SMALL"&&sum<=10)win=true;
-      if(b.type=="EVEN"&&sum%2==0)win=true;
-      if(b.type=="ODD"&&sum%2==1)win=true;
-      if(b.type=="NUM:"+sum)win=true;
-
-      if(win){state.wallet+=b.amt*2}
-      state.mybets.unshift({p:pid(),type:b.type,amt:b.amt,res:win?"WIN":"LOSS"})
-    });
-
-    state.history.unshift({p:pid(),sum:sum,res:sum>=11?"BIG":"SMALL"});
-    state.history=state.history.slice(0,10);
-    state.bets=[];
-    state.period++;
-    state.start=Date.now();
-    save();
+  let t=document.getElementById("table");
+  if(view==="history"){
+    t.innerHTML="<tr><th>Period</th><th>Sum</th><th>Result</th></tr>"+
+    state.history.map(r=>`<tr><td>${r.period}</td><td>${r.sum}</td><td>${r.result}</td></tr>`).join("");
+  }else{
+    t.innerHTML="<tr><th>Period</th><th>Bet</th><th>Amount</th></tr>"+
+    state.bets.map(b=>`<tr><td>${b.period}</td><td>${b.type}</td><td>₹${b.amt}</td></tr>`).join("");
   }
-  render();
-},1000);
-
-function show(t){
-  historyTable.style.display=t=="history"?"table":"none";
-  betsTable.style.display=t=="bets"?"table":"none";
 }
 
-render();
+let d1el=document.getElementById("d1");
+let d2el=document.getElementById("d2");
+let d3el=document.getElementById("d3");
+tick();
 </script>
 
 </body>
