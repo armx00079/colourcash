@@ -9,220 +9,184 @@
 body{
   margin:0;
   font-family:Arial, sans-serif;
-  background:#0b0b0b;
+  background:#0f0f0f;
   color:#fff;
   text-align:center;
 }
-
-/* HEADER */
 .header{
-  padding:15px;
-  font-size:22px;
+  padding:12px;
+  font-size:20px;
   font-weight:bold;
 }
-
-/* MAIN CARD */
 .card{
   background:#1c1c1c;
-  margin:15px;
-  border-radius:16px;
-  padding:20px;
+  margin:12px;
+  border-radius:14px;
+  padding:12px;
 }
-
-/* MULTIPLIER */
 .multiplier{
-  font-size:48px;
+  font-size:42px;
+  color:#00e676;
   font-weight:bold;
-  color:#00ff99;
 }
 .crashed{
   color:#ff5252;
 }
-
-/* INPUT */
+button{
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  font-size:16px;
+  width:100%;
+  margin-top:8px;
+}
+.bet-btn{ background:#ff9800; color:#000; }
+.cashout-btn{ background:#00e676; color:#000; }
 input{
   width:100%;
-  padding:14px;
+  padding:12px;
   border-radius:10px;
   border:none;
-  font-size:18px;
-  margin-top:10px;
-}
-
-/* BUTTONS */
-.btn{
-  margin-top:12px;
-  padding:14px;
-  border-radius:12px;
-  font-size:18px;
-  border:none;
-  cursor:pointer;
-}
-.bet{
-  background:#2196f3;
-  color:#fff;
-}
-.cashout{
-  background:#00c853;
-  color:#000;
-}
-
-/* WALLET */
-.wallet{
-  margin-top:10px;
+  margin-top:8px;
   font-size:16px;
-  color:#ccc;
 }
-
-/* POPUP */
+.history span{
+  display:inline-block;
+  background:#333;
+  padding:6px 10px;
+  border-radius:8px;
+  margin:4px;
+  font-size:13px;
+}
 .popup{
   position:fixed;
-  top:0; left:0;
-  width:100%; height:100%;
-  background:rgba(0,0,0,0.7);
+  inset:0;
+  background:rgba(0,0,0,.7);
   display:none;
   align-items:center;
   justify-content:center;
 }
 .popup-box{
   background:#1c1c1c;
-  padding:25px;
-  border-radius:16px;
+  padding:20px;
+  border-radius:14px;
   width:80%;
-}
-.popup-box h2{
-  color:#00ff99;
-}
-.popup-box button{
-  margin-top:15px;
-  padding:10px 20px;
-  border:none;
-  border-radius:10px;
-  background:#2196f3;
-  color:#fff;
-  font-size:16px;
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">✈️ Aviator</div>
+<div class="header">✈️ AVIATOR</div>
+
+<div class="card">
+  Wallet: ₹<span id="wallet">100</span>
+</div>
 
 <div class="card">
   <div id="multiplier" class="multiplier">1.00x</div>
+  <div id="status">Waiting…</div>
+</div>
 
-  <input id="betAmount" type="number" placeholder="Min ₹1">
+<div class="card">
+  <input type="number" id="betAmount" placeholder="Min ₹1" value="1">
+  <button class="bet-btn" id="betBtn">PLACE BET</button>
+  <button class="cashout-btn" id="cashoutBtn" style="display:none">CASHOUT</button>
+</div>
 
-  <button id="betBtn" class="btn bet" onclick="placeBet()">Place Bet</button>
-  <button id="cashoutBtn" class="btn cashout" onclick="cashOut()" disabled>Cash Out</button>
-
-  <div class="wallet" id="walletText">Wallet: ₹0</div>
+<div class="card">
+  <b>Last Crashes</b>
+  <div class="history" id="history"></div>
 </div>
 
 <!-- POPUP -->
 <div class="popup" id="popup">
   <div class="popup-box">
-    <h2 id="popupText"></h2>
+    <h3 id="popupText"></h3>
     <button onclick="closePopup()">OK</button>
   </div>
 </div>
 
 <script>
-/* WALLET SAVE */
-let wallet = localStorage.getItem("aviator_wallet");
-if(wallet===null){
-  wallet = 100;
+let wallet = Number(localStorage.getItem("aviator_wallet")) || 100;
+let history = JSON.parse(localStorage.getItem("aviator_history")) || [];
+let running=false, bet=0, currentX=1, crashX=0;
+
+const walletEl=document.getElementById("wallet");
+const multEl=document.getElementById("multiplier");
+const histEl=document.getElementById("history");
+walletEl.innerText=wallet;
+
+function save(){
   localStorage.setItem("aviator_wallet",wallet);
-}
-wallet = Number(wallet);
-document.getElementById("walletText").innerText="Wallet: ₹"+wallet;
-
-let multiplier=1;
-let interval=null;
-let bet=0;
-let playing=false;
-let crashed=false;
-
-/* OWNER CONTROL (HOUSE EDGE ~10%) */
-function getCrashPoint(){
-  let r=Math.random();
-  if(r<0.10) return (1.1+Math.random()*0.5);   // early crash
-  if(r<0.85) return (2+Math.random()*3);       // normal
-  return (5+Math.random()*5);                  // rare high
+  localStorage.setItem("aviator_history",JSON.stringify(history));
 }
 
-let crashAt=getCrashPoint();
+function renderHistory(){
+  histEl.innerHTML="";
+  history.slice(-10).reverse().forEach(x=>{
+    histEl.innerHTML+=`<span>${x}x</span>`;
+  });
+}
+renderHistory();
 
-/* PLACE BET */
-function placeBet(){
-  bet=Number(document.getElementById("betAmount").value);
-  if(bet<1){
-    alert("Minimum bet ₹1");
-    return;
-  }
-  if(bet>wallet){
-    alert("Insufficient balance");
-    return;
-  }
-  wallet-=bet;
-  localStorage.setItem("aviator_wallet",wallet);
-  document.getElementById("walletText").innerText="Wallet: ₹"+wallet;
-
-  playing=true;
-  crashed=false;
-  multiplier=1;
-  crashAt=getCrashPoint();
-
-  document.getElementById("betBtn").disabled=true;
-  document.getElementById("cashoutBtn").disabled=false;
-
-  interval=setInterval(runGame,100);
+function startRound(){
+  currentX=1;
+  crashX=(Math.random()*5+1).toFixed(2); // house edge inside
+  running=true;
+  document.getElementById("status").innerText="Flying...";
+  let interval=setInterval(()=>{
+    if(!running){ clearInterval(interval); return; }
+    currentX+=0.02;
+    multEl.innerText=currentX.toFixed(2)+"x";
+    if(currentX>=crashX){
+      clearInterval(interval);
+      crash();
+    }
+  },100);
 }
 
-/* GAME LOOP */
-function runGame(){
-  multiplier+=0.02;
-  document.getElementById("multiplier").innerText=multiplier.toFixed(2)+"x";
-
-  if(multiplier>=crashAt){
-    crash();
-  }
-}
-
-/* CASH OUT */
-function cashOut(){
-  if(!playing || crashed) return;
-
-  let winAmount=(bet*multiplier).toFixed(0);
-  wallet+=Number(winAmount);
-  localStorage.setItem("aviator_wallet",wallet);
-
-  showPopup("🎉 You Won ₹"+winAmount);
-  resetGame();
-}
-
-/* CRASH */
 function crash(){
-  crashed=true;
-  clearInterval(interval);
-  document.getElementById("multiplier").innerText="CRASHED";
-  document.getElementById("multiplier").classList.add("crashed");
-  showPopup("💥 You Lost ₹"+bet);
-  resetGame();
+  running=false;
+  multEl.classList.add("crashed");
+  document.getElementById("status").innerText="CRASHED";
+  history.push(crashX);
+  save();
+  renderHistory();
+  document.getElementById("cashoutBtn").style.display="none";
+  setTimeout(resetRound,2000);
 }
 
-/* RESET */
-function resetGame(){
-  clearInterval(interval);
-  playing=false;
-  document.getElementById("betBtn").disabled=false;
-  document.getElementById("cashoutBtn").disabled=true;
-  document.getElementById("multiplier").classList.remove("crashed");
-  document.getElementById("walletText").innerText="Wallet: ₹"+wallet;
+function resetRound(){
+  multEl.classList.remove("crashed");
+  multEl.innerText="1.00x";
+  document.getElementById("status").innerText="Waiting…";
 }
 
-/* POPUP */
+document.getElementById("betBtn").onclick=()=>{
+  bet=Number(betAmount.value);
+  if(bet<1){ showPopup("Minimum bet ₹1"); return; }
+  if(bet>wallet){ showPopup("Insufficient balance"); return; }
+  wallet-=bet;
+  walletEl.innerText=wallet;
+  save();
+  document.getElementById("cashoutBtn").style.display="block";
+  startRound();
+};
+
+document.getElementById("cashoutBtn").onclick=()=>{
+  if(!running) return;
+  running=false;
+  let win=(bet*currentX*0.9).toFixed(2); // 10% house edge
+  wallet+=Number(win);
+  walletEl.innerText=wallet;
+  save();
+  showPopup("You Won ₹"+win);
+  history.push(currentX.toFixed(2));
+  renderHistory();
+  document.getElementById("cashoutBtn").style.display="none";
+};
+
 function showPopup(text){
   document.getElementById("popupText").innerText=text;
   document.getElementById("popup").style.display="flex";
