@@ -12,28 +12,101 @@ body{
   background:#0f0f0f;
   color:#fff;
 }
-.header{text-align:center;padding:14px;font-size:22px;font-weight:bold}
-.top{display:flex;justify-content:space-between;padding:0 15px;color:#ccc}
-.timer{text-align:center;font-size:36px;color:#ff4081;margin:10px 0}
-.box{background:#1c1c1c;margin:15px;padding:15px;border-radius:14px}
-input{width:100%;padding:12px;border:none;border-radius:8px;text-align:center}
-.colors,.numbers{display:grid;gap:10px;margin-top:12px}
-.colors{grid-template-columns:repeat(3,1fr)}
+.header{
+  text-align:center;
+  padding:15px;
+  font-size:22px;
+  font-weight:bold;
+}
+.top{
+  display:flex;
+  justify-content:space-between;
+  padding:0 15px;
+  font-size:14px;
+}
+.timer{
+  text-align:center;
+  font-size:34px;
+  color:#ff4081;
+  margin:10px 0;
+}
+.box{
+  background:#1c1c1c;
+  margin:15px;
+  padding:15px;
+  border-radius:12px;
+}
+input{
+  width:100%;
+  padding:12px;
+  border-radius:8px;
+  border:none;
+  font-size:16px;
+  text-align:center;
+}
+.colors, .numbers, .multi{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  margin-top:12px;
+}
 .numbers{grid-template-columns:repeat(5,1fr)}
-button{padding:14px 0;border:none;border-radius:10px;font-size:16px;font-weight:bold;color:#fff}
-.red{background:#e53935}.green{background:#43a047}.violet{background:#8e24aa}
-.num{background:#2c2c2c}
-.multis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
-.multi{background:#2c2c2c}
-.multi.active{background:#43a047}
-.bs{display:flex;margin-top:12px}
-.big{flex:1;background:#f4a261}.small{flex:1;background:#4dabf7}
-.tab{margin:15px;background:#ff6b6b;padding:12px;border-radius:10px;text-align:center}
-.history{margin:15px}
-.row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;
-padding:8px 0;border-bottom:1px solid #333;font-size:13px}
-.win{color:#43a047}.loss{color:#e53935}
-.disabled{opacity:.4;pointer-events:none}
+button{
+  padding:14px;
+  border:none;
+  border-radius:10px;
+  font-size:16px;
+  font-weight:bold;
+  color:#fff;
+}
+.red{background:#e53935}
+.green{background:#43a047}
+.violet{background:#8e24aa}
+.gray{background:#333}
+.active{outline:2px solid #fff}
+.bigsmall{
+  display:flex;
+  margin-top:12px;
+}
+.big{flex:1;background:#f4a261}
+.small{flex:1;background:#4ea8de}
+.tabs{
+  display:flex;
+  gap:10px;
+  margin:15px;
+}
+.tab{
+  flex:1;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  background:#333;
+  color:#fff;
+}
+.tab.active{background:#ff6b6b}
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+th{
+  background:#ff6b6b;
+  padding:10px;
+}
+td{
+  padding:10px;
+  text-align:center;
+  border-bottom:1px solid #333;
+}
+.dot{
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  display:inline-block;
+}
+.lock{
+  opacity:0.4;
+  pointer-events:none;
+}
 </style>
 </head>
 
@@ -42,147 +115,172 @@ padding:8px 0;border-bottom:1px solid #333;font-size:13px}
 <div class="header">🎨 WIN GO</div>
 
 <div class="top">
-  <div>Period: <span id="period">20260120100001</span></div>
+  <div>Period: <span id="period"></span></div>
   <div>Wallet: ₹<span id="wallet">100</span></div>
 </div>
 
 <div class="timer">⏳ <span id="time">30</span>s</div>
 
-<div class="box">
-  <input type="number" id="betAmount" placeholder="Min ₹10">
+<div class="box" id="gameBox">
+  <input type="number" id="amount" placeholder="Min ₹10">
 
   <div class="colors">
-    <button class="red" data-color="RED">RED</button>
-    <button class="green" data-color="GREEN">GREEN</button>
-    <button class="violet" data-color="VIOLET">VIOLET</button>
+    <button class="red" onclick="bet('color','Red')">RED</button>
+    <button class="green" onclick="bet('color','Green')">GREEN</button>
+    <button class="violet" onclick="bet('color','Violet')">VIOLET</button>
   </div>
 
   <div class="numbers">
-    <button class="num" data-num="0">0</button>
-    <button class="num" data-num="1">1</button>
-    <button class="num" data-num="2">2</button>
-    <button class="num" data-num="3">3</button>
-    <button class="num" data-num="4">4</button>
-    <button class="num" data-num="5">5</button>
-    <button class="num" data-num="6">6</button>
-    <button class="num" data-num="7">7</button>
-    <button class="num" data-num="8">8</button>
-    <button class="num" data-num="9">9</button>
+    <button class="gray" onclick="bet('number',0)">0</button>
+    <button class="gray" onclick="bet('number',1)">1</button>
+    <button class="gray" onclick="bet('number',2)">2</button>
+    <button class="gray" onclick="bet('number',3)">3</button>
+    <button class="gray" onclick="bet('number',4)">4</button>
+    <button class="gray" onclick="bet('number',5)">5</button>
+    <button class="gray" onclick="bet('number',6)">6</button>
+    <button class="gray" onclick="bet('number',7)">7</button>
+    <button class="gray" onclick="bet('number',8)">8</button>
+    <button class="gray" onclick="bet('number',9)">9</button>
   </div>
 
-  <div class="multis">
-    <button class="multi active" data-m="1">X1</button>
-    <button class="multi" data-m="5">X5</button>
-    <button class="multi" data-m="10">X10</button>
-    <button class="multi" data-m="20">X20</button>
+  <div class="multi">
+    <button class="green active" onclick="setMulti(1)">X1</button>
+    <button class="gray" onclick="setMulti(5)">X5</button>
+    <button class="gray" onclick="setMulti(10)">X10</button>
+    <button class="gray" onclick="setMulti(20)">X20</button>
   </div>
 
-  <div class="bs">
-    <button class="big" data-bs="Big">Big</button>
-    <button class="small" data-bs="Small">Small</button>
-  </div>
-</div>
-
-<div class="tab">📜 My History</div>
-
-<div class="history" id="myHistory">
-  <div class="row" style="color:#ff6b6b">
-    <b>Period</b><b>Bet</b><b>Amount</b><b>Result</b><b>Status</b>
+  <div class="bigsmall">
+    <button class="big" onclick="bet('bigsmall','Big')">Big</button>
+    <button class="small" onclick="bet('bigsmall','Small')">Small</button>
   </div>
 </div>
+
+<div class="tabs">
+  <button class="tab active" onclick="showResults()">Game History</button>
+  <button class="tab" onclick="showBets()">My Bets</button>
+</div>
+
+<table id="resultTable">
+<thead>
+<tr><th>Period</th><th>Number</th><th>Big/Small</th><th>Color</th></tr>
+</thead>
+<tbody></tbody>
+</table>
+
+<table id="betTable" style="display:none">
+<thead>
+<tr><th>Period</th><th>Bet</th><th>Amount</th><th>Status</th></tr>
+</thead>
+<tbody></tbody>
+</table>
 
 <script>
-let time=30,period=20260120100001,wallet=100;
-let bets=[],multiplier=1,betOpen=true;
-let myHistory=[];
+let time=30;
+let period=20260120100001;
+let wallet=100;
+let multiplier=1;
+let bets=[];
+let results=[];
+let myBets=[];
+let lock=false;
 
-function startRound(){
-  time=30;betOpen=true;bets=[];
-  period++;document.getElementById("period").innerText=period;
-  lock(false);
-  const t=setInterval(()=>{
-    time--;timeSpan.innerText=time;
-    if(time<=5){betOpen=false;lock(true)}
-    if(time===0){clearInterval(t);settle()}
-  },1000);
+document.getElementById("period").innerText=period;
+
+setInterval(()=>{
+  time--;
+  document.getElementById("time").innerText=time;
+
+  if(time<=5){
+    document.getElementById("gameBox").classList.add("lock");
+    lock=true;
+  }
+
+  if(time<=0){
+    finishRound();
+    time=30;
+    lock=false;
+    document.getElementById("gameBox").classList.remove("lock");
+  }
+},1000);
+
+function setMulti(x){
+  multiplier=x;
+  document.querySelectorAll(".multi button").forEach(b=>b.classList.remove("active"));
+  event.target.classList.add("active");
 }
 
-const timeSpan=document.getElementById("time");
-const walletSpan=document.getElementById("wallet");
+function bet(type,value){
+  if(lock) return;
+  let amt=Number(document.getElementById("amount").value)*multiplier;
+  if(amt<10 || amt>wallet) return alert("Invalid amount");
 
-function lock(l){document.querySelectorAll("button").forEach(b=>{
-  if(!b.classList.contains("multi")) b.classList.toggle("disabled",l)
-})}
+  wallet-=amt;
+  document.getElementById("wallet").innerText=wallet;
 
-function placeBet(type,val,multi){
-  if(!betOpen) return alert("Betting closed");
-  let amt=Number(betAmount.value)*multiplier;
-  if(amt<10||wallet<amt) return alert("Invalid bet");
-  wallet-=amt;walletSpan.innerText=wallet;
-  bets.push({type,val,amt,multi,period});
+  bets.push({type,value,amt,label:type+":"+value+" ₹"+amt});
 }
 
-document.querySelectorAll("[data-color]").forEach(b=>b.onclick=
-()=>placeBet("Color",b.dataset.color,b.dataset.color==="VIOLET"?5:2));
+function finishRound(){
+  let num=Math.floor(Math.random()*10);
+  let bs=num>=5?"Big":"Small";
+  let col=(num==0||num==5)?"Violet":(num%2==0?"Red":"Green");
 
-document.querySelectorAll("[data-num]").forEach(b=>b.onclick=
-()=>placeBet("Number",b.dataset.num,10));
-
-document.querySelectorAll("[data-bs]").forEach(b=>b.onclick=
-()=>placeBet("BigSmall",b.dataset.bs,2));
-
-document.querySelectorAll(".multi").forEach(b=>b.onclick=()=>{
-  document.querySelectorAll(".multi").forEach(x=>x.classList.remove("active"));
-  b.classList.add("active");multiplier=Number(b.dataset.m);
-});
-
-function settle(){
-  const num=Math.floor(Math.random()*10);
-  const color=(num===0||num===5)?"VIOLET":(num%2?"GREEN":"RED");
-  const bs=num>=5?"Big":"Small";
+  results.unshift({period,num,bs,col});
+  if(results.length>10) results.pop();
+  renderResults();
 
   bets.forEach(b=>{
-    let win=false;
-    if(b.type==="Color"&&b.val===color) win=true;
-    if(b.type==="Number"&&b.val==num) win=true;
-    if(b.type==="BigSmall"&&b.val===bs) win=true;
+    let win=false,pay=0;
+    if(b.type=="color" && b.value==col){pay=b.amt*(col=="Violet"?5:2);win=true}
+    if(b.type=="bigsmall" && b.value==bs){pay=b.amt*2;win=true}
+    if(b.type=="number" && b.value==num){pay=b.amt*10;win=true}
 
-    let status="LOSS",gain=0;
-    if(win){gain=b.amt*b.multi;wallet+=gain;status="WIN"}
-
-    myHistory.unshift({
-      period:b.period,
-      bet:`${b.type}:${b.val}`,
-      amount:b.amt,
-      result:gain,
-      status
-    });
+    if(win){wallet+=pay;myBets.unshift({period,bet:b.label,amt:"+"+pay,status:"WIN"})}
+    else myBets.unshift({period,bet:b.label,amt:"-"+b.amt,status:"LOSS"});
   });
 
-  walletSpan.innerText=wallet;
-  renderMyHistory();
-  setTimeout(startRound,2000);
+  bets=[];
+  document.getElementById("wallet").innerText=wallet;
+  period++;
+  document.getElementById("period").innerText=period;
+  renderMyBets();
 }
 
-function renderMyHistory(){
-  const h=document.getElementById("myHistory");
-  h.innerHTML=`
-  <div class="row" style="color:#ff6b6b">
-    <b>Period</b><b>Bet</b><b>Amount</b><b>Result</b><b>Status</b>
-  </div>`;
-  myHistory.slice(0,20).forEach(x=>{
-    h.innerHTML+=`
-    <div class="row ${x.status==="WIN"?"win":"loss"}">
-      <div>${x.period}</div>
-      <div>${x.bet}</div>
-      <div>₹${x.amount}</div>
-      <div>${x.status==="WIN"?"+₹"+x.result:"-₹"+x.amount}</div>
-      <div>${x.status}</div>
-    </div>`;
+function renderResults(){
+  let t=document.querySelector("#resultTable tbody");
+  t.innerHTML="";
+  results.forEach(r=>{
+    t.innerHTML+=`<tr>
+      <td>${r.period}</td>
+      <td>${r.num}</td>
+      <td>${r.bs}</td>
+      <td><span class="dot ${r.col.toLowerCase()}"></span></td>
+    </tr>`;
   });
 }
 
-startRound();
+function renderMyBets(){
+  let t=document.querySelector("#betTable tbody");
+  t.innerHTML="";
+  myBets.forEach(b=>{
+    t.innerHTML+=`<tr>
+      <td>${b.period}</td>
+      <td>${b.bet}</td>
+      <td>${b.amt}</td>
+      <td style="color:${b.status=="WIN"?"#43a047":"#e53935"}">${b.status}</td>
+    </tr>`;
+  });
+}
+
+function showResults(){
+  document.getElementById("resultTable").style.display="table";
+  document.getElementById("betTable").style.display="none";
+}
+function showBets(){
+  document.getElementById("resultTable").style.display="none";
+  document.getElementById("betTable").style.display="table";
+}
 </script>
 
 </body>
