@@ -53,22 +53,22 @@ th{background:#ff6f6f}
   <input id="amount" placeholder="Min ₹1" type="number">
 
   <div class="grid3">
-    <button class="btn red" onclick="bet('color','RED')">RED</button>
-    <button class="btn green" onclick="bet('color','GREEN')">GREEN</button>
-    <button class="btn violet" onclick="bet('color','VIOLET')">VIOLET</button>
+    <button class="btn red" onclick="placeBet('color','RED')">RED</button>
+    <button class="btn green" onclick="placeBet('color','GREEN')">GREEN</button>
+    <button class="btn violet" onclick="placeBet('color','VIOLET')">VIOLET</button>
   </div>
 
   <div class="grid5">
-    <button class="btn dark" onclick="bet('number',0)">0</button>
-    <button class="btn dark" onclick="bet('number',1)">1</button>
-    <button class="btn dark" onclick="bet('number',2)">2</button>
-    <button class="btn dark" onclick="bet('number',3)">3</button>
-    <button class="btn dark" onclick="bet('number',4)">4</button>
-    <button class="btn dark" onclick="bet('number',5)">5</button>
-    <button class="btn dark" onclick="bet('number',6)">6</button>
-    <button class="btn dark" onclick="bet('number',7)">7</button>
-    <button class="btn dark" onclick="bet('number',8)">8</button>
-    <button class="btn dark" onclick="bet('number',9)">9</button>
+    <button class="btn dark" onclick="placeBet('number',0)">0</button>
+    <button class="btn dark" onclick="placeBet('number',1)">1</button>
+    <button class="btn dark" onclick="placeBet('number',2)">2</button>
+    <button class="btn dark" onclick="placeBet('number',3)">3</button>
+    <button class="btn dark" onclick="placeBet('number',4)">4</button>
+    <button class="btn dark" onclick="placeBet('number',5)">5</button>
+    <button class="btn dark" onclick="placeBet('number',6)">6</button>
+    <button class="btn dark" onclick="placeBet('number',7)">7</button>
+    <button class="btn dark" onclick="placeBet('number',8)">8</button>
+    <button class="btn dark" onclick="placeBet('number',9)">9</button>
   </div>
 
   <div class="grid5">
@@ -80,8 +80,8 @@ th{background:#ff6f6f}
   </div>
 
   <div class="bigsmall">
-    <button class="big" onclick="bet('bs','BIG')">Big</button>
-    <button class="small" onclick="bet('bs','SMALL')">Small</button>
+    <button class="big" onclick="placeBet('bs','BIG')">Big</button>
+    <button class="small" onclick="placeBet('bs','SMALL')">Small</button>
   </div>
 </div>
 
@@ -98,19 +98,24 @@ th{background:#ff6f6f}
 </div>
 
 <script>
-let store = JSON.parse(localStorage.getItem("wingo")) || {
-  period:20260120100001,time:30,wallet:28,
-  bets:[],gameHistory:[],myBets:[]
+let data = JSON.parse(localStorage.getItem("wingo")) || {
+  period:20260120100001,
+  time:30,
+  wallet:100,
+  bets:[],
+  gameHistory:[],
+  myBets:[]
 };
+
 let multi=1,locked=false,tab="game";
 
-const save=()=>localStorage.setItem("wingo",JSON.stringify(store));
-const $=id=>document.getElementById(id);
+function save(){localStorage.setItem("wingo",JSON.stringify(data));}
+function $(i){return document.getElementById(i);}
 
 function renderTop(){
-  period.innerText=store.period;
-  wallet.innerText=store.wallet;
-  time.innerText=store.time;
+  period.innerText=data.period;
+  wallet.innerText=data.wallet;
+  time.innerText=data.time;
 }
 
 function setMulti(x,el){
@@ -119,14 +124,14 @@ function setMulti(x,el){
   el.classList.add('active');
 }
 
-function bet(type,val){
+function placeBet(type,val){
   if(locked) return alert("Bet closed");
-  let amt=Number(amount.value);
+  let amt=Number(amount.value||0);
   if(amt<1) return alert("Min ₹1");
   let total=amt*multi;
-  if(total>store.wallet) return alert("Low balance");
-  store.wallet-=total;
-  store.bets.push({type,val,amt:total,period:store.period});
+  if(total>data.wallet) return alert("Low balance");
+  data.wallet-=total;
+  data.bets.push({type,val,amt:total,period:data.period});
   save();renderTop();
 }
 
@@ -135,28 +140,28 @@ function finishRound(){
   let color=num==0||num==5?'VIOLET':num%2?'GREEN':'RED';
   let bs=num>=5?'BIG':'SMALL';
 
-  store.gameHistory.unshift({period:store.period,num,bs,color});
-  store.gameHistory=store.gameHistory.slice(0,10);
+  data.gameHistory.unshift({period:data.period,num,bs,color});
+  data.gameHistory=data.gameHistory.slice(0,10);
 
-  store.bets.forEach(b=>{
+  data.bets.forEach(b=>{
     let win=0;
-    if(b.type=='number'&&b.val==num) win=b.amt*1;
+    if(b.type=='number'&&b.val==num) win=b.amt*10;
     if(b.type=='color'&&b.val==color) win=b.amt*(color=='VIOLET'?5:2);
     if(b.type=='bs'&&b.val==bs) win=b.amt*2;
-    store.wallet+=win;
-    store.myBets.unshift({
+    data.wallet+=win;
+    data.myBets.unshift({
       period:b.period,
       bet:b.type+":"+b.val,
       amt:b.amt,
-      res:win>0?"+₹"+win:"-₹"+b.amt,
+      res:win?`+₹${win}`:`-₹${b.amt}`,
       win:win>0
     });
   });
 
-  store.myBets=store.myBets.slice(0,50);
-  store.bets=[];
-  store.period++;
-  store.time=30;
+  data.myBets=data.myBets.slice(0,50);
+  data.bets=[];
+  data.period++;
+  data.time=30;
   locked=false;
   save();draw();
 }
@@ -166,17 +171,12 @@ function draw(){
   th.innerHTML=tb.innerHTML="";
   if(tab=="game"){
     th.innerHTML="<tr><th>Period</th><th>Number</th><th>Big/Small</th><th>Color</th></tr>";
-    store.gameHistory.forEach(r=>{
-      tb.innerHTML+=`<tr>
-        <td>${r.period}</td>
-        <td>${r.num}</td>
-        <td>${r.bs}</td>
-        <td>${r.color}</td>
-      </tr>`;
+    data.gameHistory.forEach(r=>{
+      tb.innerHTML+=`<tr><td>${r.period}</td><td>${r.num}</td><td>${r.bs}</td><td>${r.color}</td></tr>`;
     });
   }else{
     th.innerHTML="<tr><th>Period</th><th>Bet</th><th>Amount</th><th>Result</th></tr>";
-    store.myBets.forEach(b=>{
+    data.myBets.forEach(b=>{
       tb.innerHTML+=`<tr>
         <td>${b.period}</td>
         <td>${b.bet}</td>
@@ -195,9 +195,9 @@ function switchTab(t){
 }
 
 setInterval(()=>{
-  store.time--;
-  if(store.time<=5) locked=true;
-  if(store.time<=0) finishRound();
+  data.time--;
+  if(data.time<=5) locked=true;
+  if(data.time<=0) finishRound();
   save();renderTop();
 },1000);
 
