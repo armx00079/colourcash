@@ -7,110 +7,68 @@
 <style>
 body{
   margin:0;
-  font-family:Arial, sans-serif;
+  font-family:Arial;
   background:#0b0b0b;
   color:#fff;
   text-align:center;
 }
-.header{
-  padding:14px;
-  font-size:22px;
-  font-weight:bold;
-}
-.plane{
-  font-size:60px;
-  margin-top:10px;
-  transition:transform 0.1s linear;
-}
-.multiplier{
-  font-size:38px;
-  margin:10px 0;
-  color:#00e676;
-}
-.timer{
-  color:#ff4081;
-  font-size:22px;
-}
-input{
-  width:80%;
-  padding:12px;
-  border-radius:10px;
-  border:none;
-  margin:10px;
-  font-size:18px;
-}
-button{
-  width:80%;
-  padding:14px;
-  border:none;
-  border-radius:12px;
-  font-size:18px;
-  margin:6px;
-}
+.header{padding:14px;font-size:22px;font-weight:bold;}
+.timer{color:#ff4081;font-size:22px;}
+.plane{font-size:60px;margin:10px;}
+.multiplier{font-size:36px;color:#00e676;}
+input{width:80%;padding:12px;border-radius:10px;border:none;}
+button{width:80%;padding:14px;border:none;border-radius:12px;font-size:18px;margin:6px;}
 .bet{background:#2196f3;color:#fff;}
-.cashout{background:#ff5252;color:#fff;}
-.lock{opacity:0.4;}
-.tabs{
-  display:flex;
-  gap:10px;
-  padding:10px;
-}
-.tabs button{
-  width:50%;
-  background:#ff6f6f;
-}
-table{
-  width:100%;
-  font-size:13px;
-}
-th,td{
-  padding:6px;
-  border-bottom:1px solid #333;
-}
+.cash{background:#ff5252;color:#fff;}
+.lock{opacity:.4;pointer-events:none;}
+.tabs{display:flex;gap:10px;padding:10px;}
+.tabs button{width:50%;background:#ff6f6f;}
 .hidden{display:none;}
+table{width:100%;font-size:13px;}
+th,td{padding:6px;border-bottom:1px solid #333;}
 </style>
 </head>
 
 <body>
 
 <div class="header">✈️ AVIATOR</div>
-<div id="info">Period: <span id="period"></span> | Wallet: ₹<span id="wallet"></span></div>
+<div id="info">Period: <span id="period"></span> | Wallet ₹<span id="wallet"></span></div>
 <div class="timer" id="timer">30s</div>
 
 <div class="plane" id="plane">✈️</div>
 <div class="multiplier" id="multi">1.00x</div>
 
-<input id="betAmt" type="number" placeholder="Min ₹1" />
-<button class="bet" id="betBtn">PLACE BET</button>
-<button class="cashout hidden" id="cashBtn">CASH OUT</button>
+<input id="betAmt" type="number" placeholder="Min ₹1">
+<button id="betBtn" class="bet">PLACE BET</button>
+<button id="cashBtn" class="cash hidden">CASH OUT</button>
 
 <div class="tabs">
-  <button onclick="showTab('games')">Game History</button>
-  <button onclick="showTab('bets')">My Bets</button>
+<button onclick="tab('g')">Game History</button>
+<button onclick="tab('b')">My Bets</button>
 </div>
 
-<div id="games">
+<div id="g">
 <table>
 <thead><tr><th>Period</th><th>Crash</th></tr></thead>
-<tbody id="gameHistory"></tbody>
+<tbody id="gh"></tbody>
 </table>
 </div>
 
-<div id="bets" class="hidden">
+<div id="b" class="hidden">
 <table>
 <thead><tr><th>Period</th><th>Bet</th><th>X</th><th>P/L</th></tr></thead>
-<tbody id="betHistory"></tbody>
+<tbody id="bh"></tbody>
 </table>
 </div>
 
 <script>
 let wallet = Number(localStorage.wallet || 100);
 let period = Number(localStorage.period || Date.now());
-let gameHistory = JSON.parse(localStorage.gameHistory||"[]");
-let betHistory = JSON.parse(localStorage.betHistory||"[]");
+let gameHistory = JSON.parse(localStorage.gh || "[]");
+let betHistory = JSON.parse(localStorage.bh || "[]");
 
-let time=30, running=false, bet=null, crashX=0, multi=1;
-let timerInt, flyInt;
+let timer=30, timerI=null, flyI=null;
+let running=false, bet=null, multi=1, crash=0;
 
 const walletEl=walletSpan=document.getElementById("wallet");
 walletEl.innerText=wallet;
@@ -119,92 +77,99 @@ document.getElementById("period").innerText=period;
 function save(){
  localStorage.wallet=wallet;
  localStorage.period=period;
- localStorage.gameHistory=JSON.stringify(gameHistory);
- localStorage.betHistory=JSON.stringify(betHistory);
+ localStorage.gh=JSON.stringify(gameHistory);
+ localStorage.bh=JSON.stringify(betHistory);
+}
+
+function clearAll(){
+ clearInterval(timerI);
+ clearInterval(flyI);
+ timerI=null; flyI=null;
 }
 
 function startRound(){
- time=30; multi=1; running=false; bet=null;
+ clearAll();
+ timer=30; multi=1; bet=null; running=false;
  document.getElementById("multi").innerText="1.00x";
+ document.getElementById("timer").innerText="30s";
+ document.getElementById("betBtn").className="bet";
+ document.getElementById("betBtn").classList.remove("hidden");
  document.getElementById("cashBtn").classList.add("hidden");
- document.getElementById("betBtn").classList.remove("hidden","lock");
+ crash=(Math.random()*3+1.2).toFixed(2);
 
- crashX=(Math.random()*3+1.2).toFixed(2);
- timerInt=setInterval(()=>{
-   time--;
-   document.getElementById("timer").innerText=time+"s";
-
-   if(time===5){
-     document.getElementById("betBtn").classList.add("lock");
-   }
-
-   if(time===0){
-     clearInterval(timerInt);
-     fly();
+ timerI=setInterval(()=>{
+   timer--;
+   document.getElementById("timer").innerText=timer+"s";
+   if(timer===5) document.getElementById("betBtn").classList.add("lock");
+   if(timer<=0){
+     clearInterval(timerI);
+     startFly();
    }
  },1000);
 }
 
-function fly(){
+function startFly(){
  running=true;
- document.getElementById("betBtn").classList.add("hidden");
  if(bet) document.getElementById("cashBtn").classList.remove("hidden");
-
- flyInt=setInterval(()=>{
-   multi+=0.01+(multi/50);
+ flyI=setInterval(()=>{
+   multi+=0.02+(multi/40);
    document.getElementById("multi").innerText=multi.toFixed(2)+"x";
-   document.getElementById("plane").style.transform=`translate(${multi*8}px,${-multi*4}px)`;
-
-   if(multi>=crashX){
-     clearInterval(flyInt);
-     crash();
+   if(multi>=crash){
+     clearInterval(flyI);
+     endRound();
    }
  },60);
 }
 
-function crash(){
+function endRound(){
  running=false;
- gameHistory.unshift({p:period,x:crashX});
+ gameHistory.unshift({p:period,x:crash});
  gameHistory=gameHistory.slice(0,10);
 
  if(bet){
    betHistory.unshift({p:period,b:bet,x:"-",pl:-bet});
    wallet-=bet;
  }
- save(); render();
+
+ render();
  period++;
- localStorage.period=period;
+ save();
  setTimeout(startRound,3000);
 }
 
-document.getElementById("betBtn").onclick=()=>{
- let amt=Number(betAmt.value);
- if(amt<1) return alert("Minimum bet ₹1");
- if(time<=5) return alert("Bet closed");
- if(amt>wallet) return alert("Low balance");
- bet=amt;
+betBtn.onclick=()=>{
+ let a=Number(betAmt.value);
+ if(a<1) return alert("Min ₹1");
+ if(timer<=5) return alert("Bet closed");
+ if(a>wallet) return alert("Low balance");
+ bet=a;
 };
 
-document.getElementById("cashBtn").onclick=()=>{
- if(!running) return;
- clearInterval(flyInt);
+cashBtn.onclick=()=>{
+ if(!running||!bet) return;
+ clearInterval(flyI);
  let win=(bet*multi).toFixed(2);
  wallet+=Number(win);
  betHistory.unshift({p:period,b:bet,x:multi.toFixed(2),pl:"+"+win});
- save(); render();
- document.getElementById("cashBtn").classList.add("hidden");
+ render();
+ save();
+ cashBtn.classList.add("hidden");
 };
 
 function render(){
  walletEl.innerText=wallet;
- gameHistoryEl.innerHTML=gameHistory.map(g=>`<tr><td>${g.p}</td><td>${g.x}x</td></tr>`).join("");
- betHistoryEl.innerHTML=betHistory.map(b=>`<tr><td>${b.p}</td><td>${b.b}</td><td>${b.x}</td><td>${b.pl}</td></tr>`).join("");
+ gh.innerHTML=gameHistory.map(x=>`<tr><td>${x.p}</td><td>${x.x}x</td></tr>`).join("");
+ bh.innerHTML=betHistory.map(x=>`<tr><td>${x.p}</td><td>${x.b}</td><td>${x.x}</td><td>${x.pl}</td></tr>`).join("");
 }
-function showTab(t){
- document.getElementById("games").classList.toggle("hidden",t!=="games");
- document.getElementById("bets").classList.toggle("hidden",t!=="bets");
+
+function tab(t){
+ g.classList.toggle("hidden",t!=="g");
+ b.classList.toggle("hidden",t!=="b");
 }
-render(); startRound();
+
+render();
+startRound();
 </script>
+
 </body>
 </html>
