@@ -1,16 +1,15 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>Aviator</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <style>
 body{
   margin:0;
-  background:#0f0f0f;
+  font-family:Arial, sans-serif;
+  background:#0b0b0b;
   color:#fff;
-  font-family:Arial;
   text-align:center;
 }
 .header{
@@ -18,225 +17,194 @@ body{
   font-size:22px;
   font-weight:bold;
 }
-.timer{color:#ff5252;font-size:22px;margin-bottom:5px;}
-.flight{
-  position:relative;
-  height:160px;
-  overflow:hidden;
-  border-bottom:1px solid #333;
-}
 .plane{
-  position:absolute;
-  left:-50px;
-  bottom:20px;
-  font-size:46px;
-  transition:transform 0.08s linear;
+  font-size:60px;
+  margin-top:10px;
+  transition:transform 0.1s linear;
 }
-.multi{
-  font-size:36px;
+.multiplier{
+  font-size:38px;
+  margin:10px 0;
   color:#00e676;
-  margin:8px 0;
-  font-weight:bold;
+}
+.timer{
+  color:#ff4081;
+  font-size:22px;
 }
 input{
   width:80%;
   padding:12px;
+  border-radius:10px;
   border:none;
-  border-radius:8px;
-  font-size:16px;
-  text-align:center;
+  margin:10px;
+  font-size:18px;
 }
 button{
   width:80%;
-  margin-top:10px;
   padding:14px;
   border:none;
-  border-radius:10px;
-  font-size:18px;
-  background:#ff5252;
-  color:#fff;
-}
-.locked{background:#555 !important;}
-.section{
-  margin:15px;
-  background:#1c1c1c;
   border-radius:12px;
+  font-size:18px;
+  margin:6px;
+}
+.bet{background:#2196f3;color:#fff;}
+.cashout{background:#ff5252;color:#fff;}
+.lock{opacity:0.4;}
+.tabs{
+  display:flex;
+  gap:10px;
   padding:10px;
+}
+.tabs button{
+  width:50%;
+  background:#ff6f6f;
 }
 table{
   width:100%;
   font-size:13px;
-  border-collapse:collapse;
 }
 th,td{
   padding:6px;
   border-bottom:1px solid #333;
 }
-.popup{
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.75);
-  align-items:center;
-  justify-content:center;
-}
-.popup-box{
-  background:#1c1c1c;
-  padding:22px;
-  border-radius:14px;
-  width:80%;
-}
-.popup-box h2{margin:0;color:#00e676;}
+.hidden{display:none;}
 </style>
 </head>
 
 <body>
 
 <div class="header">✈️ AVIATOR</div>
-<div>Period: <span id="period"></span> | Wallet ₹<span id="wallet"></span></div>
-<div class="timer">⏱ <span id="time">30</span>s</div>
+<div id="info">Period: <span id="period"></span> | Wallet: ₹<span id="wallet"></span></div>
+<div class="timer" id="timer">30s</div>
 
-<div class="flight">
-  <div class="plane" id="plane">✈️</div>
+<div class="plane" id="plane">✈️</div>
+<div class="multiplier" id="multi">1.00x</div>
+
+<input id="betAmt" type="number" placeholder="Min ₹1" />
+<button class="bet" id="betBtn">PLACE BET</button>
+<button class="cashout hidden" id="cashBtn">CASH OUT</button>
+
+<div class="tabs">
+  <button onclick="showTab('games')">Game History</button>
+  <button onclick="showTab('bets')">My Bets</button>
 </div>
 
-<div class="multi" id="multi">1.00x</div>
-
-<input id="bet" type="number" placeholder="Min ₹1">
-<button id="cashBtn" onclick="cashOut()">CASH OUT</button>
-
-<div class="section">
-<b>Last 10 Games</b>
-<table id="gameHistory"></table>
+<div id="games">
+<table>
+<thead><tr><th>Period</th><th>Crash</th></tr></thead>
+<tbody id="gameHistory"></tbody>
+</table>
 </div>
 
-<div class="section">
-<b>My Bets</b>
-<table id="betHistory"></table>
-</div>
-
-<!-- POPUP -->
-<div class="popup" id="popup">
-  <div class="popup-box">
-    <h2 id="pTitle"></h2>
-    <p id="pText"></p>
-    <button onclick="closePopup()">OK</button>
-  </div>
+<div id="bets" class="hidden">
+<table>
+<thead><tr><th>Period</th><th>Bet</th><th>X</th><th>P/L</th></tr></thead>
+<tbody id="betHistory"></tbody>
+</table>
 </div>
 
 <script>
-/* ---------- STORAGE ---------- */
 let wallet = Number(localStorage.wallet || 100);
 let period = Number(localStorage.period || Date.now());
-let gameHistory = JSON.parse(localStorage.gameHistory || "[]");
-let betHistory = JSON.parse(localStorage.betHistory || "[]");
+let gameHistory = JSON.parse(localStorage.gameHistory||"[]");
+let betHistory = JSON.parse(localStorage.betHistory||"[]");
 
-/* ---------- STATE ---------- */
-let multiplier=1, running=false, crashX=0;
-let x=0,y=0,time=30, betLocked=false, timerInt, flyInt;
+let time=30, running=false, bet=null, crashX=0, multi=1;
+let timerInt, flyInt;
 
-/* ---------- INIT ---------- */
-document.getElementById("wallet").innerText=wallet;
+const walletEl=walletSpan=document.getElementById("wallet");
+walletEl.innerText=wallet;
 document.getElementById("period").innerText=period;
-renderTables();
-startRound();
 
-/* ---------- ROUND ---------- */
+function save(){
+ localStorage.wallet=wallet;
+ localStorage.period=period;
+ localStorage.gameHistory=JSON.stringify(gameHistory);
+ localStorage.betHistory=JSON.stringify(betHistory);
+}
+
 function startRound(){
-  multiplier=1; x=0; y=0; time=30; betLocked=false;
-  crashX=(Math.random()*4+1.2).toFixed(2);
-  document.getElementById("multi").innerText="1.00x";
-  document.getElementById("cashBtn").classList.remove("locked");
-  document.getElementById("plane").style.opacity="1";
+ time=30; multi=1; running=false; bet=null;
+ document.getElementById("multi").innerText="1.00x";
+ document.getElementById("cashBtn").classList.add("hidden");
+ document.getElementById("betBtn").classList.remove("hidden","lock");
 
-  running=true;
-  flyInt=setInterval(fly,80);
-  timerInt=setInterval(tick,1000);
+ crashX=(Math.random()*3+1.2).toFixed(2);
+ timerInt=setInterval(()=>{
+   time--;
+   document.getElementById("timer").innerText=time+"s";
+
+   if(time===5){
+     document.getElementById("betBtn").classList.add("lock");
+   }
+
+   if(time===0){
+     clearInterval(timerInt);
+     fly();
+   }
+ },1000);
 }
 
 function fly(){
-  multiplier+=0.03;
-  x+=2+multiplier*1.2;
-  y+=0.6+multiplier*0.4;
-  plane.style.transform=`translate(${x}px,-${y}px)`;
-  multi.innerText=multiplier.toFixed(2)+"x";
-  if(multiplier>=crashX) crash();
-}
+ running=true;
+ document.getElementById("betBtn").classList.add("hidden");
+ if(bet) document.getElementById("cashBtn").classList.remove("hidden");
 
-function tick(){
-  time--;
-  document.getElementById("time").innerText=time;
-  if(time<=5){
-    betLocked=true;
-    cashBtn.classList.add("locked");
-  }
+ flyInt=setInterval(()=>{
+   multi+=0.01+(multi/50);
+   document.getElementById("multi").innerText=multi.toFixed(2)+"x";
+   document.getElementById("plane").style.transform=`translate(${multi*8}px,${-multi*4}px)`;
+
+   if(multi>=crashX){
+     clearInterval(flyInt);
+     crash();
+   }
+ },60);
 }
 
 function crash(){
-  clearInterval(flyInt);
-  clearInterval(timerInt);
-  running=false;
-  plane.style.opacity="0.3";
+ running=false;
+ gameHistory.unshift({p:period,x:crashX});
+ gameHistory=gameHistory.slice(0,10);
 
-  gameHistory.unshift({p:period,x:crashX});
-  gameHistory=gameHistory.slice(0,10);
-  localStorage.gameHistory=JSON.stringify(gameHistory);
-
-  showPopup("💥 CRASH","Crashed at "+crashX+"x");
-
-  nextRound();
+ if(bet){
+   betHistory.unshift({p:period,b:bet,x:"-",pl:-bet});
+   wallet-=bet;
+ }
+ save(); render();
+ period++;
+ localStorage.period=period;
+ setTimeout(startRound,3000);
 }
 
-function cashOut(){
-  if(!running || betLocked) return;
-  let bet=Number(bet.value);
-  if(bet<1){showPopup("❌ Error","Minimum bet ₹1");return;}
-  let win=(bet*multiplier).toFixed(2);
-  wallet+=Number(win);
-  betHistory.unshift({p:period,res:"WIN",amt:"+"+win});
-  save();
-  showPopup("🎉 WIN","You won ₹"+win);
-  endRound();
-}
+document.getElementById("betBtn").onclick=()=>{
+ let amt=Number(betAmt.value);
+ if(amt<1) return alert("Minimum bet ₹1");
+ if(time<=5) return alert("Bet closed");
+ if(amt>wallet) return alert("Low balance");
+ bet=amt;
+};
 
-function endRound(){
-  clearInterval(flyInt);
-  clearInterval(timerInt);
-  running=false;
-  nextRound();
-}
+document.getElementById("cashBtn").onclick=()=>{
+ if(!running) return;
+ clearInterval(flyInt);
+ let win=(bet*multi).toFixed(2);
+ wallet+=Number(win);
+ betHistory.unshift({p:period,b:bet,x:multi.toFixed(2),pl:"+"+win});
+ save(); render();
+ document.getElementById("cashBtn").classList.add("hidden");
+};
 
-function nextRound(){
-  period++;
-  localStorage.period=period;
-  localStorage.wallet=wallet;
-  setTimeout(startRound,3000);
+function render(){
+ walletEl.innerText=wallet;
+ gameHistoryEl.innerHTML=gameHistory.map(g=>`<tr><td>${g.p}</td><td>${g.x}x</td></tr>`).join("");
+ betHistoryEl.innerHTML=betHistory.map(b=>`<tr><td>${b.p}</td><td>${b.b}</td><td>${b.x}</td><td>${b.pl}</td></tr>`).join("");
 }
-
-/* ---------- UI ---------- */
-function renderTables(){
-  gameHistory.innerHTML="<tr><th>Period</th><th>X</th></tr>"+
-    gameHistory.map(g=>`<tr><td>${g.p}</td><td>${g.x}x</td></tr>`).join("");
-  betHistory.innerHTML="<tr><th>Period</th><th>Result</th><th>Amt</th></tr>"+
-    betHistory.map(b=>`<tr><td>${b.p}</td><td>${b.res}</td><td>${b.amt}</td></tr>`).join("");
+function showTab(t){
+ document.getElementById("games").classList.toggle("hidden",t!=="games");
+ document.getElementById("bets").classList.toggle("hidden",t!=="bets");
 }
-function save(){
-  localStorage.wallet=wallet;
-  localStorage.betHistory=JSON.stringify(betHistory);
-  renderTables();
-  document.getElementById("wallet").innerText=wallet;
-}
-
-/* ---------- POPUP ---------- */
-function showPopup(t,m){
-  pTitle.innerText=t;
-  pText.innerText=m;
-  popup.style.display="flex";
-}
-function closePopup(){
-  popup.style.display="none";
-}
+render(); startRound();
 </script>
-
 </body>
 </html>
