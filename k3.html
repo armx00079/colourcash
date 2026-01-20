@@ -1,168 +1,152 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>K3</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-body{margin:0;font-family:Arial;background:#0f0f0f;color:#fff}
-.header{text-align:center;padding:14px;font-size:22px}
-.card{background:#1c1c1c;border-radius:14px;padding:15px;margin:12px}
-.timer{font-size:36px;color:#ff4081;text-align:center}
-.dice{display:flex;justify-content:center;gap:10px;margin:10px}
-.dice div{width:55px;height:55px;border-radius:10px;background:#e53935;
-display:flex;align-items:center;justify-content:center;font-size:26px}
-input{width:100%;padding:12px;border-radius:10px;border:none}
-.row{display:flex;gap:10px;margin-top:10px}
-.btn{flex:1;padding:12px;border-radius:10px;text-align:center;font-weight:bold}
-.big{background:#f4a261}
-.small{background:#4dabf7}
-.even{background:#4caf50}
-.odd{background:#e53935}
-.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px}
-.num{padding:14px;background:#2a2a2a;border-radius:10px;text-align:center}
-.lock{filter:blur(3px);pointer-events:none}
-.tabs{display:flex;gap:10px;margin:10px}
-.tab{flex:1;padding:12px;background:#ff6f6f;border-radius:10px;text-align:center}
-table{width:100%;border-collapse:collapse}
+body{margin:0;background:#0f0f0f;color:#fff;font-family:Arial}
+.card{background:#1c1c1c;border-radius:16px;padding:15px;margin:12px}
+.center{text-align:center}
+.timer{color:#ff4d88;font-size:34px;font-weight:bold}
+.dice{display:flex;justify-content:center;gap:12px;margin:15px 0}
+.d{width:60px;height:60px;background:#e53935;border-radius:12px;
+display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:bold}
+.blur{filter:blur(2px);pointer-events:none}
+.btn{padding:14px;border-radius:12px;text-align:center;font-weight:bold}
+.big{background:#f6a55f}.small{background:#5dade2}
+.even{background:#4caf50}.odd{background:#e53935}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.num{background:#2b2b2b;padding:14px;border-radius:10px;text-align:center}
+.tab{background:#ff7a7a;padding:12px;border-radius:12px;text-align:center}
+table{width:100%;margin-top:10px;border-collapse:collapse}
 td,th{padding:8px;border-bottom:1px solid #333;text-align:center}
-.popup{position:fixed;inset:0;background:rgba(0,0,0,.6);
-display:none;align-items:center;justify-content:center}
-.pop{background:#222;padding:20px;border-radius:12px;text-align:center}
-.pop button{margin-top:10px;padding:8px 20px;border:none;border-radius:8px}
 </style>
 </head>
 
 <body>
 
-<div class="header">🎲 K3</div>
+<div class="card center">
+  <h2>🎲 K3</h2>
+  <div id="period"></div>
+  <div class="timer" id="timer">30</div>
+</div>
 
-<div class="card">
-  <div id="info"></div>
-  <div class="timer" id="timer">30s</div>
-  <div class="dice" id="diceBox">
-    <div>?</div><div>?</div><div>?</div>
+<div class="card center">
+  <div class="dice" id="dice">
+    <div class="d">?</div><div class="d">?</div><div class="d">?</div>
   </div>
 </div>
 
-<div class="card" id="betArea">
-  <input id="amount" placeholder="Min ₹1">
-  <div class="row">
-    <div class="btn big" onclick="bet('BIG')">BIG (11-18)</div>
-    <div class="btn small" onclick="bet('SMALL')">SMALL (3-10)</div>
-  </div>
-  <div class="row">
+<div class="card" id="betBox">
+  <input id="amount" placeholder="Min ₹1" style="width:100%;padding:12px;border-radius:10px;border:none">
+  <br><br>
+  <div class="grid">
+    <div class="btn big" onclick="bet('BIG')">BIG</div>
+    <div class="btn small" onclick="bet('SMALL')">SMALL</div>
     <div class="btn even" onclick="bet('EVEN')">EVEN</div>
     <div class="btn odd" onclick="bet('ODD')">ODD</div>
   </div>
-  <div class="grid" id="nums"></div>
-</div>
-
-<div class="tabs">
-  <div class="tab" onclick="showHistory()">Game History</div>
-  <div class="tab" onclick="showBets()">My Bets</div>
-</div>
-
-<div class="card">
-  <table id="table"></table>
-</div>
-
-<div class="popup" id="popup">
-  <div class="pop">
-    <div id="popupText"></div>
-    <button onclick="popup.style.display='none'">OK</button>
+  <br>
+  <div class="grid">
+    <div class="num" onclick="bet(3)">3</div><div class="num" onclick="bet(4)">4</div>
+    <div class="num" onclick="bet(5)">5</div><div class="num" onclick="bet(6)">6</div>
+    <div class="num" onclick="bet(7)">7</div><div class="num" onclick="bet(8)">8</div>
+    <div class="num" onclick="bet(9)">9</div><div class="num" onclick="bet(10)">10</div>
+    <div class="num" onclick="bet(11)">11</div><div class="num" onclick="bet(12)">12</div>
+    <div class="num" onclick="bet(13)">13</div><div class="num" onclick="bet(14)">14</div>
+    <div class="num" onclick="bet(15)">15</div><div class="num" onclick="bet(16)">16</div>
+    <div class="num" onclick="bet(17)">17</div><div class="num" onclick="bet(18)">18</div>
   </div>
 </div>
 
+<div class="card">
+  <div class="grid">
+    <div class="tab" onclick="show('history')">Game History</div>
+    <div class="tab" onclick="show('bets')">My Bets</div>
+  </div>
+
+  <div id="history"></div>
+  <div id="bets" style="display:none"></div>
+</div>
+
 <script>
-const ROUND=30;
-const BASE=Date.now();
-let wallet=Number(localStorage.wallet)||100;
-let bets=JSON.parse(localStorage.bets||"[]");
-let history=JSON.parse(localStorage.history||"[]");
-let currentBets=[];
-let dice=[0,0,0],lastRound=-1;
+let state = JSON.parse(localStorage.getItem("K3")) || {
+  period: Date.now(),
+  wallet: 100,
+  start: Date.now(),
+  history: [],
+  bets: [],
+  currentBet: null
+};
 
-function period(){
- return Math.floor((Date.now()-BASE)/1000/ROUND)+202601200000;
+function save(){ localStorage.setItem("K3",JSON.stringify(state)); }
+
+function updatePeriod(){
+  document.getElementById("period").innerText =
+   `Period: ${state.period} | Wallet: ₹${state.wallet}`;
 }
 
-function roll(){
- dice=[1+rand(),1+rand(),1+rand()];
- diceBox.innerHTML=dice.map(d=>`<div>${d}</div>`).join("");
-}
-
-function rand(){return Math.floor(Math.random()*6)}
-
-function tick(){
- let elapsed=Math.floor((Date.now()-BASE)/1000);
- let remain=ROUND-(elapsed%ROUND);
- timer.innerText=remain+"s";
- info.innerText="Period: "+period()+" | Wallet: ₹"+wallet;
-
- if(remain<=5) betArea.classList.add("lock");
- else betArea.classList.remove("lock");
-
- let round=Math.floor(elapsed/ROUND);
- if(round!==lastRound && remain===0){
-   lastRound=round;
-   roll();
-   settle();
- }
+function rollDice(){
+  return [1,2,3].map(()=>Math.floor(Math.random()*6)+1);
 }
 
 function bet(type){
- let amt=Number(amount.value);
- if(amt<1) return pop("Minimum ₹1");
- wallet-=amt;
- localStorage.wallet=wallet;
- currentBets.push({type,amt,period:period()});
- pop("Bet Placed");
+  let amt = +amount.value;
+  if(!amt || amt<1) return alert("Minimum bet ₹1");
+  if(state.currentBet) return alert("Bet already placed");
+  state.currentBet = {type,amt,period:state.period};
+  save();
 }
 
-function settle(){
- let sum=dice.reduce((a,b)=>a+b,0);
- let res=sum>=11?"BIG":"SMALL";
- history.unshift({p:period(),s:sum,r:res});
- history=history.slice(0,10);
- localStorage.history=JSON.stringify(history);
+function finishRound(){
+  let dice = rollDice();
+  document.getElementById("dice").innerHTML =
+   dice.map(n=>`<div class="d">${n}</div>`).join("");
 
- currentBets.forEach(b=>{
-   let win=false;
-   if(b.type===res) win=true;
-   if(b.type==="EVEN" && sum%2===0) win=true;
-   if(b.type==="ODD" && sum%2===1) win=true;
-   if(Number(b.type)===sum) win=true;
+  let sum = dice.reduce((a,b)=>a+b,0);
+  let result = sum>=11 ? "BIG":"SMALL";
 
-   let profit=win?b.amt*2:-b.amt;
-   if(win) wallet+=b.amt*2;
-   bets.unshift({...b,profit});
- });
+  if(state.currentBet){
+    let win = false;
+    let t = state.currentBet.type;
+    if(t===sum || t===result || (t==="EVEN"&&sum%2===0) || (t==="ODD"&&sum%2===1)) win=true;
+    let diff = win ? state.currentBet.amt*2 : -state.currentBet.amt;
+    state.wallet += diff;
 
- currentBets=[];
- localStorage.wallet=wallet;
- localStorage.bets=JSON.stringify(bets);
+    state.bets.unshift({
+      period:state.period,
+      bet:t,
+      amount:state.currentBet.amt,
+      result: win?`+${state.currentBet.amt*2}`:`-${state.currentBet.amt}`
+    });
+    state.currentBet=null;
+  }
+
+  state.history.unshift({period:state.period,sum,result});
+  state.history=state.history.slice(0,10);
+  state.period++;
+  state.start=Date.now();
+  save();
 }
 
-function showHistory(){
- table.innerHTML="<tr><th>Period</th><th>Sum</th><th>Result</th></tr>";
- history.forEach(h=>{
- table.innerHTML+=`<tr><td>${h.p}</td><td>${h.s}</td><td>${h.r}</td></tr>`;
- });
+function render(){
+  updatePeriod();
+  history.innerHTML = `<table><tr><th>Period</th><th>Sum</th><th>Result</th></tr>`+
+   state.history.map(r=>`<tr><td>${r.period}</td><td>${r.sum}</td><td>${r.result}</td></tr>`).join("")+"</table>";
+  bets.innerHTML = `<table><tr><th>Period</th><th>Bet</th><th>Result</th></tr>`+
+   state.bets.map(b=>`<tr><td>${b.period}</td><td>${b.bet}</td><td>${b.result}</td></tr>`).join("")+"</table>";
 }
 
-function showBets(){
- table.innerHTML="<tr><th>Period</th><th>Bet</th><th>Profit</th></tr>";
- bets.slice(0,10).forEach(b=>{
- table.innerHTML+=`<tr><td>${b.period}</td><td>${b.type}</td><td>${b.profit}</td></tr>`;
- });
-}
+setInterval(()=>{
+  let left = 30 - Math.floor((Date.now()-state.start)/1000);
+  timer.innerText = left+"s";
+  betBox.classList.toggle("blur",left<=5);
+  if(left<=0) finishRound();
+  render();
+},1000);
 
-function pop(t){popupText.innerText=t;popup.style.display="flex"}
-
-nums.innerHTML=[...Array(16)].map((_,i)=>`<div class="num" onclick="bet(${i+3})">${i+3}</div>`).join("");
-
-setInterval(tick,1000);
+render();
 </script>
 </body>
 </html>
