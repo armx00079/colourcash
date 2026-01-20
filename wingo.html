@@ -8,21 +8,20 @@
 <style>
 body{
   margin:0;
-  font-family:Arial, sans-serif;
+  font-family:Arial;
   background:#0f0f0f;
   color:#fff;
 }
 .header{
   text-align:center;
-  padding:15px;
   font-size:22px;
-  font-weight:bold;
+  padding:15px;
 }
 .top{
   display:flex;
   justify-content:space-between;
   padding:0 15px;
-  font-size:14px;
+  color:#bbb;
 }
 .timer{
   text-align:center;
@@ -30,7 +29,7 @@ body{
   color:#ff4081;
   margin:10px 0;
 }
-.box{
+.card{
   background:#1c1c1c;
   margin:15px;
   padding:15px;
@@ -39,19 +38,18 @@ body{
 input{
   width:100%;
   padding:12px;
+  font-size:18px;
   border-radius:8px;
   border:none;
-  font-size:16px;
   text-align:center;
 }
-.colors, .numbers, .multi{
+.grid3{
   display:grid;
   grid-template-columns:repeat(3,1fr);
   gap:10px;
   margin-top:12px;
 }
-.numbers{grid-template-columns:repeat(5,1fr)}
-button{
+.btn{
   padding:14px;
   border:none;
   border-radius:10px;
@@ -62,14 +60,35 @@ button{
 .red{background:#e53935}
 .green{background:#43a047}
 .violet{background:#8e24aa}
-.gray{background:#333}
-.active{outline:2px solid #fff}
+.dark{background:#333}
+.active{outline:3px solid #fff}
+
+.grid5{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:8px;
+  margin-top:10px;
+}
+.multis button{
+  padding:10px;
+  border:none;
+  border-radius:8px;
+  font-weight:bold;
+}
+.multi-active{background:#43a047;color:#fff}
 .bigsmall{
   display:flex;
-  margin-top:12px;
+  margin-top:10px;
 }
-.big{flex:1;background:#f4a261}
-.small{flex:1;background:#4ea8de}
+.bigsmall button{
+  flex:1;
+  padding:12px;
+  border:none;
+  font-size:16px;
+}
+.big{background:#f4a261}
+.small{background:#4dabf7}
+
 .tabs{
   display:flex;
   gap:10px;
@@ -78,35 +97,25 @@ button{
 .tab{
   flex:1;
   padding:12px;
-  border:none;
   border-radius:10px;
-  background:#333;
-  color:#fff;
+  text-align:center;
+  font-weight:bold;
 }
-.tab.active{background:#ff6b6b}
+.pink{background:#ff6f6f}
+.gray{background:#333}
+
 table{
   width:100%;
   border-collapse:collapse;
+  font-size:14px;
 }
-th{
-  background:#ff6b6b;
-  padding:10px;
-}
-td{
-  padding:10px;
+th,td{
+  padding:8px;
   text-align:center;
-  border-bottom:1px solid #333;
 }
-.dot{
-  width:10px;
-  height:10px;
-  border-radius:50%;
-  display:inline-block;
-}
-.lock{
-  opacity:0.4;
-  pointer-events:none;
-}
+th{background:#ff6f6f}
+.win{color:#4caf50}
+.loss{color:#f44336}
 </style>
 </head>
 
@@ -116,171 +125,159 @@ td{
 
 <div class="top">
   <div>Period: <span id="period"></span></div>
-  <div>Wallet: ₹<span id="wallet">100</span></div>
+  <div>Wallet: ₹<span id="wallet"></span></div>
 </div>
 
-<div class="timer">⏳ <span id="time">30</span>s</div>
+<div class="timer">⏳ <span id="time"></span>s</div>
 
-<div class="box" id="gameBox">
-  <input type="number" id="amount" placeholder="Min ₹10">
+<div class="card">
+  <input id="amount" placeholder="Min ₹10" type="number">
 
-  <div class="colors">
-    <button class="red" onclick="bet('color','Red')">RED</button>
-    <button class="green" onclick="bet('color','Green')">GREEN</button>
-    <button class="violet" onclick="bet('color','Violet')">VIOLET</button>
+  <div class="grid3">
+    <button class="btn red" onclick="selectBet('color','RED')">RED</button>
+    <button class="btn green" onclick="selectBet('color','GREEN')">GREEN</button>
+    <button class="btn violet" onclick="selectBet('color','VIOLET')">VIOLET</button>
   </div>
 
-  <div class="numbers">
-    <button class="gray" onclick="bet('number',0)">0</button>
-    <button class="gray" onclick="bet('number',1)">1</button>
-    <button class="gray" onclick="bet('number',2)">2</button>
-    <button class="gray" onclick="bet('number',3)">3</button>
-    <button class="gray" onclick="bet('number',4)">4</button>
-    <button class="gray" onclick="bet('number',5)">5</button>
-    <button class="gray" onclick="bet('number',6)">6</button>
-    <button class="gray" onclick="bet('number',7)">7</button>
-    <button class="gray" onclick="bet('number',8)">8</button>
-    <button class="gray" onclick="bet('number',9)">9</button>
+  <div class="grid5">
+    <button class="btn dark" onclick="selectBet('number',0)">0</button>
+    <button class="btn dark" onclick="selectBet('number',1)">1</button>
+    <button class="btn dark" onclick="selectBet('number',2)">2</button>
+    <button class="btn dark" onclick="selectBet('number',3)">3</button>
+    <button class="btn dark" onclick="selectBet('number',4)">4</button>
+    <button class="btn dark" onclick="selectBet('number',5)">5</button>
+    <button class="btn dark" onclick="selectBet('number',6)">6</button>
+    <button class="btn dark" onclick="selectBet('number',7)">7</button>
+    <button class="btn dark" onclick="selectBet('number',8)">8</button>
+    <button class="btn dark" onclick="selectBet('number',9)">9</button>
   </div>
 
-  <div class="multi">
-    <button class="green active" onclick="setMulti(1)">X1</button>
-    <button class="gray" onclick="setMulti(5)">X5</button>
-    <button class="gray" onclick="setMulti(10)">X10</button>
-    <button class="gray" onclick="setMulti(20)">X20</button>
+  <div class="multis grid5">
+    <button onclick="setMulti(1)" class="multi-active">X1</button>
+    <button onclick="setMulti(5)">X5</button>
+    <button onclick="setMulti(10)">X10</button>
+    <button onclick="setMulti(20)">X20</button>
+    <button onclick="setMulti(50)">X50</button>
   </div>
 
   <div class="bigsmall">
-    <button class="big" onclick="bet('bigsmall','Big')">Big</button>
-    <button class="small" onclick="bet('bigsmall','Small')">Small</button>
+    <button class="big" onclick="selectBet('bs','BIG')">Big</button>
+    <button class="small" onclick="selectBet('bs','SMALL')">Small</button>
   </div>
 </div>
 
 <div class="tabs">
-  <button class="tab active" onclick="showResults()">Game History</button>
-  <button class="tab" onclick="showBets()">My Bets</button>
+  <div class="tab pink">Game History</div>
+  <div class="tab pink">My Bets</div>
 </div>
 
-<table id="resultTable">
-<thead>
-<tr><th>Period</th><th>Number</th><th>Big/Small</th><th>Color</th></tr>
-</thead>
-<tbody></tbody>
-</table>
-
-<table id="betTable" style="display:none">
-<thead>
-<tr><th>Period</th><th>Bet</th><th>Amount</th><th>Status</th></tr>
-</thead>
-<tbody></tbody>
-</table>
+<div class="card">
+  <table>
+    <thead>
+      <tr>
+        <th>Period</th>
+        <th>Bet</th>
+        <th>Amount</th>
+        <th>Result</th>
+      </tr>
+    </thead>
+    <tbody id="history"></tbody>
+  </table>
+</div>
 
 <script>
-let time=30;
-let period=20260120100001;
-let wallet=100;
+let state = JSON.parse(localStorage.getItem("wingo")) || {
+  period:20260120100001,
+  time:30,
+  wallet:100,
+  bets:[],
+  history:[]
+};
+
+let currentBets=[];
 let multiplier=1;
-let bets=[];
-let results=[];
-let myBets=[];
-let lock=false;
+let locked=false;
 
-document.getElementById("period").innerText=period;
+function save(){
+  localStorage.setItem("wingo",JSON.stringify(state));
+}
 
-setInterval(()=>{
-  time--;
-  document.getElementById("time").innerText=time;
+function render(){
+  period.innerText=state.period;
+  wallet.innerText=state.wallet;
+  time.innerText=state.time;
+}
 
-  if(time<=5){
-    document.getElementById("gameBox").classList.add("lock");
-    lock=true;
-  }
+function selectBet(type,val){
+  if(locked) return alert("Bet closed");
+  let amt=Number(amount.value);
+  if(amt<10) return alert("Min ₹10");
+  let total=amt*multiplier;
+  if(total>state.wallet) return alert("Low balance");
 
-  if(time<=0){
-    finishRound();
-    time=30;
-    lock=false;
-    document.getElementById("gameBox").classList.remove("lock");
-  }
-},1000);
+  currentBets.push({type,val,amt:total});
+  state.wallet-=total;
+  save();
+  render();
+}
 
 function setMulti(x){
   multiplier=x;
-  document.querySelectorAll(".multi button").forEach(b=>b.classList.remove("active"));
-  event.target.classList.add("active");
-}
-
-function bet(type,value){
-  if(lock) return;
-  let amt=Number(document.getElementById("amount").value)*multiplier;
-  if(amt<10 || amt>wallet) return alert("Invalid amount");
-
-  wallet-=amt;
-  document.getElementById("wallet").innerText=wallet;
-
-  bets.push({type,value,amt,label:type+":"+value+" ₹"+amt});
 }
 
 function finishRound(){
-  let num=Math.floor(Math.random()*10);
-  let bs=num>=5?"Big":"Small";
-  let col=(num==0||num==5)?"Violet":(num%2==0?"Red":"Green");
+  let result=Math.floor(Math.random()*10);
+  let color=result==0||result==5?'VIOLET':result%2?'GREEN':'RED';
+  let bs=result>=5?'BIG':'SMALL';
 
-  results.unshift({period,num,bs,col});
-  if(results.length>10) results.pop();
-  renderResults();
+  currentBets.forEach(b=>{
+    let win=0;
+    if(b.type=='number' && b.val==result) win=b.amt*10;
+    if(b.type=='color' && b.val==color) win=b.amt*(color=='VIOLET'?5:2);
+    if(b.type=='bs' && b.val==bs) win=b.amt*2;
 
-  bets.forEach(b=>{
-    let win=false,pay=0;
-    if(b.type=="color" && b.value==col){pay=b.amt*(col=="Violet"?5:2);win=true}
-    if(b.type=="bigsmall" && b.value==bs){pay=b.amt*2;win=true}
-    if(b.type=="number" && b.value==num){pay=b.amt*10;win=true}
-
-    if(win){wallet+=pay;myBets.unshift({period,bet:b.label,amt:"+"+pay,status:"WIN"})}
-    else myBets.unshift({period,bet:b.label,amt:"-"+b.amt,status:"LOSS"});
+    state.wallet+=win;
+    state.history.unshift({
+      period:state.period,
+      bet:b.type+":"+b.val,
+      amt:b.amt,
+      res:win>0?"+₹"+win:"-₹"+b.amt,
+      status:win>0?'WIN':'LOSS'
+    });
   });
 
-  bets=[];
-  document.getElementById("wallet").innerText=wallet;
-  period++;
-  document.getElementById("period").innerText=period;
-  renderMyBets();
+  state.history=state.history.slice(0,10);
+  state.period++;
+  currentBets=[];
+  locked=false;
+  state.time=30;
+  save();
+  drawHistory();
 }
 
-function renderResults(){
-  let t=document.querySelector("#resultTable tbody");
-  t.innerHTML="";
-  results.forEach(r=>{
-    t.innerHTML+=`<tr>
-      <td>${r.period}</td>
-      <td>${r.num}</td>
-      <td>${r.bs}</td>
-      <td><span class="dot ${r.col.toLowerCase()}"></span></td>
-    </tr>`;
-  });
-}
-
-function renderMyBets(){
-  let t=document.querySelector("#betTable tbody");
-  t.innerHTML="";
-  myBets.forEach(b=>{
-    t.innerHTML+=`<tr>
-      <td>${b.period}</td>
-      <td>${b.bet}</td>
-      <td>${b.amt}</td>
-      <td style="color:${b.status=="WIN"?"#43a047":"#e53935"}">${b.status}</td>
-    </tr>`;
+function drawHistory(){
+  history.innerHTML="";
+  state.history.forEach(h=>{
+    history.innerHTML+=`
+      <tr>
+        <td>${h.period}</td>
+        <td>${h.bet}</td>
+        <td>₹${h.amt}</td>
+        <td class="${h.status=='WIN'?'win':'loss'}">${h.res}</td>
+      </tr>`;
   });
 }
 
-function showResults(){
-  document.getElementById("resultTable").style.display="table";
-  document.getElementById("betTable").style.display="none";
-}
-function showBets(){
-  document.getElementById("resultTable").style.display="none";
-  document.getElementById("betTable").style.display="table";
-}
+setInterval(()=>{
+  state.time--;
+  if(state.time==5) locked=true;
+  if(state.time<=0) finishRound();
+  save();
+  render();
+},1000);
+
+drawHistory();
+render();
 </script>
 
 </body>
