@@ -18,6 +18,35 @@ body{
   font-size:22px;
   font-weight:bold;
 }
+
+/* 🎮 GAME MENU */
+.menu{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;
+  padding:15px;
+}
+.game-card{
+  background:#1c1c1c;
+  border-radius:14px;
+  padding:20px 10px;
+  cursor:pointer;
+}
+.game-card h3{
+  margin:0;
+  font-size:18px;
+}
+.game-card p{
+  font-size:13px;
+  color:#aaa;
+}
+
+/* 🔥 WIN GO STYLE */
+.wingo{
+  background:linear-gradient(135deg,#2196f3,#21cbf3);
+}
+
+/* ⏳ TIMER GAME (old) */
 .timer{
   font-size:36px;
   margin:10px 0;
@@ -75,6 +104,30 @@ input{
 
 <div class="header">🎨 Colour Cash</div>
 
+<!-- 🎮 GAME LIST (91 CLUB STYLE) -->
+<div class="menu">
+  <div class="game-card wingo" onclick="location.href='wingo.html'">
+    <h3>WIN GO</h3>
+    <p>30s Colour Trading</p>
+  </div>
+
+  <div class="game-card">
+    <h3>K3</h3>
+    <p>Coming Soon</p>
+  </div>
+
+  <div class="game-card">
+    <h3>5D</h3>
+    <p>Coming Soon</p>
+  </div>
+
+  <div class="game-card">
+    <h3>TRX WINGO</h3>
+    <p>Coming Soon</p>
+  </div>
+</div>
+
+<!-- 🔽 OLD GAME (OPTIONAL – agar rakhna ho) -->
 <div class="timer">
   ⏳ <span id="time">30</span>s
 </div>
@@ -143,7 +196,6 @@ function showResult(){
     return;
   }
 
-  // TEMP RANDOM (backend logic baad me)
   const colors = ["RED","GREEN","VIOLET"];
   const result = colors[Math.floor(Math.random()*3)];
 
