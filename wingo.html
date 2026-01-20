@@ -12,112 +12,28 @@ body{
   background:#0f0f0f;
   color:#fff;
 }
-.header{
-  text-align:center;
-  padding:14px;
-  font-size:22px;
-  font-weight:bold;
-}
-.top{
-  display:flex;
-  justify-content:space-between;
-  padding:0 15px;
-  font-size:14px;
-  color:#ccc;
-}
-.timer{
-  text-align:center;
-  font-size:36px;
-  margin:10px 0;
-  color:#ff4081;
-}
-.box{
-  background:#1c1c1c;
-  margin:15px;
-  padding:15px;
-  border-radius:14px;
-}
-input{
-  width:100%;
-  padding:12px;
-  font-size:16px;
-  border-radius:8px;
-  border:none;
-  text-align:center;
-}
-.colors, .numbers{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:10px;
-  margin-top:12px;
-}
-.numbers{
-  grid-template-columns:repeat(5,1fr);
-}
-button{
-  padding:14px 0;
-  border:none;
-  border-radius:10px;
-  font-size:16px;
-  font-weight:bold;
-  color:#fff;
-}
-.red{background:#e53935}
-.green{background:#43a047}
-.violet{background:#8e24aa}
+.header{text-align:center;padding:14px;font-size:22px;font-weight:bold}
+.top{display:flex;justify-content:space-between;padding:0 15px;color:#ccc}
+.timer{text-align:center;font-size:36px;color:#ff4081;margin:10px 0}
+.box{background:#1c1c1c;margin:15px;padding:15px;border-radius:14px}
+input{width:100%;padding:12px;border:none;border-radius:8px;text-align:center}
+.colors,.numbers{display:grid;gap:10px;margin-top:12px}
+.colors{grid-template-columns:repeat(3,1fr)}
+.numbers{grid-template-columns:repeat(5,1fr)}
+button{padding:14px 0;border:none;border-radius:10px;font-size:16px;font-weight:bold;color:#fff}
+.red{background:#e53935}.green{background:#43a047}.violet{background:#8e24aa}
 .num{background:#2c2c2c}
-.multis{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:8px;
-  margin-top:12px;
-}
-.multi{
-  background:#2c2c2c;
-}
+.multis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+.multi{background:#2c2c2c}
 .multi.active{background:#43a047}
-.bs{
-  display:flex;
-  margin-top:12px;
-}
-.big{flex:1;background:#f4a261}
-.small{flex:1;background:#4dabf7}
-.tabs{
-  display:flex;
-  gap:10px;
-  margin:15px;
-}
-.tab{
-  flex:1;
-  padding:12px;
-  border-radius:10px;
-  background:#2c2c2c;
-  text-align:center;
-}
-.tab.active{background:#ff6b6b}
-.table{
-  margin:15px;
-}
-.row{
-  display:grid;
-  grid-template-columns:2fr 1fr 1fr 1fr;
-  padding:8px 0;
-  border-bottom:1px solid #333;
-  font-size:14px;
-}
-.dot{
-  width:10px;
-  height:10px;
-  border-radius:50%;
-  margin:auto;
-}
-.greenDot{background:#43a047}
-.redDot{background:#e53935}
-.violetDot{background:#8e24aa}
-.disabled{
-  opacity:.4;
-  pointer-events:none;
-}
+.bs{display:flex;margin-top:12px}
+.big{flex:1;background:#f4a261}.small{flex:1;background:#4dabf7}
+.tab{margin:15px;background:#ff6b6b;padding:12px;border-radius:10px;text-align:center}
+.history{margin:15px}
+.row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;
+padding:8px 0;border-bottom:1px solid #333;font-size:13px}
+.win{color:#43a047}.loss{color:#e53935}
+.disabled{opacity:.4;pointer-events:none}
 </style>
 </head>
 
@@ -167,118 +83,102 @@ button{
   </div>
 </div>
 
-<div class="tabs">
-  <div class="tab active">Game history</div>
-  <div class="tab">Chart</div>
-  <div class="tab">Follow Strategy</div>
-</div>
+<div class="tab">📜 My History</div>
 
-<div class="table" id="history">
+<div class="history" id="myHistory">
   <div class="row" style="color:#ff6b6b">
-    <b>Period</b><b>Number</b><b>Big/Small</b><b>Color</b>
+    <b>Period</b><b>Bet</b><b>Amount</b><b>Result</b><b>Status</b>
   </div>
 </div>
 
 <script>
-let time=30, timer;
-let period=20260120100001;
-let wallet=100;
-let bets=[];
-let multiplier=1;
-let betOpen=true;
-let history=[];
-
-const walletEl=walletSpan=document.getElementById("wallet");
+let time=30,period=20260120100001,wallet=100;
+let bets=[],multiplier=1,betOpen=true;
+let myHistory=[];
 
 function startRound(){
-  time=30;
-  betOpen=true;
-  bets=[];
-  document.getElementById("period").innerText=period;
-  timer=setInterval(()=>{
-    time--;
-    document.getElementById("time").innerText=time;
-    if(time<=5){betOpen=false;lockButtons(true);}
-    if(time===0){
-      clearInterval(timer);
-      settle();
-    }
+  time=30;betOpen=true;bets=[];
+  period++;document.getElementById("period").innerText=period;
+  lock(false);
+  const t=setInterval(()=>{
+    time--;timeSpan.innerText=time;
+    if(time<=5){betOpen=false;lock(true)}
+    if(time===0){clearInterval(t);settle()}
   },1000);
 }
 
-function lockButtons(lock){
-  document.querySelectorAll("button").forEach(b=>{
-    if(lock && !b.classList.contains("multi")) b.classList.add("disabled");
-    else b.classList.remove("disabled");
-  });
-}
+const timeSpan=document.getElementById("time");
+const walletSpan=document.getElementById("wallet");
 
-function placeBet(type,value,winMult){
+function lock(l){document.querySelectorAll("button").forEach(b=>{
+  if(!b.classList.contains("multi")) b.classList.toggle("disabled",l)
+})}
+
+function placeBet(type,val,multi){
   if(!betOpen) return alert("Betting closed");
-  let amt=Number(betAmount.value);
-  if(amt<10) return alert("Min ₹10");
-  amt*=multiplier;
-  if(wallet<amt) return alert("No balance");
-  wallet-=amt;
-  walletEl.innerText=wallet;
-  bets.push({type,value,amt,winMult});
+  let amt=Number(betAmount.value)*multiplier;
+  if(amt<10||wallet<amt) return alert("Invalid bet");
+  wallet-=amt;walletSpan.innerText=wallet;
+  bets.push({type,val,amt,multi,period});
 }
 
-document.querySelectorAll("[data-color]").forEach(b=>{
-  b.onclick=()=>placeBet("color",b.dataset.color,2);
-});
-document.querySelectorAll("[data-num]").forEach(b=>{
-  b.onclick=()=>placeBet("num",Number(b.dataset.num),10);
-});
-document.querySelectorAll("[data-bs]").forEach(b=>{
-  b.onclick=()=>placeBet("bs",b.dataset.bs,2);
-});
-document.querySelectorAll(".multi").forEach(b=>{
-  b.onclick=()=>{
-    document.querySelectorAll(".multi").forEach(x=>x.classList.remove("active"));
-    b.classList.add("active");
-    multiplier=Number(b.dataset.m);
-  };
+document.querySelectorAll("[data-color]").forEach(b=>b.onclick=
+()=>placeBet("Color",b.dataset.color,b.dataset.color==="VIOLET"?5:2));
+
+document.querySelectorAll("[data-num]").forEach(b=>b.onclick=
+()=>placeBet("Number",b.dataset.num,10));
+
+document.querySelectorAll("[data-bs]").forEach(b=>b.onclick=
+()=>placeBet("BigSmall",b.dataset.bs,2));
+
+document.querySelectorAll(".multi").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll(".multi").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active");multiplier=Number(b.dataset.m);
 });
 
 function settle(){
   const num=Math.floor(Math.random()*10);
   const color=(num===0||num===5)?"VIOLET":(num%2?"GREEN":"RED");
   const bs=num>=5?"Big":"Small";
-  let win=0;
+
   bets.forEach(b=>{
-    if(
-      (b.type==="color"&&b.value===color)||
-      (b.type==="num"&&b.value===num)||
-      (b.type==="bs"&&b.value===bs)
-    ){
-      win+=b.amt*b.winMult;
-    }
+    let win=false;
+    if(b.type==="Color"&&b.val===color) win=true;
+    if(b.type==="Number"&&b.val==num) win=true;
+    if(b.type==="BigSmall"&&b.val===bs) win=true;
+
+    let status="LOSS",gain=0;
+    if(win){gain=b.amt*b.multi;wallet+=gain;status="WIN"}
+
+    myHistory.unshift({
+      period:b.period,
+      bet:`${b.type}:${b.val}`,
+      amount:b.amt,
+      result:gain,
+      status
+    });
   });
-  wallet+=win;
-  walletEl.innerText=wallet;
-  history.unshift({period,num,bs,color});
-  if(history.length>10) history.pop();
-  renderHistory();
-  period++;
-  lockButtons(false);
+
+  walletSpan.innerText=wallet;
+  renderMyHistory();
   setTimeout(startRound,2000);
 }
 
-function renderHistory(){
-  const h=document.getElementById("history");
+function renderMyHistory(){
+  const h=document.getElementById("myHistory");
   h.innerHTML=`
-    <div class="row" style="color:#ff6b6b">
-      <b>Period</b><b>Number</b><b>Big/Small</b><b>Color</b>
-    </div>`;
-  history.forEach(x=>{
+  <div class="row" style="color:#ff6b6b">
+    <b>Period</b><b>Bet</b><b>Amount</b><b>Result</b><b>Status</b>
+  </div>`;
+  myHistory.slice(0,20).forEach(x=>{
     h.innerHTML+=`
-      <div class="row">
-        <div>${x.period}</div>
-        <div>${x.num}</div>
-        <div>${x.bs}</div>
-        <div class="dot ${x.color.toLowerCase()}Dot"></div>
-      </div>`;
+    <div class="row ${x.status==="WIN"?"win":"loss"}">
+      <div>${x.period}</div>
+      <div>${x.bet}</div>
+      <div>₹${x.amount}</div>
+      <div>${x.status==="WIN"?"+₹"+x.result:"-₹"+x.amount}</div>
+      <div>${x.status}</div>
+    </div>`;
   });
 }
 
