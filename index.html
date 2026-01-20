@@ -23,14 +23,18 @@ body{
 .menu{
   display:grid;
   grid-template-columns:repeat(2,1fr);
-  gap:12px;
+  gap:14px;
   padding:15px;
 }
 .game-card{
   background:#1c1c1c;
-  border-radius:14px;
-  padding:22px 10px;
+  border-radius:16px;
+  padding:24px 10px;
   cursor:pointer;
+  transition:0.2s;
+}
+.game-card:active{
+  transform:scale(0.97);
 }
 .game-card h3{
   margin:0;
@@ -41,9 +45,18 @@ body{
   color:#aaa;
 }
 
-/* 🔥 WIN GO HIGHLIGHT */
+/* 🔥 ACTIVE GAMES */
 .wingo{
   background:linear-gradient(135deg,#2196f3,#21cbf3);
+}
+.k3{
+  background:linear-gradient(135deg,#ff7043,#ff5252);
+}
+.trx{
+  background:linear-gradient(135deg,#7e57c2,#9575cd);
+}
+.d5{
+  background:linear-gradient(135deg,#26a69a,#2bbbad);
 }
 </style>
 </head>
@@ -52,27 +65,30 @@ body{
 
 <div class="header">🎨 Colour Cash</div>
 
-<!-- 🎮 GAME LIST (91 CLUB STYLE) -->
 <div class="menu">
 
+  <!-- ✅ WIN GO -->
   <div class="game-card wingo" onclick="location.href='wingo.html'">
     <h3>WIN GO</h3>
     <p>30s Colour Trading</p>
   </div>
 
-  <div class="game-card">
+  <!-- 🎲 K3 -->
+  <div class="game-card k3" onclick="location.href='k3.html'">
     <h3>K3</h3>
-    <p>Coming Soon</p>
+    <p>Dice Game</p>
   </div>
 
-  <div class="game-card">
+  <!-- 🔢 5D -->
+  <div class="game-card d5" onclick="location.href='5d.html'">
     <h3>5D</h3>
-    <p>Coming Soon</p>
+    <p>Number Lottery</p>
   </div>
 
-  <div class="game-card">
+  <!-- 🪙 TRX WINGO -->
+  <div class="game-card trx" onclick="location.href='trxwingo.html'">
     <h3>TRX WINGO</h3>
-    <p>Coming Soon</p>
+    <p>Crypto Colour Game</p>
   </div>
 
 </div>
