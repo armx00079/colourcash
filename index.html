@@ -29,7 +29,7 @@ body{
 .game-card{
   background:#1c1c1c;
   border-radius:14px;
-  padding:20px 10px;
+  padding:22px 10px;
   cursor:pointer;
 }
 .game-card h3{
@@ -41,61 +41,9 @@ body{
   color:#aaa;
 }
 
-/* 🔥 WIN GO STYLE */
+/* 🔥 WIN GO HIGHLIGHT */
 .wingo{
   background:linear-gradient(135deg,#2196f3,#21cbf3);
-}
-
-/* ⏳ TIMER GAME (old) */
-.timer{
-  font-size:36px;
-  margin:10px 0;
-  color:#ff4081;
-}
-.balance{
-  margin:10px 0;
-  font-size:16px;
-}
-.game-box{
-  background:#1c1c1c;
-  margin:15px;
-  padding:15px;
-  border-radius:12px;
-}
-.colors{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:10px;
-  margin-top:15px;
-}
-.color-btn{
-  padding:18px 0;
-  border-radius:10px;
-  font-size:18px;
-  font-weight:bold;
-  color:#fff;
-  border:none;
-}
-.red{background:#e53935}
-.green{background:#43a047}
-.violet{background:#8e24aa}
-
-.bet-box{
-  margin-top:15px;
-}
-input{
-  width:100%;
-  padding:12px;
-  border-radius:8px;
-  border:none;
-  font-size:16px;
-  text-align:center;
-}
-
-.result{
-  margin-top:15px;
-  font-size:18px;
-  min-height:24px;
 }
 </style>
 </head>
@@ -106,6 +54,7 @@ input{
 
 <!-- 🎮 GAME LIST (91 CLUB STYLE) -->
 <div class="menu">
+
   <div class="game-card wingo" onclick="location.href='wingo.html'">
     <h3>WIN GO</h3>
     <p>30s Colour Trading</p>
@@ -125,99 +74,8 @@ input{
     <h3>TRX WINGO</h3>
     <p>Coming Soon</p>
   </div>
+
 </div>
-
-<!-- 🔽 OLD GAME (OPTIONAL – agar rakhna ho) -->
-<div class="timer">
-  ⏳ <span id="time">30</span>s
-</div>
-
-<div class="balance">
-  Wallet: ₹<span id="balance">100</span>
-</div>
-
-<div class="game-box">
-  <div>Enter Bet Amount</div>
-  <div class="bet-box">
-    <input type="number" id="betAmount" placeholder="Min ₹10" />
-  </div>
-
-  <div class="colors">
-    <button class="color-btn red" onclick="placeBet('RED')">RED</button>
-    <button class="color-btn green" onclick="placeBet('GREEN')">GREEN</button>
-    <button class="color-btn violet" onclick="placeBet('VIOLET')">VIOLET</button>
-  </div>
-
-  <div class="result" id="result"></div>
-</div>
-
-<script>
-let time = 30;
-let timer;
-let currentBet = null;
-let wallet = 100;
-
-function startTimer(){
-  time = 30;
-  document.getElementById("time").innerText = time;
-
-  timer = setInterval(()=>{
-    time--;
-    document.getElementById("time").innerText = time;
-
-    if(time === 0){
-      clearInterval(timer);
-      showResult();
-    }
-  },1000);
-}
-
-function placeBet(color){
-  const amt = Number(document.getElementById("betAmount").value);
-
-  if(amt < 10){
-    alert("Minimum bet ₹10");
-    return;
-  }
-  if(amt > wallet){
-    alert("Insufficient balance");
-    return;
-  }
-
-  currentBet = { color, amt };
-  document.getElementById("result").innerText =
-    "Bet placed on " + color + " (₹" + amt + ")";
-}
-
-function showResult(){
-  if(!currentBet){
-    document.getElementById("result").innerText = "No bet placed";
-    startTimer();
-    return;
-  }
-
-  const colors = ["RED","GREEN","VIOLET"];
-  const result = colors[Math.floor(Math.random()*3)];
-
-  if(result === currentBet.color){
-    let win = currentBet.amt * (result==="VIOLET" ? 4.5 : 2);
-    wallet += win;
-    document.getElementById("result").innerText =
-      "🎉 " + result + " WON! +₹" + win;
-  }else{
-    wallet -= currentBet.amt;
-    document.getElementById("result").innerText =
-      "❌ " + result + " LOST!";
-  }
-
-  document.getElementById("balance").innerText = wallet;
-  currentBet = null;
-
-  setTimeout(startTimer,2000);
-}
-
-startTimer();
-</script>
 
 </body>
 </html>
