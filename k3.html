@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <title>K3</title>
@@ -8,19 +8,53 @@
 body{margin:0;background:#0f0f0f;color:#fff;font-family:Arial}
 .card{background:#1c1c1c;border-radius:16px;padding:15px;margin:12px}
 .center{text-align:center}
-.timer{color:#ff4d88;font-size:34px;font-weight:bold}
+.timer{color:#ff4d88;font-size:32px;font-weight:bold}
 .dice{display:flex;justify-content:center;gap:12px;margin:15px 0}
 .d{width:60px;height:60px;background:#e53935;border-radius:12px;
 display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:bold}
 .blur{filter:blur(2px);pointer-events:none}
-.btn{padding:14px;border-radius:12px;text-align:center;font-weight:bold}
+.btn{padding:14px;border-radius:12px;text-align:center;font-weight:bold;cursor:pointer}
 .big{background:#f6a55f}.small{background:#5dade2}
 .even{background:#4caf50}.odd{background:#e53935}
 .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.num{background:#2b2b2b;padding:14px;border-radius:10px;text-align:center}
-.tab{background:#ff7a7a;padding:12px;border-radius:12px;text-align:center}
-table{width:100%;margin-top:10px;border-collapse:collapse}
+.num{background:#2b2b2b;padding:14px;border-radius:10px;text-align:center;cursor:pointer}
+
+.tabs{display:flex;gap:10px}
+.tab{
+  background:#ff7a7a;
+  padding:14px;
+  border-radius:14px;
+  text-align:center;
+  font-weight:bold;
+  width:48%;
+  cursor:pointer
+}
+
+table{width:100%;border-collapse:collapse}
 td,th{padding:8px;border-bottom:1px solid #333;text-align:center}
+
+/* POPUP */
+.modal{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.6);
+  display:none;align-items:center;justify-content:center;
+}
+.modal-card{
+  background:#1c1c1c;
+  padding:20px;
+  border-radius:16px;
+  width:80%;
+  text-align:center
+}
+.modal-card button{
+  margin-top:12px;
+  padding:10px 20px;
+  background:#4caf50;
+  border:none;
+  border-radius:10px;
+  color:#fff;
+  font-weight:bold
+}
 </style>
 </head>
 
@@ -41,33 +75,37 @@ td,th{padding:8px;border-bottom:1px solid #333;text-align:center}
 <div class="card" id="betBox">
   <input id="amount" placeholder="Min ₹1" style="width:100%;padding:12px;border-radius:10px;border:none">
   <br><br>
+
   <div class="grid">
-    <div class="btn big" onclick="bet('BIG')">BIG</div>
-    <div class="btn small" onclick="bet('SMALL')">SMALL</div>
-    <div class="btn even" onclick="bet('EVEN')">EVEN</div>
-    <div class="btn odd" onclick="bet('ODD')">ODD</div>
+    <div class="btn big" onclick="placeBet('BIG')">BIG</div>
+    <div class="btn small" onclick="placeBet('SMALL')">SMALL</div>
+    <div class="btn even" onclick="placeBet('EVEN')">EVEN</div>
+    <div class="btn odd" onclick="placeBet('ODD')">ODD</div>
   </div>
+
   <br>
   <div class="grid">
-    <div class="num" onclick="bet(3)">3</div><div class="num" onclick="bet(4)">4</div>
-    <div class="num" onclick="bet(5)">5</div><div class="num" onclick="bet(6)">6</div>
-    <div class="num" onclick="bet(7)">7</div><div class="num" onclick="bet(8)">8</div>
-    <div class="num" onclick="bet(9)">9</div><div class="num" onclick="bet(10)">10</div>
-    <div class="num" onclick="bet(11)">11</div><div class="num" onclick="bet(12)">12</div>
-    <div class="num" onclick="bet(13)">13</div><div class="num" onclick="bet(14)">14</div>
-    <div class="num" onclick="bet(15)">15</div><div class="num" onclick="bet(16)">16</div>
-    <div class="num" onclick="bet(17)">17</div><div class="num" onclick="bet(18)">18</div>
+    ${[...Array(16)].map((_,i)=>`<div class="num" onclick="placeBet(${i+3})">${i+3}</div>`).join('')}
   </div>
 </div>
 
 <div class="card">
-  <div class="grid">
-    <div class="tab" onclick="show('history')">Game History</div>
-    <div class="tab" onclick="show('bets')">My Bets</div>
+  <div class="tabs">
+    <div class="tab" onclick="showTab('history')">Game History</div>
+    <div class="tab" onclick="showTab('bets')">My Bets</div>
   </div>
 
   <div id="history"></div>
   <div id="bets" style="display:none"></div>
+</div>
+
+<!-- POPUP -->
+<div class="modal" id="popup">
+  <div class="modal-card">
+    <h3>⚠ Minimum Bet</h3>
+    <p>Minimum bet amount is ₹1</p>
+    <button onclick="closePopup()">OK</button>
+  </div>
 </div>
 
 <script>
@@ -77,70 +115,67 @@ let state = JSON.parse(localStorage.getItem("K3")) || {
   start: Date.now(),
   history: [],
   bets: [],
-  currentBet: null
+  roundBets: []
 };
 
-function save(){ localStorage.setItem("K3",JSON.stringify(state)); }
+function save(){localStorage.setItem("K3",JSON.stringify(state));}
 
-function updatePeriod(){
-  document.getElementById("period").innerText =
-   `Period: ${state.period} | Wallet: ₹${state.wallet}`;
+function updateHeader(){
+  period.innerText=`Period: ${state.period} | Wallet: ₹${state.wallet}`;
+}
+
+function placeBet(type){
+  let amt=+amount.value;
+  if(!amt||amt<1){popup.style.display="flex";return;}
+  state.roundBets.push({type,amt,period:state.period});
+  save();
 }
 
 function rollDice(){
   return [1,2,3].map(()=>Math.floor(Math.random()*6)+1);
 }
 
-function bet(type){
-  let amt = +amount.value;
-  if(!amt || amt<1) return alert("Minimum bet ₹1");
-  if(state.currentBet) return alert("Bet already placed");
-  state.currentBet = {type,amt,period:state.period};
-  save();
-}
-
 function finishRound(){
-  let dice = rollDice();
-  document.getElementById("dice").innerHTML =
-   dice.map(n=>`<div class="d">${n}</div>`).join("");
+  let diceVals=rollDice();
+  dice.innerHTML=diceVals.map(n=>`<div class="d">${n}</div>`).join('');
+  let sum=diceVals.reduce((a,b)=>a+b,0);
+  let bs=sum>=11?"BIG":"SMALL";
 
-  let sum = dice.reduce((a,b)=>a+b,0);
-  let result = sum>=11 ? "BIG":"SMALL";
+  state.roundBets.forEach(b=>{
+    let win=false;
+    if(b.type===sum||b.type===bs||(b.type==="EVEN"&&sum%2===0)||(b.type==="ODD"&&sum%2===1)) win=true;
+    let diff=win?b.amt*2:-b.amt;
+    state.wallet+=diff;
+    state.bets.unshift({period:b.period,bet:b.type,result:win?`+${b.amt*2}`:`-${b.amt}`});
+  });
 
-  if(state.currentBet){
-    let win = false;
-    let t = state.currentBet.type;
-    if(t===sum || t===result || (t==="EVEN"&&sum%2===0) || (t==="ODD"&&sum%2===1)) win=true;
-    let diff = win ? state.currentBet.amt*2 : -state.currentBet.amt;
-    state.wallet += diff;
-
-    state.bets.unshift({
-      period:state.period,
-      bet:t,
-      amount:state.currentBet.amt,
-      result: win?`+${state.currentBet.amt*2}`:`-${state.currentBet.amt}`
-    });
-    state.currentBet=null;
-  }
-
-  state.history.unshift({period:state.period,sum,result});
+  state.history.unshift({period:state.period,sum,result:bs});
   state.history=state.history.slice(0,10);
+  state.roundBets=[];
   state.period++;
   state.start=Date.now();
   save();
 }
 
 function render(){
-  updatePeriod();
-  history.innerHTML = `<table><tr><th>Period</th><th>Sum</th><th>Result</th></tr>`+
-   state.history.map(r=>`<tr><td>${r.period}</td><td>${r.sum}</td><td>${r.result}</td></tr>`).join("")+"</table>";
-  bets.innerHTML = `<table><tr><th>Period</th><th>Bet</th><th>Result</th></tr>`+
-   state.bets.map(b=>`<tr><td>${b.period}</td><td>${b.bet}</td><td>${b.result}</td></tr>`).join("")+"</table>";
+  updateHeader();
+  history.innerHTML=`<table><tr><th>Period</th><th>Sum</th><th>Result</th></tr>`+
+  state.history.map(r=>`<tr><td>${r.period}</td><td>${r.sum}</td><td>${r.result}</td></tr>`).join('')+`</table>`;
+
+  bets.innerHTML=`<table><tr><th>Period</th><th>Bet</th><th>Result</th></tr>`+
+  state.bets.map(b=>`<tr><td>${b.period}</td><td>${b.bet}</td><td>${b.result}</td></tr>`).join('')+`</table>`;
 }
 
+function showTab(t){
+  history.style.display=t==="history"?"block":"none";
+  bets.style.display=t==="bets"?"block":"none";
+}
+
+function closePopup(){popup.style.display="none";}
+
 setInterval(()=>{
-  let left = 30 - Math.floor((Date.now()-state.start)/1000);
-  timer.innerText = left+"s";
+  let left=30-Math.floor((Date.now()-state.start)/1000);
+  timer.innerText=left+"s";
   betBox.classList.toggle("blur",left<=5);
   if(left<=0) finishRound();
   render();
