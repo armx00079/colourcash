@@ -2,130 +2,30 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>K3 Dice</title>
+<title>K3</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <style>
-body{
-  margin:0;
-  font-family:Arial, sans-serif;
-  background:#0f0f0f;
-  color:#fff;
-  text-align:center;
-}
-.header{
-  padding:15px;
-  font-size:22px;
-  font-weight:bold;
-}
-.timer{
-  font-size:36px;
-  color:#ff4081;
-  margin:10px 0;
-}
-.info{
-  display:flex;
-  justify-content:space-between;
-  padding:0 20px;
-  font-size:14px;
-  color:#aaa;
-}
-.card{
-  background:#1c1c1c;
-  margin:15px;
-  padding:15px;
-  border-radius:14px;
-}
-input{
-  width:100%;
-  padding:12px;
-  font-size:18px;
-  border:none;
-  border-radius:8px;
-  text-align:center;
-}
-.btn-row{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:10px;
-  margin-top:12px;
-}
-.btn{
-  padding:14px;
-  border-radius:10px;
-  font-weight:bold;
-  border:none;
-  color:#fff;
-}
+body{margin:0;font-family:Arial;background:#0f0f0f;color:#fff;text-align:center}
+.header{padding:15px;font-size:22px;font-weight:bold}
+.info{display:flex;justify-content:space-between;padding:0 20px;color:#aaa;font-size:14px}
+.timer{font-size:36px;color:#ff4081;margin:10px 0}
+.card{background:#1c1c1c;margin:15px;padding:15px;border-radius:14px;position:relative}
+input{width:100%;padding:12px;font-size:18px;border:none;border-radius:8px;text-align:center}
+.dice{display:flex;justify-content:center;gap:10px;margin:10px 0}
+.dice div{width:50px;height:50px;background:#e53935;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:bold}
+.blur{position:absolute;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;font-size:18px}
+.btn-row{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:10px}
+.btn{padding:14px;border:none;border-radius:10px;font-weight:bold;color:#fff}
 .big{background:#f4a261}
 .small{background:#4dabf7}
 .even{background:#4caf50}
 .odd{background:#e53935}
-
-.numbers{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:10px;
-  margin-top:12px;
-}
-.num{
-  background:#2a2a2a;
-  padding:14px;
-  border-radius:10px;
-}
-
-.dice{
-  display:flex;
-  justify-content:center;
-  gap:10px;
-  margin-top:10px;
-}
-.dice div{
-  width:50px;
-  height:50px;
-  background:#e53935;
-  border-radius:10px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:22px;
-  font-weight:bold;
-}
-
-.blur{
-  position:absolute;
-  inset:0;
-  background:rgba(0,0,0,.6);
-  backdrop-filter:blur(5px);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  font-size:18px;
-}
-
-.tabs{
-  display:flex;
-  gap:10px;
-  margin:15px;
-}
-.tab{
-  flex:1;
-  padding:12px;
-  border-radius:10px;
-  background:#ff6f6f;
-  font-weight:bold;
-}
-
-table{
-  width:100%;
-  border-collapse:collapse;
-  margin-top:10px;
-}
-th,td{
-  padding:8px;
-  border-bottom:1px solid #333;
-  font-size:14px;
-}
+.numbers{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
+.num{background:#2a2a2a;padding:14px;border-radius:10px}
+.tabs{display:flex;gap:10px;margin:15px}
+.tab{flex:1;padding:12px;border-radius:10px;background:#ff6f6f;font-weight:bold}
+table{width:100%;border-collapse:collapse}
+th,td{padding:8px;border-bottom:1px solid #333;font-size:14px}
 </style>
 </head>
 
@@ -138,9 +38,9 @@ th,td{
   <div>Wallet: ₹<span id="wallet"></span></div>
 </div>
 
-<div class="timer" id="time">30s</div>
+<div class="timer" id="timer">30s</div>
 
-<div class="card" style="position:relative">
+<div class="card">
   <div class="dice">
     <div id="d1">?</div>
     <div id="d2">?</div>
@@ -152,106 +52,95 @@ th,td{
 <div class="card">
   <input id="amount" type="number" placeholder="Min ₹1">
   <div class="btn-row">
-    <button class="btn big" onclick="bet('BIG')">BIG (11-18)</button>
-    <button class="btn small" onclick="bet('SMALL')">SMALL (3-10)</button>
-    <button class="btn even" onclick="bet('EVEN')">EVEN</button>
-    <button class="btn odd" onclick="bet('ODD')">ODD</button>
+    <button class="btn big" onclick="placeBet('BIG')">BIG (11–18)</button>
+    <button class="btn small" onclick="placeBet('SMALL')">SMALL (3–10)</button>
+    <button class="btn even" onclick="placeBet('EVEN')">EVEN</button>
+    <button class="btn odd" onclick="placeBet('ODD')">ODD</button>
   </div>
 
   <div class="numbers">
-    <div class="num" onclick="bet(3)">3</div>
-    <div class="num" onclick="bet(4)">4</div>
-    <div class="num" onclick="bet(5)">5</div>
-    <div class="num" onclick="bet(6)">6</div>
-    <div class="num" onclick="bet(7)">7</div>
-    <div class="num" onclick="bet(8)">8</div>
-    <div class="num" onclick="bet(9)">9</div>
-    <div class="num" onclick="bet(10)">10</div>
-    <div class="num" onclick="bet(11)">11</div>
-    <div class="num" onclick="bet(12)">12</div>
-    <div class="num" onclick="bet(13)">13</div>
-    <div class="num" onclick="bet(14)">14</div>
-    <div class="num" onclick="bet(15)">15</div>
-    <div class="num" onclick="bet(16)">16</div>
-    <div class="num" onclick="bet(17)">17</div>
-    <div class="num" onclick="bet(18)">18</div>
+    ${[...Array(16)].map((_,i)=>`<div class="num" onclick="placeBet(${i+3})">${i+3}</div>`).join("")}
   </div>
 </div>
 
 <div class="tabs">
-  <div class="tab">Game History</div>
-  <div class="tab">My Bets</div>
+  <div class="tab" onclick="showHistory()">Game History</div>
+  <div class="tab" onclick="showMyBets()">My Bets</div>
 </div>
 
 <div class="card">
   <table>
     <thead>
-      <tr>
-        <th>Period</th>
-        <th>Sum</th>
-        <th>Result</th>
-      </tr>
+      <tr><th>Period</th><th>Sum</th><th>Result</th></tr>
     </thead>
-    <tbody id="history"></tbody>
+    <tbody id="table"></tbody>
   </table>
 </div>
 
 <script>
-const ROUND = 30;
-
-let state = JSON.parse(localStorage.getItem("k3_state")) || {
-  period: 202601200001,
-  wallet: 100,
-  start: Date.now(),
+const ROUND=30, LOCK=5;
+let data = JSON.parse(localStorage.getItem("k3_data")) || {
+  period:202601200001,
+  start:Date.now(),
+  wallet:100,
   dice:["?","?","?"],
-  history:[]
+  history:[],
+  mybets:[]
 };
 
-function save(){ localStorage.setItem("k3_state",JSON.stringify(state)); }
+function save(){localStorage.setItem("k3_data",JSON.stringify(data))}
 
-function update(){
-  let elapsed = Math.floor((Date.now()-state.start)/1000);
-  let remain = ROUND - elapsed;
+function tick(){
+  let elapsed=Math.floor((Date.now()-data.start)/1000);
+  let remain=ROUND-elapsed;
 
-  document.getElementById("period").innerText = state.period;
-  document.getElementById("wallet").innerText = state.wallet;
-
-  if(remain>0){
-    document.getElementById("time").innerText = remain+"s";
-    document.getElementById("blur").style.display = remain<=5?"flex":"none";
-  }else{
-    if(state.dice[0]==="?"){
-      state.dice=[1+Math.random()*6|0,1+Math.random()*6|0,1+Math.random()*6|0];
-      let sum = state.dice.reduce((a,b)=>a+b,0);
-      state.history.unshift({p:state.period,s:sum,r:sum>=11?"BIG":"SMALL"});
-      state.history=state.history.slice(0,10);
+  if(remain<=0){
+    if(data.dice[0]==="?"){
+      let d=[1+Math.random()*6|0,1+Math.random()*6|0,1+Math.random()*6|0];
+      data.dice=d;
+      let sum=d.reduce((a,b)=>a+b,0);
+      let res=sum>=11?"BIG":"SMALL";
+      data.history.unshift({p:data.period,s:sum,r:res});
+      data.history=data.history.slice(0,10);
       save();
     }
     setTimeout(()=>{
-      state.period++;
-      state.start=Date.now();
-      state.dice=["?","?","?"];
+      data.period++;
+      data.start=Date.now();
+      data.dice=["?","?","?"];
       save();
     },3000);
   }
 
-  ["d1","d2","d3"].forEach((id,i)=>document.getElementById(id).innerText=state.dice[i]);
+  document.getElementById("timer").innerText = Math.max(remain,0)+"s";
+  document.getElementById("blur").style.display = remain<=LOCK?"flex":"none";
+  document.getElementById("period").innerText=data.period;
+  document.getElementById("wallet").innerText=data.wallet;
+  ["d1","d2","d3"].forEach((id,i)=>document.getElementById(id).innerText=data.dice[i]);
 
-  document.getElementById("history").innerHTML =
-    state.history.map(h=>`<tr><td>${h.p}</td><td>${h.s}</td><td>${h.r}</td></tr>`).join("");
+  showHistory();
 }
 
-function bet(type){
-  let amt = Number(document.getElementById("amount").value);
-  if(amt<1){ alert("Minimum ₹1"); return; }
-  if(state.wallet<amt){ alert("Low balance"); return; }
-  if((ROUND-(Date.now()-state.start)/1000)<=5){ alert("Bet closed"); return; }
-  state.wallet-=amt;
+function placeBet(type){
+  let amt=Number(amount.value);
+  let remain=ROUND-Math.floor((Date.now()-data.start)/1000);
+  if(amt<1) return alert("Minimum ₹1");
+  if(remain<=LOCK) return alert("Bet closed");
+  if(data.wallet<amt) return alert("Low balance");
+  data.wallet-=amt;
+  data.mybets.unshift({p:data.period,b:type,a:amt});
   save();
 }
 
-setInterval(update,1000);
-update();
+function showHistory(){
+  table.innerHTML=data.history.map(h=>`<tr><td>${h.p}</td><td>${h.s}</td><td>${h.r}</td></tr>`).join("");
+}
+function showMyBets(){
+  table.innerHTML=data.mybets.map(b=>`<tr><td>${b.p}</td><td>${b.b}</td><td>₹${b.a}</td></tr>`).join("");
+}
+
+setInterval(tick,1000);
+tick();
 </script>
 
 </body>
