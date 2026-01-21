@@ -83,6 +83,30 @@ body{
   border-bottom:1px solid #333;
   padding:6px 0;
 }
+
+/* 🔔 POPUP */
+.popup{
+  position:fixed;
+  inset:0;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.65);
+  z-index:999;
+}
+.popup-box{
+  background:#1e1e1e;
+  padding:25px 30px;
+  border-radius:14px;
+  font-size:20px;
+  font-weight:bold;
+  text-align:center;
+  animation:pop .3s ease;
+}
+@keyframes pop{
+  from{transform:scale(0.7);opacity:0}
+  to{transform:scale(1);opacity:1}
+}
 </style>
 </head>
 
@@ -115,6 +139,11 @@ body{
 
 </div>
 
+<!-- POPUP -->
+<div class="popup" id="popup">
+  <div class="popup-box" id="popupBox"></div>
+</div>
+
 <script>
 /* ===== STATE ===== */
 let wallet = Number(localStorage.getItem("wallet")) || 100;
@@ -127,21 +156,32 @@ let active = false;
 const HOUSE_EDGE = 0.10;
 
 /* ===== INIT ===== */
-walletEl();
+updateWallet();
 const mineSelect = document.getElementById("mineCount");
 for(let i=1;i<=24;i++){
   mineSelect.innerHTML += `<option value="${i}">${i} Mines</option>`;
 }
 createGrid();
 
-/* ===== FUNCTIONS ===== */
-function walletEl(){
+/* ===== POPUP ===== */
+function showPopup(text,color){
+  const pop=document.getElementById("popup");
+  const box=document.getElementById("popupBox");
+  box.innerText=text;
+  box.style.color=color;
+  pop.style.display="flex";
+  setTimeout(()=>pop.style.display="none",1500);
+}
+
+/* ===== WALLET ===== */
+function updateWallet(){
   document.getElementById("wallet").innerText = wallet;
   localStorage.setItem("wallet",wallet);
 }
 
+/* ===== GRID ===== */
 function createGrid(){
-  const grid = document.getElementById("grid");
+  const grid=document.getElementById("grid");
   grid.innerHTML="";
   for(let i=0;i<25;i++){
     const d=document.createElement("div");
@@ -151,29 +191,30 @@ function createGrid(){
   }
 }
 
+/* ===== GAME ===== */
 function startGame(){
-  bet = Number(document.getElementById("betAmount").value);
-  mines = Number(document.getElementById("mineCount").value);
+  bet=Number(betAmount.value);
+  mines=Number(mineCount.value);
 
-  if(bet < 1) return alert("Minimum bet ₹1");
-  if(bet > wallet) return alert("Insufficient balance");
+  if(bet<1) return alert("Minimum bet ₹1");
+  if(bet>wallet) return alert("Insufficient balance");
 
-  wallet -= bet;
-  walletEl();
+  wallet-=bet;
+  updateWallet();
+  showPopup("🎯 Bet Placed ₹"+bet,"#4caf50");
 
-  opened = 0;
-  multiplier = 1;
-  minePositions = [];
-  active = true;
+  opened=0;
+  multiplier=1;
+  minePositions=[];
+  active=true;
 
-  document.getElementById("multi").innerText = multiplier.toFixed(2);
-  document.getElementById("cashBtn").disabled = false;
+  multi.innerText=multiplier.toFixed(2);
+  cashBtn.disabled=false;
 
-  while(minePositions.length < mines){
-    let r = Math.floor(Math.random()*25);
+  while(minePositions.length<mines){
+    let r=Math.floor(Math.random()*25);
     if(!minePositions.includes(r)) minePositions.push(r);
   }
-
   createGrid();
 }
 
@@ -181,7 +222,6 @@ function clickCell(i,el){
   if(!active || el.classList.contains("open")) return;
 
   el.classList.add("open");
-
   if(minePositions.includes(i)){
     el.classList.add("mine");
     el.innerText="💣";
@@ -195,26 +235,28 @@ function clickCell(i,el){
 }
 
 function calcMultiplier(){
-  const safe = 25 - mines;
-  multiplier = ((safe / (safe - opened)) * (1 - HOUSE_EDGE));
-  document.getElementById("multi").innerText = multiplier.toFixed(2);
+  const safe=25-mines;
+  multiplier=((safe/(safe-opened))*(1-HOUSE_EDGE));
+  multi.innerText=multiplier.toFixed(2);
 }
 
 function cashOut(){
   if(!active) return;
-  const win = Math.floor(bet * multiplier);
-  wallet += win;
-  walletEl();
+  const win=Math.floor(bet*multiplier);
+  wallet+=win;
+  updateWallet();
   addHistory("WIN",win);
+  showPopup("💰 CASHOUT +₹"+win,"#4caf50");
   endGame(true);
 }
 
 function endGame(win){
   active=false;
-  document.getElementById("cashBtn").disabled=true;
+  cashBtn.disabled=true;
 
   if(!win){
     addHistory("LOSS",-bet);
+    showPopup("💣 BOOM! -₹"+bet,"#ff5252");
     document.querySelectorAll(".cell").forEach((c,i)=>{
       if(minePositions.includes(i)){
         c.classList.add("open","mine");
@@ -228,7 +270,7 @@ function addHistory(type,amt){
   const h=document.getElementById("betHistory");
   const d=document.createElement("div");
   d.className="history-item";
-  d.innerText = `${type} | ${amt>0?"+₹"+amt:"₹"+amt}`;
+  d.innerText=`${type} | ${amt>0?"+₹"+amt:"₹"+amt}`;
   h.prepend(d);
 }
 </script>
