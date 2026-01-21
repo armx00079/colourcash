@@ -14,7 +14,7 @@ body{
   text-align:center;
 }
 .header{
-  padding:15px;
+  padding:14px;
   font-size:22px;
   font-weight:bold;
 }
@@ -24,29 +24,35 @@ body{
   padding:20px;
   border-radius:16px;
 }
-.timer{color:#ff4081;font-size:22px}
-.mult{font-size:36px;color:#00e676;font-weight:bold}
 input{
-  width:90%;
-  padding:12px;
-  border-radius:10px;
+  width:100%;
+  padding:14px;
+  font-size:16px;
+  border-radius:12px;
   border:none;
-  font-size:18px;
 }
 button{
-  width:90%;
+  width:100%;
   padding:14px;
   margin-top:10px;
   border:none;
   border-radius:12px;
-  font-size:18px;
+  font-size:16px;
   font-weight:bold;
 }
-.bet{background:#2196f3;color:#fff}
-.cash{background:#e91e63;color:#fff}
-.lock{opacity:0.5}
-.row{display:flex;gap:10px;justify-content:center}
-.smallBtn{width:45%;background:#ff4081;color:#fff}
+.bet{background:#2196f3;color:#fff;}
+.cash{background:#e91e63;color:#fff;}
+.lock{opacity:.4;pointer-events:none;}
+.row{
+  display:flex;
+  gap:10px;
+  margin:15px;
+}
+.small{
+  flex:1;
+  background:#ff4081;
+  color:#fff;
+}
 .popup{
   position:fixed;
   inset:0;
@@ -57,17 +63,8 @@ button{
 }
 .popup div{
   background:#222;
-  padding:25px;
+  padding:20px;
   border-radius:14px;
-  font-size:18px;
-}
-.history{
-  background:#181818;
-  margin:15px;
-  padding:15px;
-  border-radius:14px;
-  text-align:left;
-  font-size:14px;
 }
 </style>
 </head>
@@ -81,143 +78,127 @@ button{
     <div>Period: <span id="period"></span></div>
     <div>Wallet: ₹<span id="wallet"></span></div>
   </div>
-  <br>
-  <div class="timer" id="timer"></div>
-  <div class="mult" id="mult">WAIT</div>
-</div>
 
-<div class="card">
+  <h2 id="state" style="color:#00e676">WAIT</h2>
+  <h3 id="timer" style="color:#ff4081">30s</h3>
+  <h1 id="mult" style="color:#00e676">1.00x</h1>
+
   <input id="betAmt" placeholder="Min ₹1">
   <button class="bet" id="betBtn" onclick="placeBet()">PLACE BET</button>
   <button class="cash lock" id="cashBtn" onclick="cashOut()">CASH OUT</button>
 </div>
 
 <div class="row">
-  <button class="smallBtn" onclick="showHistory()">Game History</button>
-  <button class="smallBtn" onclick="showMyBets()">My Bets</button>
+  <button class="small" onclick="showHistory()">Game History</button>
+  <button class="small" onclick="showBets()">My Bets</button>
 </div>
 
-<div class="history" id="historyBox"></div>
+<div class="card" id="historyBox">Last 10 Games</div>
 
-<div class="popup" id="popupBox">
+<div class="popup" id="popup">
   <div id="popupText"></div>
 </div>
 
 <script>
-const WAIT_TIME=30, BET_LOCK=5;
-let data=JSON.parse(localStorage.getItem("aviator_final"));
-
-if(!data){
- data={wallet:100,period:1000,phase:"WAIT",start:Date.now(),
- multiplier:1,crash:genCrash(),bets:[],history:[]};
+const WAIT=30, LOCK=5;
+let d=JSON.parse(localStorage.getItem("aviator"));
+if(!d){
+ d={wallet:100,period:1000,phase:"WAIT",start:Date.now(),
+ mult:1,crash:rand(),active:[],bets:[],history:[]};
  save();
 }
 
-const period=document.getElementById("period"),
-wallet=document.getElementById("wallet"),
-timer=document.getElementById("timer"),
-mult=document.getElementById("mult"),
-betBtn=document.getElementById("betBtn"),
-cashBtn=document.getElementById("cashBtn"),
-betAmt=document.getElementById("betAmt"),
-popupBox=document.getElementById("popupBox"),
-popupText=document.getElementById("popupText"),
-historyBox=document.getElementById("historyBox");
+const pEl=periodEl=period;
+const wEl=walletEl=wallet;
+function rand(){return +(Math.random()*3+1.2).toFixed(2);}
+function save(){localStorage.setItem("aviator",JSON.stringify(d));}
 
-function genCrash(){return +(Math.random()*3+1.2).toFixed(2);}
-function save(){localStorage.setItem("aviator_final",JSON.stringify(data));}
-function popup(msg){
- popupText.innerHTML=msg;
- popupBox.style.display="flex";
- setTimeout(()=>popupBox.style.display="none",1500);
+function popup(t){
+ let p=document.getElementById("popup");
+ document.getElementById("popupText").innerHTML=t;
+ p.style.display="flex";
+ setTimeout(()=>p.style.display="none",1500);
 }
 
-function update(){
- period.innerText=data.period;
- wallet.innerText=data.wallet;
+function ui(){
+ period.innerText=d.period;
+ wallet.innerText=d.wallet;
 }
-update(); loop();
+ui(); loop();
 
 function loop(){
- let t=Math.floor((Date.now()-data.start)/1000);
-
- if(data.phase==="WAIT"){
-   let r=WAIT_TIME-t;
-   timer.innerText=r+"s";
-   mult.innerText="WAIT";
-   betBtn.disabled=r<=BET_LOCK;
-   betBtn.classList.toggle("lock",r<=BET_LOCK);
-   if(r<=0){
-     data.phase="FLY";
-     data.start=Date.now();
-     popup("✈️ Plane Flying");
-   }
+ let e=Math.floor((Date.now()-d.start)/1000);
+ if(d.phase==="WAIT"){
+  let l=WAIT-e;
+  timer.innerText=l+"s";
+  state.innerText="WAIT";
+  betBtn.disabled=l<=LOCK;
+  if(l<=0){
+   d.phase="FLY";
+   d.start=Date.now();
+   popup("✈️ Plane Flying");
+  }
  }
-
- if(data.phase==="FLY"){
-   data.multiplier+=0.01;
-   mult.innerText=data.multiplier.toFixed(2)+"x";
-   timer.innerText="FLYING";
-   cashBtn.classList.remove("lock");
-   if(data.multiplier>=data.crash){crash();return;}
+ else{
+  d.mult+=0.01;
+  mult.innerText=d.mult.toFixed(2)+"x";
+  state.innerText="FLYING";
+  cashBtn.classList.remove("lock");
+  if(d.mult>=d.crash){crash();return;}
  }
-
- save(); setTimeout(loop,100);
+ save();
+ setTimeout(loop,100);
 }
 
 function placeBet(){
  let a=+betAmt.value;
  if(a<1)return popup("Min ₹1");
- if(a>data.wallet)return popup("Low Balance");
- if(data.phase!=="WAIT")return popup("Bet Locked");
- data.wallet-=a;
- data.bets.push({period:data.period,amt:a,win:0,cash:null});
+ if(a>d.wallet)return popup("Low Balance");
+ if(d.phase!=="WAIT")return popup("Bet Locked");
+ d.wallet-=a;
+ d.active.push({p:d.period,a,co:null,w:0});
  popup("Bet Placed ₹"+a);
- update(); save();
+ ui();save();
 }
 
 function cashOut(){
- if(data.phase!=="FLY")return;
- let b=data.bets.find(x=>!x.cash);
+ if(d.phase!=="FLY")return;
+ let b=d.active.find(x=>!x.co);
  if(!b)return;
- b.cash=data.multiplier.toFixed(2);
- b.win=Math.floor(b.amt*data.multiplier);
- data.wallet+=b.win;
- popup("✅ Won ₹"+b.win+" @ "+b.cash+"x");
- cashBtn.classList.add("lock");
- update(); save();
+ b.co=d.mult.toFixed(2);
+ b.w=Math.floor(b.a*d.mult);
+ d.wallet+=b.w;
+ popup("✅ Won ₹"+b.w+" @ "+b.co+"x");
+ ui();save();
 }
 
 function crash(){
- popup("💥 Crashed @ "+data.crash+"x");
- data.bets.forEach(b=>{if(!b.cash){b.cash="CRASH";b.win=0;}});
- data.history.unshift({period:data.period,crash:data.crash});
- data.history=data.history.slice(0,10);
- setTimeout(nextRound,1200);
+ popup("💥 Crashed @ "+d.crash+"x");
+ d.active.forEach(b=>{
+  if(!b.co){b.co="CRASH";b.w=0;}
+  d.bets.unshift(b);
+ });
+ d.bets=d.bets.slice(0,20);
+ d.history.unshift({p:d.period,c:d.crash});
+ d.history=d.history.slice(0,10);
+ setTimeout(next,1500);
 }
 
-function nextRound(){
- data.period++;
- data.phase="WAIT";
- data.start=Date.now();
- data.multiplier=1;
- data.crash=genCrash();
- data.bets=[];
+function next(){
+ d.period++;d.phase="WAIT";d.start=Date.now();
+ d.mult=1;d.crash=rand();d.active=[];
  cashBtn.classList.add("lock");
- showHistory();
- save();
+ showHistory();save();loop();
 }
 
 function showHistory(){
  historyBox.innerHTML="<b>Last 10 Games</b><br>"+
- data.history.map(h=>`#${h.period} → ${h.crash}x`).join("<br>");
+ d.history.map(h=>`#${h.p} → ${h.c}x`).join("<br>");
 }
-
-function showMyBets(){
+function showBets(){
  historyBox.innerHTML="<b>My Bets</b><br>"+
- data.bets.map(b=>`#${b.period} ₹${b.amt} | ${b.cash} | ₹${b.win}`).join("<br>");
+ d.bets.map(b=>`#${b.p} ₹${b.a} | ${b.co} | ₹${b.w}`).join("<br>");
 }
 </script>
-
 </body>
 </html>
