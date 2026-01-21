@@ -178,14 +178,19 @@ body{
 </div>
 
 <script>
-/* 🔥 LIVE USER + WALLET DATA */
+/* 🔥 LIVE USER + WALLET DATA (FINAL FIX) */
 
-// USER NAME FROM GMAIL
-let email = localStorage.getItem("userEmail") || "user@gmail.com";
-let name = email.split("@")[0];
-document.getElementById("userName").innerText = name.toUpperCase();
+// ✅ USER NAME (FROM LOGIN / REGISTER)
+let storedName = localStorage.getItem("userName");
+let storedEmail = localStorage.getItem("userEmail");
 
-// UID (random once)
+let finalName = storedName 
+  ? storedName 
+  : (storedEmail ? storedEmail.split("@")[0] : "USER");
+
+document.getElementById("userName").innerText = finalName.toUpperCase();
+
+// UID (ONE TIME)
 let uid = localStorage.getItem("uid");
 if(!uid){
   uid = Math.floor(1000000 + Math.random()*9000000);
@@ -193,10 +198,9 @@ if(!uid){
 }
 document.getElementById("uid").innerText = uid;
 
-// LAST LOGIN
-let now = new Date().toLocaleString();
-localStorage.setItem("lastLogin", now);
-document.getElementById("lastLogin").innerText = now;
+// ✅ LAST LOGIN (DO NOT OVERWRITE)
+let lastLogin = localStorage.getItem("lastLogin");
+document.getElementById("lastLogin").innerText = lastLogin || "-";
 
 // WALLET
 let balance = Number(localStorage.getItem("balance")) || 0;
