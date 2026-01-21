@@ -117,10 +117,26 @@ window.register = () => {
   }
 
   createUserWithEmailAndPassword(auth, email, pass)
-    .then(()=>{
+    .then((result)=>{
+
+      // 🔥🔥🔥 ADDED CODE (SAME AS LOGIN)
+      const user = result.user;
+      localStorage.setItem("userEmail", user.email);
+      localStorage.setItem(
+        "userName",
+        user.displayName || user.email.split("@")[0]
+      );
+      localStorage.setItem("lastLogin", new Date().toLocaleString());
+
+      // FIRST TIME WALLET INIT
+      localStorage.setItem("balance", "0");
+      localStorage.setItem("totalDeposit", "0");
+      localStorage.setItem("totalWithdraw", "0");
+      // 🔥🔥🔥 END
+
       showPopup("Registration Successful 🎉");
       setTimeout(()=>{
-        window.location.href = "index.html"; // 👉 DIRECT GAME
+        window.location.href = "index.html";
       },1500);
     })
     .catch(err=>{
