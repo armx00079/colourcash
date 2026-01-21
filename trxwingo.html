@@ -1,183 +1,123 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>GOD • DEVIL • DRAW</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <style>
-body{margin:0;background:#0e0e0e;color:#fff;font-family:Arial;text-align:center}
-.card{background:#1b1b1b;border-radius:14px;padding:18px;margin:14px}
-.btn{padding:14px;border:none;border-radius:10px;font-size:16px;color:#fff}
-.blue{background:#2196f3}
-.green{background:#4caf50}
-.orange{background:#ff5722}
-.gray{background:#555}
-input{width:90%;padding:14px;border-radius:10px;border:none;font-size:16px}
-.popup{position:fixed;top:0;left:0;width:100%;height:100%;background:#000c;display:none;align-items:center;justify-content:center}
-.popup div{background:#222;padding:25px;border-radius:12px}
+body{margin:0;font-family:Arial;background:#0f0f0f;color:#fff}
+h1{text-align:center;padding:12px}
+.card{background:#1c1c1c;border-radius:16px;padding:16px;margin:12px}
+.row{display:flex;gap:10px}
+.box{flex:1;padding:20px;border-radius:12px;text-align:center;font-weight:bold}
+.god{background:#2196f3}
+.draw{background:#4caf50}
+.devil{background:#ff5722}
+button{width:100%;padding:14px;border:none;border-radius:12px;font-size:16px;margin-top:10px}
+.bet{background:#2196f3;color:#fff}
+.locked{background:#555}
+input{width:100%;padding:12px;border-radius:10px;border:none}
+.list{font-size:14px;line-height:1.6}
 </style>
 </head>
-
 <body>
 
-<h2>👑 GOD • DEVIL • DRAW</h2>
+<h1>👑 GOD • DEVIL • DRAW</h1>
 
 <div class="card">
-Period: <span id="period"></span> |
-Wallet: ₹<span id="wallet"></span>
-<h1 id="status">BET NOW</h1>
-<h2 id="timer">30s</h2>
+  <div id="info">Period: <span id="period"></span> | Wallet: ₹<span id="wallet"></span></div>
+  <h2 id="status">BET NOW</h2>
+  <h3 id="timer"></h3>
 
-<div style="display:flex;gap:10px">
-<div class="btn blue" style="flex:1">GOD<br><span id="godCard">?</span></div>
-<div class="btn green" style="flex:1">DRAW</div>
-<div class="btn orange" style="flex:1">DEVIL<br><span id="devilCard">?</span></div>
-</div>
-</div>
-
-<div class="card">
-<input id="amount" placeholder="Min ₹1">
-<br><br>
-<button class="btn blue" onclick="select('GOD')">GOD</button>
-<button class="btn green" onclick="select('DRAW')">DRAW</button>
-<button class="btn orange" onclick="select('DEVIL')">DEVIL</button>
-<br><br>
-<button class="btn blue" id="betBtn" onclick="placeBet()">PLACE BET</button>
+  <div class="row">
+    <div class="box god" id="godCard">GOD</div>
+    <div class="box draw">VS</div>
+    <div class="box devil" id="devilCard">DEVIL</div>
+  </div>
 </div>
 
 <div class="card">
-<h3>Last 10 Games</h3>
-<div id="last10"></div>
+  <input id="amount" type="number" min="1" value="1">
+  <div class="row">
+    <button onclick="select('GOD')">GOD</button>
+    <button onclick="select('DRAW')">DRAW</button>
+    <button onclick="select('DEVIL')">DEVIL</button>
+  </div>
+  <button id="betBtn" class="bet" onclick="placeBet()">PLACE BET</button>
 </div>
 
 <div class="card">
-<h3>My Bets</h3>
-<div id="mybets"></div>
+  <h3>Last 10 Games</h3>
+  <div id="history" class="list"></div>
 </div>
 
-<div class="popup" id="popup">
-<div id="popupText"></div>
+<div class="card">
+  <h3>My Bets</h3>
+  <div id="mybets" class="list"></div>
 </div>
 
 <script>
-let wallet=JSON.parse(localStorage.getItem("wallet"))||100;
-let period=JSON.parse(localStorage.getItem("period"))||1768000000000;
-let last10=JSON.parse(localStorage.getItem("last10"))||[];
-let mybets=JSON.parse(localStorage.getItem("mybets"))||[];
+let state = JSON.parse(localStorage.getItem("gdd_state")) || {
+  period: 1768931539081,
+  wallet: 100,
+  phase: "BET",
+  time: 30,
+  history: [],
+  mybets: []
+};
 
-let timer=30;
-let phase="BET";
-let betSide=null;
-let betAmt=0;
+let selected = null;
 
-const periodEl=periodEl2=document.getElementById("period");
-const walletEl=document.getElementById("wallet");
-const timerEl=document.getElementById("timer");
-const statusEl=document.getElementById("status");
-const godEl=document.getElementById("godCard");
-const devilEl=document.getElementById("devilCard");
-const betBtn=document.getElementById("betBtn");
-const last10El=document.getElementById("last10");
-const mybetsEl=document.getElementById("mybets");
+function save(){ localStorage.setItem("gdd_state",JSON.stringify(state)); }
 
 function render(){
-periodEl.innerText=period;
-walletEl.innerText=wallet.toFixed(2);
-timerEl.innerText=timer+"s";
-last10El.innerHTML=last10.join("<br>");
-mybetsEl.innerHTML=mybets.join("<br>");
-localStorage.setItem("wallet",JSON.stringify(wallet));
-localStorage.setItem("period",JSON.stringify(period));
-localStorage.setItem("last10",JSON.stringify(last10));
-localStorage.setItem("mybets",JSON.stringify(mybets));
+  period.innerText = state.period;
+  wallet.innerText = state.wallet.toFixed(2);
+  timer.innerText = state.time+"s";
+  status.innerText = state.phase==="BET"?"BET NOW":state.phase==="LOCK"?"LOCKED":"RESULT";
+
+  betBtn.disabled = state.phase!=="BET";
+  betBtn.innerText = state.phase==="LOCK"?"LOCKED": "PLACE BET";
+
+  history.innerHTML = state.history.map(h=>`#${h.period} → ${h.result}`).join("<br>");
+  mybets.innerHTML = state.mybets.map(b=>`#${b.period} ${b.choice} ₹${b.amount}`).join("<br>");
 }
 
-function select(s){betSide=s;}
+function select(c){ selected=c; }
 
 function placeBet(){
-if(timer<=5){popup("❌ BET LOCKED");return;}
-betAmt=parseFloat(amount.value);
-if(!betSide||betAmt<1||betAmt>wallet){popup("❌ Invalid Bet");return;}
-popup("✅ Bet Placed on "+betSide);
+  let amt = Number(amount.value);
+  if(state.phase!=="BET") return;
+  if(!selected) return alert("Select option");
+  if(state.wallet < amt) return alert("Low balance");
+
+  state.wallet -= amt;
+  state.mybets.unshift({period:state.period,choice:selected,amount:amt});
+  save(); render();
 }
 
-function popup(msg){
-popupText.innerHTML=msg;
-popupDiv.style.display="flex";
-setTimeout(()=>popupDiv.style.display="none",1500);
+function tick(){
+  state.time--;
+
+  if(state.time===5){
+    state.phase="LOCK";
+  }
+
+  if(state.time===0){
+    let res = ["GOD","DEVIL","DRAW"][Math.floor(Math.random()*3)];
+    state.history.unshift({period:state.period,result:res});
+    if(state.history.length>10) state.history.pop();
+
+    state.period++;
+    state.time=30;
+    state.phase="BET";
+  }
+
+  save(); render();
 }
 
-const popupDiv=document.getElementById("popup");
-
-function drawCard(){
-const cards=["A","K","Q","J","10","9","8","7","6","5","4","3","2"];
-return cards[Math.floor(Math.random()*cards.length)];
-}
-
-function startRound(){
-timer=30;phase="BET";
-statusEl.innerText="BET NOW";
-godEl.innerText="?";devilEl.innerText="?";
-betBtn.disabled=false;
 render();
-
-let t=setInterval(()=>{
-timer--;
-if(timer==5){
-statusEl.innerText="LOCKED";
-betBtn.disabled=true;
-}
-if(timer<=0){
-clearInterval(t);
-fly();
-}
-render();
-},1000);
-}
-
-function fly(){
-phase="RESULT";
-statusEl.innerText="FLIPPING";
-setTimeout(()=>{
-let g=drawCard(),d=drawCard();
-godEl.innerText=g;devilEl.innerText=d;
-
-let gv=cardVal(g),dv=cardVal(d);
-let result=gv>dv?"GOD":gv<dv?"DEVIL":"DRAW";
-
-let win=betSide==result;
-if(win){
-let gain=betAmt*2;
-wallet+=gain;
-popup("🎉 YOU WIN ₹"+gain);
-}else{
-wallet-=betAmt;
-popup("❌ YOU LOSE ₹"+betAmt);
-}
-
-mybets.unshift(`#${period} | ${betSide} | ${win?"WIN":"LOSS"} | ₹${betAmt}`);
-last10.unshift(`#${period} → ${result}`);
-mybets=mybets.slice(0,10);
-last10=last10.slice(0,10);
-
-period++;
-betSide=null;betAmt=0;
-render();
-
-setTimeout(startRound,3000);
-},1500);
-}
-
-function cardVal(c){
-if(c=="A")return 14;
-if(c=="K")return 13;
-if(c=="Q")return 12;
-if(c=="J")return 11;
-return parseInt(c);
-}
-
-startRound();
+setInterval(tick,1000);
 </script>
 
 </body>
