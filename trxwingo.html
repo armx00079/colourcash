@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>GOD DEVIL DRAW</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+body{margin:0;font-family:Arial;background:#0e0e0e;color:#fff}
+.header{text-align:center;font-size:22px;padding:12px}
+.board{background:#1c1c1c;margin:12px;border-radius:14px;padding:15px;text-align:center}
+.timer{font-size:20px;color:#ff4081}
+.status{font-size:26px;font-weight:bold;margin:10px}
+.cards{display:flex;justify-content:space-around;margin:15px}
+.card{width:90px;height:120px;border-radius:12px;
+display:flex;align-items:center;justify-content:center;
+font-size:18px;font-weight:bold}
+.god{background:#2196f3}
+.devil{background:#ff5722}
+.draw{background:#4caf50}
+.lock{opacity:.4}
+.betbox{display:flex;gap:8px;margin:12px}
+.betbox input{flex:1;padding:10px;border-radius:10px;border:none}
+.betbox button{flex:1;padding:10px;border:none;border-radius:10px;
+background:#2196f3;color:#fff;font-size:16px}
+.option{display:flex;gap:8px;margin:10px}
+.option button{flex:1;padding:12px;border-radius:10px;border:none;font-size:15px}
+.history{background:#1a1a1a;margin:12px;border-radius:14px;padding:10px}
+small{color:#aaa}
+</style>
+</head>
+
+<body>
+
+<div class="header">👑 GOD • DEVIL • DRAW</div>
+
+<div class="board">
+  <div>Period: <span id="period">1001</span> | Wallet: ₹<span id="wallet">100</span></div>
+  <div class="timer" id="timer">30s</div>
+  <div class="status" id="status">BET NOW</div>
+
+  <div class="cards">
+    <div class="card god" id="god">GOD</div>
+    <div class="card draw" id="draw">DRAW</div>
+    <div class="card devil" id="devil">DEVIL</div>
+  </div>
+</div>
+
+<div class="betbox">
+  <input type="number" id="amount" placeholder="Min ₹1">
+  <button onclick="placeBet()">BET</button>
+</div>
+
+<div class="option">
+  <button onclick="select('GOD')" class="god">GOD</button>
+  <button onclick="select('DRAW')" class="draw">DRAW</button>
+  <button onclick="select('DEVIL')" class="devil">DEVIL</button>
+</div>
+
+<div class="history">
+<b>Last 10 Games</b>
+<div id="last10"></div>
+</div>
+
+<div class="history">
+<b>My Bets</b>
+<div id="mybets"></div>
+</div>
+
+<script>
+let timer=30,period=1001,wallet=100;
+let choice="",bet=0,locked=false;
+let last10=[],mybets=[];
+/* 👑 ADMIN RESULT CONTROL */
+let ADMIN_RESULT="GOD"; // change GOD / DEVIL / DRAW
+
+function tick(){
+  timer--;
+  document.getElementById("timer").innerText=timer+"s";
+  if(timer===5){locked=true;document.getElementById("status").innerText="LOCKED";}
+  if(timer===0){reveal();}
+}
+setInterval(tick,1000);
+
+function select(v){ if(!locked) choice=v }
+
+function placeBet(){
+  bet=parseInt(amount.value);
+  if(locked||!choice||bet<1||bet>wallet)return;
+  wallet-=bet;
+  walletEl();
+}
+
+function reveal(){
+  locked=true;
+  document.getElementById("status").innerText="RESULT";
+  if(choice===ADMIN_RESULT){
+    let win=bet*2;
+    wallet+=win;
+    mybets.unshift(`Period ${period} WIN ₹${win}`);
+  }else{
+    mybets.unshift(`Period ${period} LOSS ₹${bet}`);
+  }
+  last10.unshift(`#${period} → ${ADMIN_RESULT}`);
+  updateLists();
+  setTimeout(nextRound,3000);
+}
+
+function nextRound(){
+  period++;timer=30;locked=false;choice="";bet=0;
+  document.getElementById("status").innerText="BET NOW";
+  walletEl();
+}
+
+function updateLists(){
+  document.getElementById("last10").innerHTML=last10.slice(0,10).join("<br>");
+  document.getElementById("mybets").innerHTML=mybets.slice(0,10).join("<br>");
+}
+function walletEl(){document.getElementById("wallet").innerText=wallet;}
+</script>
+
+</body>
+</html>
