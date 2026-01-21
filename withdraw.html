@@ -87,11 +87,21 @@ input{
   color:#fff;
 }
 
+/* INFO TEXT */
+.rules{
+  margin-top:15px;
+  font-size:13px;
+  color:#ccc;
+}
+.rules div{
+  margin-bottom:8px;
+}
+
 /* POPUP */
 .popup{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.6);
+  background:rgba(0,0,0,.7);
   display:none;
   align-items:center;
   justify-content:center;
@@ -105,9 +115,10 @@ input{
   width:80%;
 }
 .popup-box h3{
-  color:#4caf50;
   margin:0 0 10px;
 }
+.popup-box.success h3{color:#4caf50}
+.popup-box.error h3{color:#ff5252}
 .popup-box button{
   margin-top:15px;
   width:100%;
@@ -147,6 +158,15 @@ input{
     <input type="text" placeholder="example@upi">
 
     <button class="btn" onclick="submitWithdraw()">Submit Withdraw</button>
+
+    <!-- INFO -->
+    <div class="rules">
+      <div>🔴 Withdraw time: 00:05 - 23:55</div>
+      <div>🔴 Inday Remaining Withdrawal Times: 3</div>
+      <div>🔴 Withdrawal amount range: ₹100 - ₹50,000</div>
+      <div>🔴 Please confirm your account details carefully</div>
+      <div>🔴 If information is incorrect, contact customer service</div>
+    </div>
   </div>
 
   <!-- BANK FORM -->
@@ -173,16 +193,18 @@ input{
 
 <!-- POPUP -->
 <div class="popup" id="popup">
-  <div class="popup-box">
-    <h3>✅ Withdraw Submitted</h3>
-    <p>Your request has been sent.<br>Waiting for approval.</p>
+  <div class="popup-box success" id="popupBox">
+    <h3 id="popupTitle"></h3>
+    <p id="popupMsg"></p>
     <button onclick="closePopup()">OK</button>
   </div>
 </div>
 
 <script>
-/* LOAD BALANCE */
+/* LOAD DATA */
 let balance = Number(localStorage.getItem("balance")) || 0;
+let withdrawCount = Number(localStorage.getItem("withdrawCount")) || 0;
+
 document.getElementById("balance").innerText = balance.toFixed(2);
 
 /* TAB SWITCH */
@@ -193,6 +215,18 @@ function openTab(id,el){
   document.getElementById(id).classList.add('active');
 }
 
+/* POPUP */
+function showPopup(type,title,msg){
+  let box=document.getElementById("popupBox");
+  box.className="popup-box "+type;
+  document.getElementById("popupTitle").innerText=title;
+  document.getElementById("popupMsg").innerText=msg;
+  document.getElementById("popup").style.display="flex";
+}
+function closePopup(){
+  document.getElementById("popup").style.display="none";
+}
+
 /* SUBMIT */
 function submitWithdraw(){
   let amt = Number(
@@ -201,21 +235,18 @@ function submitWithdraw(){
     : document.getElementById("bankAmount").value
   );
 
-  if(amt < 100){alert("Minimum withdraw ₹100");return;}
-  if(amt > balance){alert("Insufficient balance");return;}
+  if(amt < 100) return showPopup("error","Minimum Withdraw","Minimum withdraw ₹100");
+  if(amt > 50000) return showPopup("error","Limit Exceeded","Maximum withdraw ₹50,000");
+  if(amt > balance) return showPopup("error","Insufficient Balance","Not enough balance");
+  if(withdrawCount >= 3) return showPopup("error","Limit Reached","Daily withdraw limit exceeded");
 
   balance -= amt;
-  localStorage.setItem("balance", balance);
+  withdrawCount++;
 
-  let tw = Number(localStorage.getItem("totalWithdraw")) || 0;
-  localStorage.setItem("totalWithdraw", tw + amt);
+  localStorage.setItem("balance",balance);
+  localStorage.setItem("withdrawCount",withdrawCount);
 
-  document.getElementById("popup").style.display="flex";
-}
-
-function closePopup(){
-  document.getElementById("popup").style.display="none";
-  location.href="wallet.html";
+  showPopup("success","Withdraw Submitted","Your request is sent for approval");
 }
 </script>
 
