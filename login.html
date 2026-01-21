@@ -111,10 +111,21 @@ window.login = () => {
   }
 
   signInWithEmailAndPassword(auth, email, pass)
-    .then(()=>{
+    .then((result)=>{
+
+      // 🔥🔥🔥 ADDED CODE (USER NAME FIX)
+      const user = result.user;
+      localStorage.setItem("userEmail", user.email);
+      localStorage.setItem(
+        "userName",
+        user.displayName || user.email.split("@")[0]
+      );
+      localStorage.setItem("lastLogin", new Date().toLocaleString());
+      // 🔥🔥🔥 END
+
       showPopup("Login Successful ✅");
       setTimeout(()=>{
-        window.location.href = "index.html"; // 👉 DIRECT GAME
+        window.location.href = "index.html";
       },1200);
     })
     .catch(err=>{
