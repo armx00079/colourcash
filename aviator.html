@@ -55,133 +55,120 @@ input,button{width:100%;padding:14px;margin-top:10px;border-radius:10px;border:n
 </div>
 
 <script>
-/* CONFIG */
-const ROUND_TIME = 30;
-const BET_LOCK = 5;
+const WAIT_TIME = 30;
+const BET_LOCK_TIME = 5;
 
-/* STATE */
-let state = JSON.parse(localStorage.getItem("aviator"));
-if(!state){
-  state = {
+let s = JSON.parse(localStorage.getItem("aviator_v2"));
+if(!s){
+  s={
     wallet:100,
-    period:Date.now(),
-    history:[],
-    bets:[],
-    roundStart:Date.now(),
+    period:1000,
+    phase:"WAIT",
+    start:Date.now(),
     mult:1,
-    flying:false
+    crash:(Math.random()*3+1.5).toFixed(2),
+    bets:[],
+    history:[]
   };
   save();
 }
 
-updateUI();
-loop();
-
-/* CORE */
-function save(){localStorage.setItem("aviator",JSON.stringify(state))}
-function updateUI(){
-  period.innerText = state.period;
-  wallet.innerText = state.wallet;
+function save(){localStorage.setItem("aviator_v2",JSON.stringify(s))}
+function ui(){
+  period.innerText=s.period;
+  wallet.innerText=s.wallet;
 }
+ui();tick();
 
-function loop(){
-  let now = Date.now();
-  let elapsed = Math.floor((now-state.roundStart)/1000);
-  let remain = ROUND_TIME - elapsed;
-  timer.innerText = remain+"s";
+function tick(){
+  let now=Date.now();
+  let t=Math.floor((now-s.start)/1000);
 
-  if(remain<=0){endRound();return;}
+  if(s.phase==="WAIT"){
+    let r=WAIT_TIME-t;
+    timer.innerText=r+"s";
+    mult.innerText="WAIT";
 
-  if(remain<=BET_LOCK) betBtn.classList.add("lock");
-  else betBtn.classList.remove("lock");
+    if(r<=BET_LOCK_TIME) betBtn.classList.add("lock");
+    else betBtn.classList.remove("lock");
 
-  if(remain<ROUND_TIME && !state.flying) startPlane();
-
-  setTimeout(loop,100);
-}
-
-/* PLANE */
-function startPlane(){
-  state.flying=true;
-  state.mult=1;
-  cashBtn.classList.remove("lock");
-  fly();
-}
-
-function fly(){
-  if(!state.flying) return;
-  state.mult+=0.01;
-  mult.innerText=state.mult.toFixed(2)+"x";
-  setTimeout(fly,50);
-}
-
-/* BET */
-function placeBet(){
-  let amt=Number(betAmt.value);
-  if(amt<1) return popup("❌ Min bet ₹1");
-  if(betBtn.classList.contains("lock")) return popup("⏳ Bet Locked");
-  if(amt>state.wallet) return popup("❌ Insufficient Balance");
-
-  state.wallet-=amt;
-  state.bets.push({amount:amt,cashout:null,result:"RUNNING"});
-  save();updateUI();
-  popup("✅ Bet Placed ₹"+amt);
-}
-
-/* CASH OUT */
-function cashOut(){
-  if(!state.flying) return;
-  let bet=state.bets.find(b=>b.result==="RUNNING");
-  if(!bet) return;
-
-  let win=Math.floor(bet.amount*state.mult);
-  state.wallet+=win;
-  bet.cashout=state.mult.toFixed(2)+"x";
-  bet.result="+₹"+win;
-
-  cashBtn.classList.add("lock");
-  save();updateUI();
-  popup("🎉 Cashed Out ₹"+win);
-}
-
-/* END ROUND */
-function endRound(){
-  state.flying=false;
-  cashBtn.classList.add("lock");
-
-  let crash=(Math.random()*3+1).toFixed(2);
-  state.history.unshift({period:state.period,crash:crash+"x"});
-  state.history=state.history.slice(0,10);
-
-  state.bets.forEach(b=>{
-    if(b.result==="RUNNING"){
-      b.result="-₹"+b.amount;
+    if(r<=0){
+      s.phase="FLY";
+      s.start=Date.now();
+      cashBtn.classList.remove("lock");
+      save();
     }
-  });
+  }
 
-  state.bets=[];
-  state.period=Date.now();
-  state.roundStart=Date.now();
-  save();updateUI();
-  mult.innerText="WAIT";
-  loop();
+  if(s.phase==="FLY"){
+    s.mult+=0.01;
+    mult.innerText=s.mult.toFixed(2)+"x";
+    timer.innerText="FLYING";
+
+    if(s.mult>=s.crash){
+      endRound();
+      return;
+    }
+  }
+
+  save();
+  setTimeout(tick,100);
 }
 
-/* UI */
+function placeBet(){
+  let a=+betAmt.value;
+  if(a<1)return popup("Min ₹1");
+  if(a>s.wallet)return popup("No balance");
+  if(betBtn.classList.contains("lock"))return popup("Bet Locked");
+
+  s.wallet-=a;
+  s.bets.push({amt:a,win:null});
+  ui();save();
+  popup("Bet Placed ₹"+a);
+}
+
+function cashOut(){
+  if(s.phase!=="FLY")return;
+  let b=s.bets.find(x=>x.win===null);
+  if(!b)return;
+
+  let win=Math.floor(b.amt*s.mult);
+  b.win=win;
+  s.wallet+=win;
+  cashBtn.classList.add("lock");
+  ui();save();
+  popup("Win ₹"+win);
+}
+
+function endRound(){
+  s.bets.forEach(b=>{if(b.win===null)b.win=0});
+  s.history.unshift({p:s.period,x:s.crash});
+  s.history=s.history.slice(0,10);
+
+  s.period++;
+  s.phase="WAIT";
+  s.start=Date.now();
+  s.mult=1;
+  s.crash=(Math.random()*3+1.5).toFixed(2);
+  s.bets=[];
+  save();ui();
+}
+
 function showHistory(){
   listBox.innerHTML="<b>Last 10 Games</b><br>"+
-    state.history.map(h=>`#${h.period} → ${h.crash}`).join("<br>");
+  s.history.map(h=>`#${h.p} → ${h.x}x`).join("<br>");
 }
+
 function showBets(){
   listBox.innerHTML="<b>My Bets</b><br>"+
-    state.bets.map(b=>`${b.result} @ ${b.cashout||"-"}`).join("<br>");
+  s.history.map(h=>`Period ${h.p}`).join("<br>");
 }
-function popup(txt){
-  popupText.innerText=txt;
+
+function popup(t){
+  popupText.innerText=t;
   popup.style.display="flex";
-  setTimeout(()=>popup.style.display="none",1500);
+  setTimeout(()=>popup.style.display="none",1200);
 }
 </script>
-
 </body>
 </html>
