@@ -9,40 +9,44 @@
 body{
   margin:0;background:#0f0f0f;color:#fff;font-family:Arial;
 }
-.header{
-  text-align:center;padding:14px;font-size:24px;font-weight:bold;
-}
-.card{
-  background:#1b1b1b;margin:12px;padding:14px;border-radius:14px;
-}
+.header{text-align:center;padding:14px;font-size:24px;font-weight:bold}
+.card{background:#1b1b1b;margin:12px;padding:14px;border-radius:14px}
 .center{text-align:center}
-.row{display:flex;gap:10px;flex-wrap:wrap}
+.row{display:flex;gap:10px}
 .btn{
   flex:1;padding:12px;border-radius:10px;border:none;
-  background:#333;color:#fff;font-weight:bold;font-size:15px;
+  background:#333;color:#fff;font-weight:bold;font-size:15px
 }
 .btn.active{outline:3px solid #fff}
 .btn.primary{background:#ff9800;color:#000}
-.btn.danger{background:#ff5252}
 .btn.success{background:#4caf50}
+.btn.danger{background:#ff5252}
 .btn:disabled{opacity:.5}
+input{width:100%;padding:12px;border-radius:10px;border:none;font-size:16px;margin-top:8px}
 
-.track{
-  display:flex;gap:6px;overflow-x:auto;margin-top:10px;
-}
-.step{
-  min-width:70px;padding:10px;border-radius:10px;
-  background:#2a2a2a;text-align:center;font-size:13px;
-}
+.track{display:flex;gap:6px;overflow-x:auto;margin-top:10px}
+.step{min-width:70px;padding:10px;border-radius:10px;background:#2a2a2a;text-align:center;font-size:13px}
 .step.active{background:#ff9800;color:#000}
-.step.dead{background:#ff1744}
 
-input{
-  width:100%;padding:12px;border-radius:10px;border:none;
-  font-size:16px;margin-top:8px;
+.chicken{
+  font-size:34px;
+  transition:transform .3s;
 }
-.info{font-size:16px;margin-top:6px}
-.big{font-size:26px;font-weight:bold}
+.jump{transform:translateX(8px) scale(1.1)}
+
+.popup{
+  position:fixed;inset:0;display:none;
+  align-items:center;justify-content:center;
+  background:rgba(0,0,0,.6);z-index:10
+}
+.popup div{
+  background:#222;padding:22px;border-radius:14px;
+  font-size:18px;text-align:center;min-width:220px
+}
+.win{color:#4caf50}
+.lose{color:#ff5252}
+
+.history{font-size:14px;line-height:1.6;margin-top:6px}
 </style>
 </head>
 
@@ -51,8 +55,9 @@ input{
 <div class="header">🐔 CHICKEN ROAD</div>
 
 <div class="card center">
-  <div class="big">Balance: ₹<span id="bal">100.00</span></div>
-  <div class="info">Current X: <b id="curX">1.00x</b></div>
+  <div style="font-size:26px">Balance: ₹<span id="bal">100.00</span></div>
+  <div style="margin-top:6px">Current X: <b id="curX">1.00x</b></div>
+  <div class="chicken" id="chicken">🐔</div>
 </div>
 
 <div class="card">
@@ -64,7 +69,7 @@ input{
     <button class="btn" onclick="setMode('veryhard')">Very Hard</button>
   </div>
 
-  <input id="amt" type="number" min="1" placeholder="Bet Amount (₹)">
+  <input id="amt" type="number" min="1" placeholder="Bet Amount ₹">
   <button class="btn primary" onclick="startGame()">START</button>
 </div>
 
@@ -73,110 +78,91 @@ input{
     <button class="btn success" onclick="nextStep()">NEXT STEP</button>
     <button class="btn danger" onclick="cashOut()">CASH OUT</button>
   </div>
-
   <div class="track" id="track"></div>
 </div>
 
+<div class="card">
+  <b>My Bets</b>
+  <div class="history" id="bets"></div>
+</div>
+
+<div class="popup" id="popup"><div id="popupText"></div></div>
+
 <script>
-/* ---------------- MULTIPLIERS ---------------- */
-const MODES = {
-  easy: [
-    1.02,1.08,1.14,1.21,1.29,1.37,1.46,1.56,1.67,1.80,1.94,2.09,
-    2.27,2.47,2.69,2.95,3.24,3.58,3.98,4.45,5.01,5.68,6.49,7.49,
-    8.74,10.33,12.39,15.15,18.94,24.35
-  ],
-  medium: [
-    1.08,1.22,1.38,1.57,1.79,2.06,2.38,2.78,3.27,3.89,4.67,5.67,
-    6.98,8.73,11.11,14.44,19.25,26.48,37.83,56.74,90.79,158.88,
-    317.77,794.43,3177.72
-  ],
-  hard: [
-    1.19,1.47,1.84,2.32,2.97,3.84,5.05,6.73,9.13,12.65,17.92,
-    26.07,39.11,60.84,98.87,169.49,310.74,621.49,1398.35,
-    3728.95,13051.35,78308.1
-  ],
-  veryhard: [
-    1.45,2.22,3.47,5.56,9.13,15.46,27.06,49.21,93.5,187.01,
-    397.39,908.33,2270.83,6358.35,20664.63,82658.55,456622.02,
-    4546220.25
-  ]
+const MODES={
+easy:[1.02,1.08,1.14,1.21,1.29,1.37,1.46,1.56,1.67,1.80,1.94,2.09,2.27,2.47,2.69,2.95,3.24,3.58,3.98,4.45,5.01,5.68,6.49,7.49,8.74,10.33,12.39,15.15,18.94,24.35],
+medium:[1.08,1.22,1.38,1.57,1.79,2.06,2.38,2.78,3.27,3.89,4.67,5.67,6.98,8.73,11.11,14.44,19.25,26.48,37.83,56.74,90.79,158.88,317.77,794.43,3177.72],
+hard:[1.19,1.47,1.84,2.32,2.97,3.84,5.05,6.73,9.13,12.65,17.92,26.07,39.11,60.84,98.87,169.49,310.74,621.49,1398.35,3728.95,13051.35,78308.1],
+veryhard:[1.45,2.22,3.47,5.56,9.13,15.46,27.06,49.21,93.5,187.01,397.39,908.33,2270.83,6358.35,20664.63,82658.55,456622.02,4546220.25]
 };
 
-/* ---------------- STATE ---------------- */
-let balance = 100;
-let mode = "easy";
-let steps = MODES[mode];
-let index = -1;
-let bet = 0;
-let alive = false;
+let balance=100,mode="easy",steps=MODES.easy;
+let index=-1,bet=0,alive=false,bets=[];
 
-/* House edge ~10% */
-function bombChance(){
-  return Math.random() < 0.10;
-}
+const bomb=()=>Math.random()<0.10;
 
-/* ---------------- UI ---------------- */
-function renderTrack(){
-  track.innerHTML="";
-  steps.forEach((x,i)=>{
-    const d=document.createElement("div");
-    d.className="step";
-    if(i===index) d.classList.add("active");
-    d.innerHTML = x.toFixed(2)+"x";
-    track.appendChild(d);
-  });
+function popup(msg,cls=""){
+  popupText.className=cls;
+  popupText.innerHTML=msg;
+  popup.style.display="flex";
+  setTimeout(()=>popup.style.display="none",1500);
 }
 
 function setMode(m){
-  mode=m;
-  steps=MODES[mode];
-  index=-1;
-  alive=false;
-  curX.innerText="1.00x";
+  mode=m;steps=MODES[m];index=-1;alive=false;
   document.querySelectorAll(".btn").forEach(b=>b.classList.remove("active"));
   event.target.classList.add("active");
   renderTrack();
 }
 
-/* ---------------- GAME ---------------- */
+function renderTrack(){
+  track.innerHTML="";
+  steps.forEach((x,i)=>{
+    const d=document.createElement("div");
+    d.className="step"+(i===index?" active":"");
+    d.innerText=x.toFixed(2)+"x";
+    track.appendChild(d);
+  });
+}
+
 function startGame(){
   const a=+amt.value;
-  if(a<1 || a>balance) return alert("Invalid bet");
-  bet=a;
-  balance-=bet;
-  bal.innerText=balance.toFixed(2);
-  index=-1;
-  alive=true;
-  curX.innerText="1.00x";
+  if(a<1||a>balance)return;
+  bet=a;balance-=bet;bal.innerText=balance.toFixed(2);
+  index=-1;alive=true;curX.innerText="1.00x";
+  popup("Bet Placed ₹"+bet);
   renderTrack();
 }
 
 function nextStep(){
-  if(!alive) return;
-  if(bombChance()){
+  if(!alive)return;
+  if(bomb()){
     alive=false;
-    alert("💣 Chicken got hit! You LOST");
-    return;
+    popup("💣 You Lost","lose");
+    bets.unshift(`❌ ${mode} | ₹${bet}`);
+    renderBets();return;
   }
   index++;
-  if(index>=steps.length){
-    cashOut();
-    return;
-  }
+  chicken.classList.add("jump");
+  setTimeout(()=>chicken.classList.remove("jump"),300);
   curX.innerText=steps[index].toFixed(2)+"x";
   renderTrack();
 }
 
 function cashOut(){
-  if(!alive || index<0) return;
-  const win = bet * steps[index];
-  balance += win;
-  bal.innerText=balance.toFixed(2);
+  if(!alive||index<0)return;
+  const win=bet*steps[index];
+  balance+=win;bal.innerText=balance.toFixed(2);
   alive=false;
-  alert("✅ You WIN ₹"+win.toFixed(2));
+  popup("🎉 You Win ₹"+win.toFixed(2),"win");
+  bets.unshift(`✅ ${mode} | ₹${bet} → ₹${win.toFixed(2)}`);
+  renderBets();
 }
 
-/* INIT */
+function renderBets(){
+  betsDiv.innerHTML=bets.slice(0,10).join("<br>");
+}
+
 renderTrack();
 </script>
 
