@@ -21,10 +21,9 @@ body{margin:0;background:#0b0b0b;color:#fff;font-family:Arial}
 input{width:100%;padding:14px;font-size:16px;border-radius:10px;border:none;margin-top:10px}
 button{width:100%;padding:14px;margin-top:10px;border:none;border-radius:10px;font-size:16px;font-weight:bold;background:#2196f3;color:#fff}
 button:disabled{opacity:.5}
-.small button{flex:1;background:#333}
 .history{font-size:14px;line-height:1.6;margin-top:6px}
 
-.popup{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6)}
+.popup{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);z-index:999}
 .popup div{background:#1e1e1e;padding:25px;border-radius:14px;font-size:18px}
 
 .flip{animation:flip .6s}
@@ -51,7 +50,7 @@ button:disabled{opacity:.5}
 
   <input id="amount" type="number" min="1" placeholder="Min ₹1">
 
-  <div class="row small">
+  <div class="row">
     <button onclick="selectBet('GOD')">GOD</button>
     <button onclick="selectBet('DRAW')">DRAW</button>
     <button onclick="selectBet('DEVIL')">DEVIL</button>
@@ -72,124 +71,129 @@ button:disabled{opacity:.5}
 
 <div class="popup" id="popup"><div id="popupText"></div></div>
 
+<!-- ================= GAME LOGIC ================= -->
 <script>
-/* -------- CLEAN RESET (ONE TIME) -------- */
-if(!localStorage.getItem("gdd_clean")){
-  localStorage.clear();
-  localStorage.setItem("gdd_clean","1");
-}
-
-/* -------- STATE -------- */
 const cards=["A","K","Q","J","10","9","8","7","6","5","4","3","2"];
+let selected=null;
 
-let state = JSON.parse(localStorage.getItem("gdd_state")) || {
-  period:1000,
+let state = JSON.parse(localStorage.getItem("gdd_user")) || {
   wallet:100,
-  phase:"BET",
-  time:25,
-  selected:null,
-  bets:[],
-  last10:[]
+  bets:[]
 };
 
-let interval=null;
-
-/* -------- HELPERS -------- */
-function save(){localStorage.setItem("gdd_state",JSON.stringify(state))}
-function popup(msg){
-  popupText.innerText=msg;
-  popupEl.style.display="flex";
-  setTimeout(()=>popupEl.style.display="none",1500);
+function popupMsg(t){
+  popupText.innerText=t;
+  popup.style.display="flex";
+  setTimeout(()=>popup.style.display="none",1500);
 }
 
-/* -------- UI -------- */
-function render(){
-  info.innerText=`Period: ${state.period} | Wallet: ₹${state.wallet.toFixed(2)}`;
-  status.innerText=state.phase==="BET"?"BET NOW":state.phase==="LOCK"?"LOCKED":"RESULT";
-  timer.innerText=state.time+"s";
-
-  betBtn.disabled=state.phase!=="BET";
-
-  godCard.classList.toggle("active",state.selected==="GOD");
-  devilCard.classList.toggle("active",state.selected==="DEVIL");
-
-  last10.innerHTML=state.last10.map(r=>`#${r.p} → ${r.r}`).join("<br>");
-  myBets.innerHTML=state.bets.map(b=>`P${b.p} | ${b.side} | ₹${b.amt} | ${b.res}`).join("<br>");
-}
-
-/* -------- GAME LOOP -------- */
-function startLoop(){
-  if(interval) clearInterval(interval);
-  interval=setInterval(()=>{
-    if(state.time>0){state.time--}
-    else{
-      if(state.phase==="BET"){state.phase="LOCK";state.time=5}
-      else if(state.phase==="LOCK"){resolve()}
-      else{
-        state.period++;
-        state.phase="BET";
-        state.time=25;
-        state.selected=null;
-        godCard.innerText="GOD";
-        devilCard.innerText="DEVIL";
-      }
-    }
-    save();render();
-  },1000);
-}
-
-/* -------- ACTIONS -------- */
 function selectBet(s){
-  if(state.phase!=="BET")return;
-  state.selected=s;
-  render();
+  if(game.phase!=="BET") return;
+  selected=s;
+  godCard.classList.toggle("active",s==="GOD");
+  devilCard.classList.toggle("active",s==="DEVIL");
 }
 
 function placeBet(){
   let amt=+amount.value;
-  if(!state.selected||amt<1||amt>state.wallet)return;
+  if(!selected||amt<1||amt>state.wallet||game.phase!=="BET") return;
   state.wallet-=amt;
-  state.bets.unshift({p:state.period,side:state.selected,amt,res:"PENDING"});
-  popup("Bet Placed");
-  save();render();
+  state.bets.unshift({p:game.period,side:selected,amt,res:"PENDING"});
+  popupMsg("Bet Placed");
+  saveUser();
 }
 
-function resolve(){
-  state.phase="RESULT";
-  state.time=5;
+function saveUser(){
+  localStorage.setItem("gdd_user",JSON.stringify(state));
+}
 
+function renderUser(){
+  myBets.innerHTML=state.bets.map(b=>`P${b.p} | ${b.side} | ₹${b.amt} | ${b.res}`).join("<br>");
+}
+</script>
+
+<!-- ================= FIREBASE SYNC ================= -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, serverTimestamp } 
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+/* 🔥 PASTE YOUR FIREBASE CONFIG HERE */
+const firebaseConfig={
+  apiKey:"YOUR_API_KEY",
+  authDomain:"YOUR_PROJECT.firebaseapp.com",
+  projectId:"YOUR_PROJECT_ID"
+};
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+const gameRef=doc(db,"games","god-devil-draw");
+
+let game={period:1000,phase:"BET",time:25,last10:[]};
+
+async function init(){
+  const snap=await getDoc(gameRef);
+  if(!snap.exists()){
+    await setDoc(gameRef,{...game,updatedAt:serverTimestamp()});
+  }
+}
+init();
+
+onSnapshot(gameRef,(snap)=>{
+  if(!snap.exists()) return;
+  game=snap.data();
+  renderGame();
+});
+
+function renderGame(){
+  info.innerText=`Period: ${game.period} | Wallet: ₹${state.wallet}`;
+  status.innerText=game.phase==="BET"?"BET NOW":game.phase==="LOCK"?"LOCKED":"RESULT";
+  timer.innerText=game.time+"s";
+  betBtn.disabled=game.phase!=="BET";
+  last10.innerHTML=(game.last10||[]).map(r=>`#${r.p} → ${r.r}`).join("<br>");
+  renderUser();
+}
+
+let master = !localStorage.getItem("gdd_master");
+if(master) localStorage.setItem("gdd_master","1");
+
+if(master){
+  setInterval(async()=>{
+    if(game.time>0){game.time--}
+    else{
+      if(game.phase==="BET"){game.phase="LOCK";game.time=5}
+      else if(game.phase==="LOCK"){resolveRound()}
+      else{game.period++;game.phase="BET";game.time=25}
+    }
+    await updateDoc(gameRef,{...game,updatedAt:serverTimestamp()});
+  },1000);
+}
+
+function resolveRound(){
+  game.phase="RESULT";game.time=5;
   let g=cards[Math.random()*cards.length|0];
   let d=cards[Math.random()*cards.length|0];
-
-  godCard.innerText=g;
-  devilCard.innerText=d;
-  godCard.classList.add("flip");
-  devilCard.classList.add("flip");
-
-  let gv=cards.indexOf(g), dv=cards.indexOf(d);
-  let result = gv<dv?"GOD":dv<gv?"DEVIL":"DRAW";
-
-  state.last10.unshift({p:state.period,r:result});
-  state.last10=state.last10.slice(0,10);
+  godCard.innerText=g;devilCard.innerText=d;
+  godCard.classList.add("flip");devilCard.classList.add("flip");
+  let res=cards.indexOf(g)<cards.indexOf(d)?"GOD":cards.indexOf(d)<cards.indexOf(g)?"DEVIL":"DRAW";
+  game.last10.unshift({p:game.period,r:res});
+  game.last10=game.last10.slice(0,10);
 
   state.bets.forEach(b=>{
-    if(b.p===state.period && b.res==="PENDING"){
-      if(b.side===result){
+    if(b.p===game.period&&b.res==="PENDING"){
+      if(b.side===res){
         let win=b.amt*2;
         state.wallet+=win;
         b.res="WIN ₹"+win;
-        popup("YOU WIN ₹"+win);
+        popupMsg("YOU WIN ₹"+win);
       }else{
         b.res="LOSS";
-        popup("YOU LOST");
+        popupMsg("YOU LOST");
       }
     }
   });
+  saveUser();
 }
-
-/* -------- INIT -------- */
-render();
-startLoop();
 </script>
 
 </body>
