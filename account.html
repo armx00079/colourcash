@@ -16,75 +16,81 @@ body{
 /* HEADER */
 .header{
   background:linear-gradient(135deg,#ff6a6a,#ff8e8e);
+  padding:18px;
   color:#fff;
-  padding:20px;
   display:flex;
   align-items:center;
-  gap:15px;
+  gap:12px;
 }
-.avatar{
-  width:60px;
-  height:60px;
+.header img{
+  width:52px;
+  height:52px;
   border-radius:50%;
-  background:#fff;
 }
-.user-info h3{
-  margin:0;
-  font-size:18px;
-}
-.uid{
-  background:#ffb347;
-  padding:4px 8px;
-  border-radius:10px;
+.header h3{margin:0}
+.header p{
+  margin:2px 0 0;
   font-size:12px;
-  display:inline-block;
-  margin-top:4px;
-}
-.last-login{
-  font-size:11px;
   opacity:.9;
-  margin-top:4px;
 }
 
-/* WALLET CARD */
-.wallet-box{
+/* CARD */
+.card{
   background:#fff;
   margin:15px;
   border-radius:16px;
-  padding:15px;
+  padding:18px;
 }
-.balance{
-  font-size:22px;
-  font-weight:bold;
+
+/* BALANCE */
+.balance h2{
+  margin:6px 0;
+  font-size:28px;
 }
-.wallet-actions{
+
+/* QUICK ACTIONS */
+.quick{
   display:flex;
-  justify-content:space-around;
+  justify-content:space-between;
   margin-top:15px;
 }
-.wallet-actions div{
+.quick div{
+  flex:1;
   text-align:center;
   cursor:pointer;
 }
-.wallet-actions div span{
+.quick div span{
   display:block;
-  margin-top:6px;
-  font-size:13px;
+  font-size:22px;
 }
 
-/* MENU */
-.menu{
+/* HISTORY BUTTONS */
+.history{
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:12px;
   margin:15px;
 }
-.menu-item{
-  background:#fff;
-  padding:15px;
-  border-radius:12px;
+.history div{
+  background:linear-gradient(135deg,#ff9a9e,#fad0c4);
+  border-radius:14px;
+  padding:16px;
+  text-align:center;
+  font-weight:bold;
   cursor:pointer;
-  font-size:14px;
+}
+
+/* LOGOUT */
+.logout{
+  background:#e53935;
+  color:#fff;
+  border:none;
+  width:calc(100% - 30px);
+  margin:15px;
+  padding:14px;
+  border-radius:14px;
+  font-size:16px;
+  cursor:pointer;
 }
 
 /* BOTTOM NAV */
@@ -106,6 +112,7 @@ body{
 }
 .nav-btn.active{
   color:#ff6a6a;
+  font-weight:bold;
 }
 .nav-btn div{font-size:20px}
 </style>
@@ -115,35 +122,44 @@ body{
 
 <!-- HEADER -->
 <div class="header">
-  <img src="https://i.imgur.com/8Km9tLL.png" class="avatar">
-  <div class="user-info">
-    <h3 id="username">User</h3>
-    <div class="uid">UID: <span id="uid"></span></div>
-    <div class="last-login">Last login: <span id="lastLogin"></span></div>
+  <img src="https://i.imgur.com/6VBx3io.png">
+  <div>
+    <h3 id="userName">USER</h3>
+    <p>UID: <span id="uid"></span></p>
+    <p>Last login: <span id="lastLogin"></span></p>
   </div>
 </div>
 
-<!-- WALLET -->
-<div class="wallet-box">
-  <div>Total balance</div>
-  <div class="balance">₹<span id="balance">0.00</span></div>
+<!-- BALANCE -->
+<div class="card balance">
+  <p>Total balance</p>
+  <h2 id="accBalance">₹0.00</h2>
 
-  <div class="wallet-actions">
-    <div onclick="location.href='wallet.html'">👛<span>Wallet</span></div>
-    <div onclick="location.href='deposit.html'">💰<span>Deposit</span></div>
-    <div onclick="location.href='withdraw.html'">🏦<span>Withdraw</span></div>
+  <div class="quick">
+    <div onclick="location.href='wallet.html'">
+      <span>👛</span>Wallet
+    </div>
+    <div onclick="location.href='deposit.html'">
+      <span>💰</span>Deposit
+    </div>
+    <div onclick="location.href='withdraw.html'">
+      <span>🏦</span>Withdraw
+    </div>
   </div>
 </div>
 
-<!-- MENU -->
-<div class="menu">
-  <div class="menu-item" onclick="location.href='deposit-history.html'">
+<!-- HISTORY -->
+<div class="history">
+  <div onclick="location.href='deposit-history.html'">
     📥 My Deposit History
   </div>
-  <div class="menu-item" onclick="location.href='withdraw-history.html'">
+  <div onclick="location.href='withdraw-history.html'">
     📤 My Withdraw History
   </div>
 </div>
+
+<!-- LOGOUT -->
+<button class="logout" onclick="logout()">Logout</button>
 
 <!-- BOTTOM NAV -->
 <div class="bottom-nav">
@@ -162,12 +178,14 @@ body{
 </div>
 
 <script>
-/* USER DATA */
-let email = localStorage.getItem("email") || "user@gmail.com";
-let name = email.split("@")[0];
-document.getElementById("username").innerText = name.toUpperCase();
+/* 🔥 LIVE USER + WALLET DATA */
 
-/* UID */
+// USER NAME FROM GMAIL
+let email = localStorage.getItem("userEmail") || "user@gmail.com";
+let name = email.split("@")[0];
+document.getElementById("userName").innerText = name.toUpperCase();
+
+// UID (random once)
 let uid = localStorage.getItem("uid");
 if(!uid){
   uid = Math.floor(1000000 + Math.random()*9000000);
@@ -175,14 +193,21 @@ if(!uid){
 }
 document.getElementById("uid").innerText = uid;
 
-/* LAST LOGIN */
+// LAST LOGIN
 let now = new Date().toLocaleString();
+localStorage.setItem("lastLogin", now);
 document.getElementById("lastLogin").innerText = now;
 
-/* BALANCE */
+// WALLET
 let balance = Number(localStorage.getItem("balance")) || 0;
-document.getElementById("balance").innerText = balance.toFixed(2);
+document.getElementById("accBalance").innerText = "₹" + balance.toFixed(2);
+
+// LOGOUT
+function logout(){
+  localStorage.clear();
+  location.href = "login.html";
+}
 </script>
 
 </body>
-  </html>
+</html>
