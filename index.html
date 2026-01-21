@@ -27,7 +27,6 @@ body{
   padding:15px;
 }
 .game-card{
-  background:#1c1c1c;
   border-radius:16px;
   padding:24px 10px;
   cursor:pointer;
@@ -42,8 +41,8 @@ body{
 }
 .game-card p{
   font-size:13px;
-  color:#ddd;
-  opacity:0.8;
+  color:#fff;
+  opacity:0.85;
 }
 
 /* 🔥 GAME COLORS */
@@ -57,12 +56,15 @@ body{
   background:linear-gradient(135deg,#ff9800,#ff5722);
 }
 .goddevil{
-  background:linear-gradient(135deg,#2196f3,#ff5722);
+  background:linear-gradient(135deg,#5f2c82,#49a09d);
+}
+.chicken{
+  background:linear-gradient(135deg,#f7971e,#ffd200);
 }
 
 /* ICON */
 .icon{
-  font-size:30px;
+  font-size:32px;
 }
 </style>
 </head>
@@ -94,11 +96,18 @@ body{
     <p>Crash Multiplier Game</p>
   </div>
 
-  <!-- 👑 GOD DEVIL DRAW (TRX WINGO REMOVED) -->
+  <!-- 👑 GOD DEVIL DRAW -->
   <div class="game-card goddevil" onclick="location.href='god-devil-draw.html'">
     <div class="icon">👑</div>
     <h3>GOD • DEVIL • DRAW</h3>
     <p>Card Battle Game</p>
+  </div>
+
+  <!-- 🐔 CHICKEN ROAD (NEW GAME) -->
+  <div class="game-card chicken" onclick="location.href='chicken-road.html'">
+    <div class="icon">🐔</div>
+    <h3>CHICKEN ROAD</h3>
+    <p>High Risk • High Reward</p>
   </div>
 
 </div>
