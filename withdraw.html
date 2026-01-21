@@ -32,7 +32,6 @@ body{
 /* BALANCE */
 .balance{
   text-align:center;
-  font-size:16px;
   margin-bottom:15px;
 }
 .balance span{
@@ -62,11 +61,12 @@ body{
   font-weight:bold;
 }
 
+/* FORMS */
+.form{display:none}
+.form.active{display:block}
+
 /* INPUTS */
-label{
-  font-size:13px;
-  opacity:.8;
-}
+label{font-size:13px;opacity:.8}
 input{
   width:100%;
   padding:12px;
@@ -85,7 +85,37 @@ input{
   font-size:16px;
   background:#4caf50;
   color:#fff;
-  cursor:pointer;
+}
+
+/* POPUP */
+.popup{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.6);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+}
+.popup-box{
+  background:#1c1c1c;
+  padding:25px;
+  border-radius:14px;
+  text-align:center;
+  width:80%;
+}
+.popup-box h3{
+  color:#4caf50;
+  margin:0 0 10px;
+}
+.popup-box button{
+  margin-top:15px;
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  background:#4caf50;
+  color:#fff;
 }
 </style>
 </head>
@@ -96,7 +126,7 @@ input{
 
 <div class="card">
 
-  <!-- ✅ WALLET BALANCE -->
+  <!-- BALANCE -->
   <div class="balance">
     Available Balance<br>
     ₹ <span id="balance">0.00</span>
@@ -104,58 +134,88 @@ input{
 
   <!-- TABS -->
   <div class="tabs">
-    <div class="tab">UPI</div>
-    <div class="tab active">Bank</div>
+    <div class="tab active" onclick="openTab('upi',this)">UPI</div>
+    <div class="tab" onclick="openTab('bank',this)">Bank</div>
+  </div>
+
+  <!-- UPI FORM -->
+  <div class="form active" id="upi">
+    <label>Withdraw Amount (₹)</label>
+    <input type="number" id="upiAmount" placeholder="Minimum ₹100">
+
+    <label>UPI ID</label>
+    <input type="text" placeholder="example@upi">
+
+    <button class="btn" onclick="submitWithdraw()">Submit Withdraw</button>
   </div>
 
   <!-- BANK FORM -->
-  <label>Withdraw Amount (₹)</label>
-  <input type="number" id="amount" placeholder="Minimum ₹100">
+  <div class="form" id="bank">
+    <label>Withdraw Amount (₹)</label>
+    <input type="number" id="bankAmount" placeholder="Minimum ₹100">
 
-  <label>Account Holder Name</label>
-  <input type="text" id="holder">
+    <label>Account Holder Name</label>
+    <input type="text">
 
-  <!-- ✅ BANK NAME ADDED -->
-  <label>Bank Name</label>
-  <input type="text" id="bank">
+    <label>Bank Name</label>
+    <input type="text">
 
-  <label>Account Number</label>
-  <input type="number" id="account">
+    <label>Account Number</label>
+    <input type="number">
 
-  <label>IFSC Code</label>
-  <input type="text" id="ifsc">
+    <label>IFSC Code</label>
+    <input type="text">
 
-  <button class="btn" onclick="submitWithdraw()">Submit Withdraw</button>
+    <button class="btn" onclick="submitWithdraw()">Submit Withdraw</button>
+  </div>
 
 </div>
 
+<!-- POPUP -->
+<div class="popup" id="popup">
+  <div class="popup-box">
+    <h3>✅ Withdraw Submitted</h3>
+    <p>Your request has been sent.<br>Waiting for approval.</p>
+    <button onclick="closePopup()">OK</button>
+  </div>
+</div>
+
 <script>
-/* 🔥 LOAD BALANCE */
+/* LOAD BALANCE */
 let balance = Number(localStorage.getItem("balance")) || 0;
 document.getElementById("balance").innerText = balance.toFixed(2);
 
+/* TAB SWITCH */
+function openTab(id,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.form').forEach(f=>f.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+
+/* SUBMIT */
 function submitWithdraw(){
-  let amt = Number(document.getElementById("amount").value);
+  let amt = Number(
+    document.getElementById("upi").classList.contains("active")
+    ? document.getElementById("upiAmount").value
+    : document.getElementById("bankAmount").value
+  );
 
-  if(amt < 100){
-    alert("Minimum withdraw ₹100");
-    return;
-  }
-  if(amt > balance){
-    alert("Insufficient balance");
-    return;
-  }
+  if(amt < 100){alert("Minimum withdraw ₹100");return;}
+  if(amt > balance){alert("Insufficient balance");return;}
 
-  // TEMP LOGIC (ADMIN APPROVAL LATER)
   balance -= amt;
   localStorage.setItem("balance", balance);
 
-  let totalWithdraw = Number(localStorage.getItem("totalWithdraw")) || 0;
-  totalWithdraw += amt;
-  localStorage.setItem("totalWithdraw", totalWithdraw);
+  let tw = Number(localStorage.getItem("totalWithdraw")) || 0;
+  localStorage.setItem("totalWithdraw", tw + amt);
 
-  alert("Withdraw request submitted. Waiting for approval.");
-  location.href = "wallet.html";
+  document.getElementById("popup").style.display="flex";
+}
+
+function closePopup(){
+  document.getElementById("popup").style.display="none";
+  location.href="wallet.html";
 }
 </script>
 
