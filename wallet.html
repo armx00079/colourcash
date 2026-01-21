@@ -11,7 +11,7 @@ body{
   font-family:Arial, sans-serif;
   background:#f2f2f2;
   color:#222;
-  padding-bottom:90px; /* ✅ NAV SPACE */
+  padding-bottom:90px;
 }
 
 /* HEADER */
@@ -75,6 +75,7 @@ body{
 .action{
   text-align:center;
   font-size:13px;
+  cursor:pointer;
 }
 .action div{
   width:44px;
@@ -92,7 +93,7 @@ body{
 .dh{background:#bbdefb}
 .wh{background:#ffcdd2}
 
-/* 🔽 BOTTOM NAV (FIXED) */
+/* 🔽 BOTTOM NAV */
 .bottom-nav{
   position:fixed;
   bottom:0;
@@ -101,7 +102,7 @@ body{
   background:#111;
   display:flex;
   border-top:1px solid #222;
-  z-index:9999; /* ✅ CLICK FIX */
+  z-index:9999;
 }
 .nav-btn{
   flex:1;
@@ -141,18 +142,28 @@ body{
 
 <!-- ACTION BUTTONS -->
 <div class="actions">
-  <div class="action">
-    <div class="deposit">💰</div>Deposit
+
+  <!-- ✅ DEPOSIT BUTTON FIX -->
+  <div class="action" onclick="location.href='deposit.html'">
+    <div class="deposit">💰</div>
+    Deposit
   </div>
+
   <div class="action">
-    <div class="withdraw">🏦</div>Withdraw
+    <div class="withdraw">🏦</div>
+    Withdraw
   </div>
+
   <div class="action">
-    <div class="dh">📥</div>Deposit History
+    <div class="dh">📥</div>
+    Deposit History
   </div>
+
   <div class="action">
-    <div class="wh">📤</div>Withdraw History
+    <div class="wh">📤</div>
+    Withdraw History
   </div>
+
 </div>
 
 <!-- 🔽 BOTTOM NAV -->
@@ -172,7 +183,7 @@ body{
 </div>
 
 <script>
-/* 🔥 LIVE WALLET DATA (TEMP LOCAL) */
+/* LIVE WALLET DATA (LOCAL FOR NOW) */
 let balance = Number(localStorage.getItem("balance")) || 5.12;
 let totalDeposit = Number(localStorage.getItem("totalDeposit")) || 11870;
 let totalWithdraw = Number(localStorage.getItem("totalWithdraw")) || 19883;
