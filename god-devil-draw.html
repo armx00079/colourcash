@@ -1,117 +1,72 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>GOD • DEVIL • DRAW</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<style>
-body{margin:0;background:#0b0b0b;color:#fff;font-family:Arial}
-.header{text-align:center;padding:15px;font-size:26px;font-weight:bold}
-.card{background:#1a1a1a;margin:12px;padding:15px;border-radius:14px}
-.center{text-align:center}
-.status{font-size:26px;font-weight:bold}
-.timer{font-size:22px;color:#ff4d6d;margin-top:5px}
-.row{display:flex;gap:10px}
-.box{flex:1;padding:20px;border-radius:12px;text-align:center;font-size:18px;font-weight:bold}
-.god{background:#2196f3}
-.draw{background:#4caf50}
-.devil{background:#ff5722}
-.active{outline:3px solid #fff}
-input{width:100%;padding:14px;font-size:16px;border-radius:10px;border:none;margin-top:10px}
-button{width:100%;padding:14px;margin-top:10px;border:none;border-radius:10px;font-size:16px;font-weight:bold;background:#2196f3;color:#fff}
-button:disabled{opacity:.5}
-.small button{flex:1;background:#333}
-.history{font-size:14px;line-height:1.6;margin-top:6px}
-</style>
-</head>
-
-<body>
-
-<div class="header">👑 GOD • DEVIL • DRAW</div>
-
-<div class="card center">
-  <div id="info"></div>
-  <div class="status" id="status">--</div>
-  <div class="timer" id="timer">--</div>
-</div>
-
-<div class="card">
-  <div class="row">
-    <div class="box god" id="godCard">GOD</div>
-    <div class="box draw">DRAW</div>
-    <div class="box devil" id="devilCard">DEVIL</div>
-  </div>
-
-  <input id="amount" type="number" min="1" placeholder="Min ₹1">
-
-  <div class="row small">
-    <button onclick="selectBet('GOD')">GOD</button>
-    <button onclick="selectBet('DRAW')">DRAW</button>
-    <button onclick="selectBet('DEVIL')">DEVIL</button>
-  </div>
-
-  <button id="betBtn">PLACE BET</button>
-</div>
-
-<div class="card">
-  <b>Last 10 Games</b>
-  <div class="history" id="last10">Coming soon</div>
-</div>
-
-<div class="card">
-  <b>My Bets</b>
-  <div class="history" id="myBets">Coming soon</div>
-</div>
-
-<script type="module">
-/* 🔥 FIREBASE */
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, onSnapshot } 
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
-  authDomain: "colourcash-ea60e.firebaseapp.com",
-  projectId: "colourcash-ea60e"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const gameRef = doc(db,"games","god_devil_draw");
-
-/* 🔁 REALTIME LISTENER */
-onSnapshot(gameRef,(snap)=>{
-  if(!snap.exists()) return;
-  const d = snap.data();
-
-  info.innerText = `Period: ${d.period}`;
-  status.innerText = d.phase;
-  timer.innerText = d.time + "s";
-
-  if(d.phase !== "BET"){
-    betBtn.disabled = true;
-  } else {
-    betBtn.disabled = false;
-  }
-
-  if(d.phase === "RESULT"){
-    godCard.innerText = d.result === "GOD" ? "WIN" : "GOD";
-    devilCard.innerText = d.result === "DEVIL" ? "WIN" : "DEVIL";
-  } else {
-    godCard.innerText = "GOD";
-    devilCard.innerText = "DEVIL";
-  }
-});
-
-/* UI ONLY */
-let selected = null;
-function selectBet(s){
-  selected = s;
-  godCard.classList.toggle("active",s==="GOD");
-  devilCard.classList.toggle("active",s==="DEVIL");
+else{
+      if(state.phase==="BET"){state.phase="LOCK";state.time=5}
+      else if(state.phase==="LOCK"){resolve()}
+      else{
+        state.period++;
+        state.phase="BET";
+        state.time=25;
+        state.selected=null;
+        godCard.innerText="GOD";
+        devilCard.innerText="DEVIL";
+      }
+    }
+    save();render();
+  },1000);
 }
+
+/* -------- ACTIONS -------- */
+function selectBet(s){
+  if(state.phase!=="BET")return;
+  state.selected=s;
+  render();
+}
+
+function placeBet(){
+  let amt=+amount.value;
+  if(!state.selectedamt<1amt>state.wallet)return;
+  state.wallet-=amt;
+  state.bets.unshift({p:state.period,side:state.selected,amt,res:"PENDING"});
+  popup("Bet Placed");
+  save();render();
+}
+
+function resolve(){
+  state.phase="RESULT";
+  state.time=5;
+
+  let g=cards[Math.random()*cards.length|0];
+  let d=cards[Math.random()*cards.length|0];
+
+  godCard.innerText=g;
+  devilCard.innerText=d;
+  godCard.classList.add("flip");
+  devilCard.classList.add("flip");
+
+  let gv=cards.indexOf(g), dv=cards.indexOf(d);
+  let result = gv<dv?"GOD":dv<gv?"DEVIL":"DRAW";
+
+  state.last10.unshift({p:state.period,r:result});
+  state.last10=state.last10.slice(0,10);
+
+  state.bets.forEach(b=>{
+    if(b.p===state.period && b.res==="PENDING"){
+      if(b.side===result){
+        let win=b.amt*2;
+        state.wallet+=win;
+        b.res="WIN ₹"+win;
+        popup("YOU WIN ₹"+win);
+      }else{
+        b.res="LOSS";
+        popup("YOU LOST");
+      }
+    }
+  });
+}
+
+/* -------- INIT -------- */
+render();
+startLoop();
 </script>
 
 </body>
-</html>
+  </html>
