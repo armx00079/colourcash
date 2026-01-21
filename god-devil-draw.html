@@ -1,4 +1,128 @@
-else{
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>GOD • DEVIL • DRAW</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{margin:0;background:#0b0b0b;color:#fff;font-family:Arial}
+.header{text-align:center;padding:15px;font-size:26px;font-weight:bold}
+.card{background:#1a1a1a;margin:12px;padding:15px;border-radius:14px}
+.center{text-align:center}
+.status{font-size:26px;font-weight:bold}
+.timer{font-size:22px;color:#ff4d6d;margin-top:5px}
+.row{display:flex;gap:10px}
+.box{flex:1;padding:20px;border-radius:12px;text-align:center;font-size:18px;font-weight:bold}
+.god{background:#2196f3}
+.draw{background:#4caf50}
+.devil{background:#ff5722}
+.active{outline:3px solid #fff}
+input{width:100%;padding:14px;font-size:16px;border-radius:10px;border:none;margin-top:10px}
+button{width:100%;padding:14px;margin-top:10px;border:none;border-radius:10px;font-size:16px;font-weight:bold;background:#2196f3;color:#fff}
+button:disabled{opacity:.5}
+.small button{flex:1;background:#333}
+.history{font-size:14px;line-height:1.6;margin-top:6px}
+
+.popup{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6)}
+.popup div{background:#1e1e1e;padding:25px;border-radius:14px;font-size:18px}
+
+.flip{animation:flip .6s}
+@keyframes flip{from{transform:rotateY(0)}to{transform:rotateY(360deg)}}
+</style>
+</head>
+
+<body>
+
+<div class="header">👑 GOD • DEVIL • DRAW</div>
+
+<div class="card center">
+  <div id="info"></div>
+  <div class="status" id="status">BET NOW</div>
+  <div class="timer" id="timer">25s</div>
+</div>
+
+<div class="card">
+  <div class="row">
+    <div class="box god" id="godCard">GOD</div>
+    <div class="box draw">DRAW</div>
+    <div class="box devil" id="devilCard">DEVIL</div>
+  </div>
+
+  <input id="amount" type="number" min="1" placeholder="Min ₹1">
+
+  <div class="row small">
+    <button onclick="selectBet('GOD')">GOD</button>
+    <button onclick="selectBet('DRAW')">DRAW</button>
+    <button onclick="selectBet('DEVIL')">DEVIL</button>
+  </div>
+
+  <button id="betBtn" onclick="placeBet()">PLACE BET</button>
+</div>
+
+<div class="card">
+  <b>Last 10 Games</b>
+  <div class="history" id="last10"></div>
+</div>
+
+<div class="card">
+  <b>My Bets</b>
+  <div class="history" id="myBets"></div>
+</div>
+
+<div class="popup" id="popup"><div id="popupText"></div></div>
+
+<script>
+/* -------- CLEAN RESET (ONE TIME) -------- */
+if(!localStorage.getItem("gdd_clean")){
+  localStorage.clear();
+  localStorage.setItem("gdd_clean","1");
+}
+
+/* -------- STATE -------- */
+const cards=["A","K","Q","J","10","9","8","7","6","5","4","3","2"];
+
+let state = JSON.parse(localStorage.getItem("gdd_state")) || {
+  period:1000,
+  wallet:100,
+  phase:"BET",
+  time:25,
+  selected:null,
+  bets:[],
+  last10:[]
+};
+
+let interval=null;
+
+/* -------- HELPERS -------- */
+function save(){localStorage.setItem("gdd_state",JSON.stringify(state))}
+function popup(msg){
+  popupText.innerText=msg;
+  popupEl.style.display="flex";
+  setTimeout(()=>popupEl.style.display="none",1500);
+}
+
+/* -------- UI -------- */
+function render(){
+  info.innerText=`Period: ${state.period} | Wallet: ₹${state.wallet.toFixed(2)}`;
+  status.innerText=state.phase==="BET"?"BET NOW":state.phase==="LOCK"?"LOCKED":"RESULT";
+  timer.innerText=state.time+"s";
+
+  betBtn.disabled=state.phase!=="BET";
+
+  godCard.classList.toggle("active",state.selected==="GOD");
+  devilCard.classList.toggle("active",state.selected==="DEVIL");
+
+  last10.innerHTML=state.last10.map(r=>`#${r.p} → ${r.r}`).join("<br>");
+  myBets.innerHTML=state.bets.map(b=>`P${b.p} | ${b.side} | ₹${b.amt} | ${b.res}`).join("<br>");
+}
+
+/* -------- GAME LOOP -------- */
+function startLoop(){
+  if(interval) clearInterval(interval);
+  interval=setInterval(()=>{
+    if(state.time>0){state.time--}
+    else{
       if(state.phase==="BET"){state.phase="LOCK";state.time=5}
       else if(state.phase==="LOCK"){resolve()}
       else{
@@ -23,7 +147,7 @@ function selectBet(s){
 
 function placeBet(){
   let amt=+amount.value;
-  if(!state.selectedamt<1amt>state.wallet)return;
+  if(!state.selected||amt<1||amt>state.wallet)return;
   state.wallet-=amt;
   state.bets.unshift({p:state.period,side:state.selected,amt,res:"PENDING"});
   popup("Bet Placed");
@@ -69,4 +193,4 @@ startLoop();
 </script>
 
 </body>
-  </html>
+</html>
