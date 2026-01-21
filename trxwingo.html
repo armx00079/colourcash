@@ -1,29 +1,24 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <title>GOD DEVIL DRAW</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
-body{margin:0;background:#0f0f0f;font-family:Arial;color:#fff}
+body{margin:0;background:#0f0f0f;color:#fff;font-family:Arial}
 h1{text-align:center;margin:15px 0}
-.card{background:#1b1b1b;margin:15px;border-radius:14px;padding:15px}
+.card{background:#1c1c1c;margin:15px;border-radius:14px;padding:15px}
 .row{display:flex;gap:10px}
-.box{flex:1;text-align:center;padding:25px;border-radius:12px;font-weight:bold}
+.box{flex:1;padding:25px;text-align:center;border-radius:12px;font-weight:bold}
 .god{background:#2196f3}
 .draw{background:#4caf50}
 .devil{background:#ff5722}
 input,button{width:100%;padding:14px;border-radius:10px;border:none;font-size:16px}
 button{background:#2196f3;color:#fff;font-weight:bold;margin-top:10px}
-.locked{background:#555 !important}
-.list{background:#111;padding:10px;border-radius:10px;margin-top:10px;font-size:14px}
-.popup{
-position:fixed;inset:0;
-background:rgba(0,0,0,.6);
-display:none;align-items:center;justify-content:center}
-.popup div{
-background:#222;padding:25px;border-radius:14px;
-text-align:center}
+.popup{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;
+align-items:center;justify-content:center}
+.popup div{background:#222;padding:25px;border-radius:14px}
+.list{background:#111;margin-top:10px;padding:10px;border-radius:10px;font-size:14px}
 </style>
 </head>
 
@@ -32,25 +27,25 @@ text-align:center}
 <h1>👑 GOD • DEVIL • DRAW</h1>
 
 <div class="card">
-<div id="top">Period: <span id="period"></span> | Wallet: ₹<span id="wallet"></span></div>
+<div>Period: <span id="period"></span> | Wallet: ₹<span id="wallet"></span></div>
 <h2 id="status">BET NOW</h2>
 <h3 id="time">30s</h3>
 
 <div class="row">
-<div class="box god" id="godCard">GOD</div>
-<div class="box draw">VS</div>
-<div class="box devil" id="devilCard">DEVIL</div>
+<div class="box god" id="godBox">GOD</div>
+<div class="box draw" id="drawBox">DRAW</div>
+<div class="box devil" id="devilBox">DEVIL</div>
 </div>
 </div>
 
 <div class="card">
-<input id="amount" type="number" min="1" placeholder="Min ₹1">
+<input id="amt" type="number" min="1" placeholder="Min ₹1">
 <div class="row">
-<button onclick="select('GOD')">GOD</button>
-<button onclick="select('DRAW')">DRAW</button>
-<button onclick="select('DEVIL')">DEVIL</button>
+<button onclick="pick('GOD')">GOD</button>
+<button onclick="pick('DRAW')">DRAW</button>
+<button onclick="pick('DEVIL')">DEVIL</button>
 </div>
-<button id="betBtn" onclick="placeBet()">PLACE BET</button>
+<button onclick="bet()">PLACE BET</button>
 </div>
 
 <div class="card list">
@@ -63,130 +58,114 @@ text-align:center}
 <div id="mybets"></div>
 </div>
 
-<div class="popup" id="popup">
-<div id="popupText"></div>
+<div class="popup" id="pop">
+<div id="popText"></div>
 </div>
 
 <script>
-let S = JSON.parse(localStorage.getItem("GDD")) || {
-period:1768000000000,
+let G = JSON.parse(localStorage.getItem("GDD2")) || {
+period:1000,
 wallet:100,
 time:30,
 phase:"BET",
-selected:null,
+pick:null,
 bet:0,
-mybets:[],
-history:[]
+history:[],
+mybets:[]
 };
 
 let timer=null;
 
-function save(){localStorage.setItem("GDD",JSON.stringify(S))}
+function save(){localStorage.setItem("GDD2",JSON.stringify(G))}
 
-function render(){
-period.innerText=S.period;
-wallet.innerText=S.wallet.toFixed(2);
-time.innerText=S.time+"s";
-status.innerText=S.phase;
-
-betBtn.className = (S.phase==="LOCK")?"locked":"";
-
-history.innerHTML=S.history.slice(0,10)
-.map(x=>`#${x.p} → ${x.r}`).join("<br>");
-
-mybets.innerHTML=S.mybets.slice(0,10)
-.map(b=>`#${b.p} ${b.s} ₹${b.a} → ${b.w}`).join("<br>");
-}
-
-function start(){
-clearInterval(timer);
-timer=setInterval(()=>{
-if(S.phase==="RESULT")return;
-S.time--;
-
-if(S.time===5) S.phase="LOCK";
-
-if(S.time<=0){
-S.time=0;
-S.phase="RESULT";
-clearInterval(timer);
-showResult();
-return;
-}
-save();render();
-},1000);
-}
-
-function select(x){
-if(S.phase!=="BET")return;
-S.selected=x;
+function show(){
+period.innerText=G.period;
+wallet.innerText=G.wallet.toFixed(2);
+time.innerText=G.time+"s";
+status.innerText=G.phase;
+history.innerHTML=G.history.map(x=>`#${x.p} → ${x.r}`).join("<br>");
+mybets.innerHTML=G.mybets.map(b=>`#${b.p} ${b.s} ₹${b.a} → ${b.w}`).join("<br>");
 }
 
 function popup(msg){
-popupText.innerHTML=msg;
-popup.style.display="flex";
-setTimeout(()=>popup.style.display="none",2000);
+popText.innerHTML=msg;
+pop.style.display="flex";
+setTimeout(()=>pop.style.display="none",2000);
 }
 
-function placeBet(){
-if(S.phase!=="BET") return popup("❌ Bet Locked");
-let a=+amount.value;
-if(a<1) return popup("❌ Min ₹1");
-if(a>S.wallet) return popup("❌ Low Balance");
+function startTimer(){
+clearInterval(timer);
+timer=setInterval(()=>{
+if(G.phase==="RESULT") return;
+G.time--;
 
-S.wallet-=a;
-S.bet=a;
+if(G.time===5) G.phase="LOCK";
+if(G.time<=0){
+G.phase="RESULT";
+clearInterval(timer);
+result();
+return;
+}
+save();show();
+},1000);
+}
+
+function pick(x){
+if(G.phase!=="BET") return popup("⛔ Bet Locked");
+G.pick=x;
+}
+
+function bet(){
+if(G.phase!=="BET") return popup("⛔ Bet Locked");
+let a=+amt.value;
+if(a<1) return popup("Min ₹1");
+if(a>G.wallet) return popup("Low Balance");
+G.wallet-=a;
+G.bet=a;
 popup("✅ Bet Placed");
-save();render();
+save();show();
 }
 
 function card(){
-let arr=["A","K","Q","J",10,9,8,7,6,5,4,3,2];
-return arr[Math.floor(Math.random()*arr.length)];
+let c=["A","K","Q","J",10,9,8,7,6,5,4,3,2"];
+return c[Math.floor(Math.random()*c.length)];
 }
+function val(x){return x==="A"?14:x==="K"?13:x==="Q"?12:x==="J"?11:x;}
 
-function val(c){
-if(c==="A")return 14;
-if(c==="K")return 13;
-if(c==="Q")return 12;
-if(c==="J")return 11;
-return c;
-}
-
-function showResult(){
+function result(){
 let g=card(), d=card();
-godCard.innerText="GOD "+g;
-devilCard.innerText="DEVIL "+d;
+godBox.innerText="GOD "+g;
+devilBox.innerText="DEVIL "+d;
 
 let r="DRAW";
 if(val(g)>val(d)) r="GOD";
 if(val(d)>val(g)) r="DEVIL";
 
-if(S.selected){
-let win = (S.selected===r);
+if(G.pick){
+let win = (G.pick===r);
 if(win){
-let w=S.bet*2;
-S.wallet+=w;
+let w=G.bet*2;
+G.wallet+=w;
 popup("🎉 YOU WIN ₹"+w);
 }else popup("❌ YOU LOST");
-S.mybets.unshift({p:S.period,s:S.selected,a:S.bet,w:win?"WIN":"LOSS"});
+G.mybets.unshift({p:G.period,s:G.pick,a:G.bet,w:win?"WIN":"LOSS"});
 }
 
-S.history.unshift({p:S.period,r:r});
-S.bet=0;S.selected=null;
+G.history.unshift({p:G.period,r});
+G.bet=0;G.pick=null;
 
 setTimeout(()=>{
-S.period++;
-S.time=30;
-S.phase="BET";
-godCard.innerText="GOD";
-devilCard.innerText="DEVIL";
-save();render();start();
+G.period++;
+G.time=30;
+G.phase="BET";
+godBox.innerText="GOD";
+devilBox.innerText="DEVIL";
+save();show();startTimer();
 },2000);
 }
 
-render();
-start();
+show();
+startTimer();
 </script>
 
 </body>
