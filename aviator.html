@@ -4,53 +4,15 @@
 <meta charset="UTF-8">
 <title>Aviator</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <style>
-body{
-  margin:0;
-  background:#0f0f0f;
-  font-family:Arial, sans-serif;
-  color:#fff;
-  text-align:center;
-}
-.card{
-  background:#1c1c1c;
-  border-radius:18px;
-  padding:18px;
-  margin:15px;
-}
-.btn{
-  width:100%;
-  padding:14px;
-  border:none;
-  border-radius:12px;
-  font-size:16px;
-  color:#fff;
-}
+body{margin:0;background:#0f0f0f;font-family:Arial;color:#fff;text-align:center}
+.card{background:#1c1c1c;border-radius:16px;padding:16px;margin:15px}
+button{width:100%;padding:14px;border:none;border-radius:12px;font-size:16px;color:#fff}
 .blue{background:#2196f3}
 .pink{background:#e91e63}
-.gray{background:#555}
-input{
-  width:100%;
-  padding:12px;
-  border-radius:10px;
-  border:none;
-  font-size:16px;
-}
-.popup{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.7);
-  display:none;
-  align-items:center;
-  justify-content:center;
-}
-.popup .box{
-  background:#222;
-  padding:20px;
-  border-radius:16px;
-  width:80%;
-}
+input{width:100%;padding:12px;border-radius:10px;border:none;font-size:16px}
+.popup{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center}
+.popup .box{background:#222;padding:20px;border-radius:14px;width:80%}
 </style>
 </head>
 
@@ -59,159 +21,128 @@ input{
 <h2>✈️ AVIATOR</h2>
 
 <div class="card">
-  <div>
-    Period: <b id="period"></b> |
-    Wallet: ₹<b id="wallet"></b>
-  </div>
-
+  <div>Period: <b id="period"></b> | Wallet: ₹<b id="wallet"></b></div>
   <h1 id="status" style="color:#00e676">WAIT</h1>
   <h2 id="timer">30s</h2>
   <h1 id="multiplier">1.00x</h1>
 </div>
 
 <div class="card">
-  <input id="betAmount" placeholder="Min ₹1" type="number">
+  <input id="betInput" placeholder="Min ₹1" type="number">
   <br><br>
-  <button class="btn blue" id="betBtn">PLACE BET</button>
+  <button class="blue" id="betBtn">PLACE BET</button>
   <br><br>
-  <button class="btn pink" id="cashBtn" disabled>CASH OUT</button>
+  <button class="pink" id="cashBtn" disabled>CASH OUT</button>
 </div>
 
 <div class="card">
-  <button class="btn pink" onclick="showHistory()">Game History</button>
+  <button class="pink" onclick="showHistory()">Game History</button>
   <br><br>
-  <button class="btn pink" onclick="showMyBets()">My Bets</button>
+  <button class="pink" onclick="showMyBets()">My Bets</button>
 </div>
 
 <div class="card">
   <h3>Last 10 Games</h3>
-  <div id="history"></div>
+  <div id="list"></div>
 </div>
 
 <div class="popup" id="popup">
   <div class="box">
-    <h2 id="popupText"></h2>
-    <button class="btn pink" onclick="closePopup()">OK</button>
+    <h3 id="popupText"></h3>
+    <button class="pink" onclick="popup.style.display='none'">OK</button>
   </div>
 </div>
 
 <script>
-let wallet = Number(localStorage.wallet || 100);
-let period = Number(localStorage.period || Date.now());
-let history = JSON.parse(localStorage.history || "[]");
-let myBets = JSON.parse(localStorage.myBets || "[]");
+let wallet=Number(localStorage.wallet||100);
+let period=Number(localStorage.period||1000);
+let history=JSON.parse(localStorage.history||"[]");
+let bets=JSON.parse(localStorage.bets||"[]");
 
-let phase = "WAIT";
-let timer = 30;
-let multiplier = 1;
-let crashPoint = 0;
-let bet = null;
-let loop;
+let phase="WAIT",time=30,multi=1,crash=0,bet=null,loop;
 
 updateUI();
-startGame();
+start();
 
-function startGame(){
-  crashPoint = (Math.random()*3 + 1.2).toFixed(2);
-  timer = 30;
-  phase = "WAIT";
-  multiplier = 1;
-  bet = null;
-  document.getElementById("cashBtn").disabled = true;
-  loop = setInterval(gameLoop,100);
+function start(){
+  phase="WAIT";time=30;multi=1;
+  crash=(Math.random()*3+1.2).toFixed(2);
+  bet=null;
+  cashBtn.disabled=true;
+  betBtn.disabled=false;
+  loop=setInterval(tick,100);
 }
 
-function gameLoop(){
+function tick(){
   if(phase==="WAIT"){
-    timer -= 0.1;
-    if(timer<=5){
-      phase="LOCK";
-      document.getElementById("betBtn").disabled=true;
-    }
-    if(timer<=0){
-      phase="FLY";
-      document.getElementById("status").innerText="FLYING";
-      document.getElementById("betBtn").disabled=true;
-      document.getElementById("cashBtn").disabled = !bet;
-    }
+    time-=0.1;
+    if(time<=5) betBtn.disabled=true;
+    if(time<=0){phase="FLY";status.innerText="FLYING";cashBtn.disabled=!bet;}
   }
   else if(phase==="FLY"){
-    multiplier += 0.02;
-    if(multiplier>=crashPoint){
-      crash();
-      return;
-    }
+    multi+=0.02;
+    if(multi>=crash) end();
   }
   updateUI();
 }
 
-function crash(){
+function end(){
   clearInterval(loop);
-  phase="CRASH";
-  showPopup("💥 CRASH @ "+crashPoint+"x");
-
-  if(bet && !bet.cashout){
+  if(bet&&!bet.cash){
     bet.result="LOSS";
-    myBets.unshift(bet);
+    bets.unshift(bet);
+    popupMsg("💥 Crash @ "+crash+"x");
   }
-
-  history.unshift({period,crash:crashPoint});
+  history.unshift({p:period,c:crash});
   history=history.slice(0,10);
-
   save();
-  setTimeout(()=>{
-    period++;
-    startGame();
-  },2000);
+  setTimeout(()=>{period++;start()},2000);
 }
 
-document.getElementById("betBtn").onclick=()=>{
-  let amt=Number(betAmount.value);
-  if(amt<1||amt>wallet) return showPopup("Invalid Bet");
+betBtn.onclick=()=>{
+  let amt=Number(betInput.value);
+  if(amt<1||amt>wallet) return popupMsg("Invalid Bet");
   wallet-=amt;
-  bet={period,amount:amt,cashout:false};
-  showPopup("Bet Placed ₹"+amt);
-  updateUI();
+  bet={p:period,a:amt,cash:false};
+  popupMsg("Bet Placed ₹"+amt);
   save();
 };
 
-document.getElementById("cashBtn").onclick=()=>{
-  if(!bet||bet.cashout) return;
-  bet.cashout=true;
-  let win=(bet.amount*multiplier).toFixed(2);
+cashBtn.onclick=()=>{
+  if(!bet||bet.cash) return;
+  bet.cash=true;
+  let win=(bet.a*multi).toFixed(2);
   wallet+=Number(win);
-  bet.result="WIN @ "+multiplier.toFixed(2)+"x";
-  myBets.unshift(bet);
-  showPopup("🎉 You Won ₹"+win);
-  updateUI();
+  bet.result="WIN @ "+multi.toFixed(2)+"x";
+  bets.unshift(bet);
+  popupMsg("🎉 Won ₹"+win);
   save();
 };
 
 function updateUI(){
   periodEl.innerText=period;
   walletEl.innerText=wallet.toFixed(2);
-  timerEl.innerText=Math.max(0,Math.floor(timer))+"s";
-  multiplierEl.innerText=multiplier.toFixed(2)+"x";
+  timer.innerText=Math.max(0,Math.floor(time))+"s";
+  multiplier.innerText=multi.toFixed(2)+"x";
 }
 
 function showHistory(){
-  historyEl.innerHTML=history.map(h=>`#${h.period} → ${h.crash}x`).join("<br>");
+  list.innerHTML=history.map(h=>`#${h.p} → ${h.c}x`).join("<br>");
 }
 function showMyBets(){
-  historyEl.innerHTML=myBets.map(b=>`#${b.period} ₹${b.amount} → ${b.result}`).join("<br>");
+  list.innerHTML=bets.map(b=>`#${b.p} ₹${b.a} → ${b.result}`).join("<br>");
 }
 
-function showPopup(t){
+function popupMsg(t){
   popupText.innerText=t;
   popup.style.display="flex";
 }
-function closePopup(){popup.style.display="none";}
 
 function save(){
   localStorage.wallet=wallet;
   localStorage.period=period;
   localStorage.history=JSON.stringify(history);
-  localStorage.myBets=JSON.stringify(myBets);
+  localStorage.bets=JSON.stringify(bets);
 }
 </script>
 </body>
