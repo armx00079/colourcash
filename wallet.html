@@ -23,7 +23,7 @@ body{
   font-weight:bold;
 }
 
-/* WALLET CARD */
+/* TOP WALLET CARD */
 .wallet-card{
   background:linear-gradient(135deg,#ff6a6a,#ff8e8e);
   color:#fff;
@@ -92,35 +92,28 @@ body{
 .dh{background:#bbdefb;color:#2196f3}
 .wh{background:#ffcdd2;color:#f44336}
 
-/* 🔽 BOTTOM NAV */
-.bottom-nav{
+/* BOTTOM NAV */
+.nav{
   position:fixed;
   bottom:0;
   left:0;
   right:0;
-  background:#111;
+  background:#fff;
   display:flex;
   border-top:1px solid #ddd;
 }
-.nav-btn{
+.nav div{
   flex:1;
   text-align:center;
   padding:10px 0;
   font-size:12px;
-  color:#aaa;
+  color:#777;
 }
-.nav-btn.active{
-  color:#4caf50;
+.nav .active{
+  color:#ff6a6a;
   font-weight:bold;
 }
-.nav-btn div{
-  font-size:20px;
-}
-
-/* SPACE */
-.spacer{
-  height:70px;
-}
+.spacer{height:70px}
 </style>
 </head>
 
@@ -131,15 +124,15 @@ body{
 <!-- WALLET INFO -->
 <div class="wallet-card">
   <p>Total Balance</p>
-  <h1>₹5.12</h1>
+  <h1>₹<span id="balance">0.00</span></h1>
 
   <div class="stats">
     <div class="stat">
-      <h3>19883</h3>
+      <h3 id="totalWithdraw">0</h3>
       <span>Total Amount</span>
     </div>
     <div class="stat">
-      <h3>11870</h3>
+      <h3 id="totalDeposit">0</h3>
       <span>Total Deposit Amount</span>
     </div>
   </div>
@@ -147,19 +140,22 @@ body{
 
 <!-- ACTION BUTTONS -->
 <div class="actions">
-  <div class="action">
+  <div class="action" onclick="alert('Deposit page coming soon')">
     <div class="deposit">💰</div>
     Deposit
   </div>
-  <div class="action">
+
+  <div class="action" onclick="alert('Withdraw page coming soon')">
     <div class="withdraw">🏦</div>
     Withdraw
   </div>
-  <div class="action">
+
+  <div class="action" onclick="alert('Deposit history coming soon')">
     <div class="dh">📥</div>
     Deposit History
   </div>
-  <div class="action">
+
+  <div class="action" onclick="alert('Withdraw history coming soon')">
     <div class="wh">📤</div>
     Withdraw History
   </div>
@@ -167,28 +163,61 @@ body{
 
 <div class="spacer"></div>
 
-<!-- 🔽 SAME BOTTOM NAV -->
-<div class="bottom-nav">
-  <div class="nav-btn" onclick="location.href='index.html'">
-    <div>🏠</div>
-    Home
-  </div>
-
-  <div class="nav-btn active">
-    <div>💰</div>
-    Wallet
-  </div>
-
-  <div class="nav-btn" onclick="location.href='promotion.html'">
-    <div>🎁</div>
-    Promotion
-  </div>
-
-  <div class="nav-btn" onclick="location.href='account.html'">
-    <div>👤</div>
-    Account
-  </div>
+<!-- BOTTOM NAV -->
+<div class="nav">
+  <div onclick="location.href='index.html'">Home</div>
+  <div class="active">Wallet</div>
+  <div>Promotion</div>
+  <div>Account</div>
 </div>
+
+<!-- ================= WALLET LOGIC ================= -->
+<script>
+/* ===== WALLET DATA ===== */
+let walletBalance = Number(localStorage.getItem("wallet_balance")) || 5.12;
+let totalDeposit = Number(localStorage.getItem("total_deposit")) || 11870;
+let totalWithdraw = Number(localStorage.getItem("total_withdraw")) || 19883;
+
+/* ===== RENDER ===== */
+function renderWallet(){
+  document.getElementById("balance").innerText = walletBalance.toFixed(2);
+  document.getElementById("totalDeposit").innerText = totalDeposit;
+  document.getElementById("totalWithdraw").innerText = totalWithdraw;
+}
+renderWallet();
+
+/* ===== FUNCTIONS (USE LATER) ===== */
+// Call this when user deposits money
+function deposit(amount){
+  amount = Number(amount);
+  walletBalance += amount;
+  totalDeposit += amount;
+  saveWallet();
+}
+
+// Call this when user withdraws money
+function withdraw(amount){
+  amount = Number(amount);
+  if(amount > walletBalance){
+    alert("Insufficient balance");
+    return;
+  }
+  walletBalance -= amount;
+  totalWithdraw += amount;
+  saveWallet();
+}
+
+function saveWallet(){
+  localStorage.setItem("wallet_balance", walletBalance);
+  localStorage.setItem("total_deposit", totalDeposit);
+  localStorage.setItem("total_withdraw", totalWithdraw);
+  renderWallet();
+}
+
+/* ===== TEST (REMOVE LATER) ===== */
+// deposit(100);
+// withdraw(200);
+</script>
 
 </body>
 </html>
