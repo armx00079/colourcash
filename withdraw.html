@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Withdraw – Colour Cash</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:#0f0f0f;
+  color:#fff;
+}
+.header{
+  padding:15px;
+  text-align:center;
+  font-size:22px;
+  font-weight:bold;
+}
+.tabs{
+  display:flex;
+  margin:15px;
+  background:#1c1c1c;
+  border-radius:12px;
+}
+.tab{
+  flex:1;
+  padding:12px;
+  text-align:center;
+  cursor:pointer;
+  color:#aaa;
+}
+.tab.active{
+  background:#4caf50;
+  color:#fff;
+  border-radius:12px;
+}
+.card{
+  background:#1c1c1c;
+  margin:15px;
+  border-radius:16px;
+  padding:18px;
+}
+label{font-size:14px;color:#ccc}
+input{
+  width:100%;
+  padding:14px;
+  border-radius:10px;
+  border:none;
+  margin-top:8px;
+  font-size:16px;
+}
+button{
+  width:100%;
+  margin-top:15px;
+  padding:14px;
+  background:#4caf50;
+  border:none;
+  border-radius:10px;
+  color:#fff;
+  font-size:17px;
+  font-weight:bold;
+}
+
+/* POPUP */
+.popup-bg{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.6);
+  display:none;
+  align-items:center;
+  justify-content:center;
+}
+.popup{
+  background:#1c1c1c;
+  padding:22px;
+  border-radius:16px;
+  width:85%;
+  text-align:center;
+}
+.popup h3{color:#4caf50;margin:0 0 8px}
+.popup button{margin-top:12px}
+</style>
+</head>
+
+<body>
+
+<div class="header">🏦 Withdraw</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active" onclick="showTab('upi',this)">UPI</div>
+  <div class="tab" onclick="showTab('bank',this)">Bank</div>
+</div>
+
+<!-- UPI WITHDRAW -->
+<div class="card tab-page" id="upi">
+  <label>Withdraw Amount (₹)</label>
+  <input type="number" id="upiAmount" placeholder="Minimum ₹100">
+
+  <label style="margin-top:12px">UPI ID</label>
+  <input type="text" id="upiId" placeholder="example@upi">
+
+  <button onclick="submitWithdraw()">Submit Withdraw</button>
+</div>
+
+<!-- BANK WITHDRAW -->
+<div class="card tab-page" id="bank" style="display:none">
+  <label>Withdraw Amount (₹)</label>
+  <input type="number" id="bankAmount" placeholder="Minimum ₹100">
+
+  <label style="margin-top:12px">Account Holder Name</label>
+  <input type="text">
+
+  <label style="margin-top:12px">Account Number</label>
+  <input type="number">
+
+  <label style="margin-top:12px">IFSC Code</label>
+  <input type="text">
+
+  <button onclick="submitWithdraw()">Submit Withdraw</button>
+</div>
+
+<!-- POPUP -->
+<div class="popup-bg" id="popup">
+  <div class="popup">
+    <h3>Success</h3>
+    <p>Withdraw request submitted.<br>Processing time: 5–30 minutes</p>
+    <button onclick="closePopup()">OK</button>
+  </div>
+</div>
+
+<script>
+function showTab(id,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.tab-page').forEach(p=>p.style.display='none');
+  document.getElementById(id).style.display='block';
+}
+
+function submitWithdraw(){
+  document.getElementById("popup").style.display="flex";
+}
+
+function closePopup(){
+  document.getElementById("popup").style.display="none";
+  location.href="wallet.html";
+}
+</script>
+
+</body>
+</html>
