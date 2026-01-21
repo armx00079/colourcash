@@ -23,7 +23,7 @@ body{
   font-weight:bold;
 }
 
-/* TOP WALLET CARD */
+/* WALLET CARD */
 .wallet-card{
   background:linear-gradient(135deg,#ff6a6a,#ff8e8e);
   color:#fff;
@@ -92,26 +92,34 @@ body{
 .dh{background:#bbdefb;color:#2196f3}
 .wh{background:#ffcdd2;color:#f44336}
 
-/* BOTTOM NAV */
-.nav{
+/* 🔽 BOTTOM NAV */
+.bottom-nav{
   position:fixed;
   bottom:0;
   left:0;
   right:0;
-  background:#fff;
+  background:#111;
   display:flex;
   border-top:1px solid #ddd;
 }
-.nav div{
+.nav-btn{
   flex:1;
   text-align:center;
   padding:10px 0;
   font-size:12px;
-  color:#777;
+  color:#aaa;
 }
-.nav .active{
-  color:#ff6a6a;
+.nav-btn.active{
+  color:#4caf50;
   font-weight:bold;
+}
+.nav-btn div{
+  font-size:20px;
+}
+
+/* SPACE */
+.spacer{
+  height:70px;
 }
 </style>
 </head>
@@ -123,15 +131,15 @@ body{
 <!-- WALLET INFO -->
 <div class="wallet-card">
   <p>Total Balance</p>
-  <h1>₹<span id="balance">5.12</span></h1>
+  <h1>₹5.12</h1>
 
   <div class="stats">
     <div class="stat">
-      <h3 id="withdrawn">19883</h3>
+      <h3>19883</h3>
       <span>Total Amount</span>
     </div>
     <div class="stat">
-      <h3 id="deposit">11870</h3>
+      <h3>11870</h3>
       <span>Total Deposit Amount</span>
     </div>
   </div>
@@ -139,33 +147,47 @@ body{
 
 <!-- ACTION BUTTONS -->
 <div class="actions">
-  <div class="action" onclick="alert('Deposit page coming soon')">
+  <div class="action">
     <div class="deposit">💰</div>
     Deposit
   </div>
-
-  <div class="action" onclick="alert('Withdraw page coming soon')">
+  <div class="action">
     <div class="withdraw">🏦</div>
     Withdraw
   </div>
-
-  <div class="action" onclick="alert('Deposit history coming soon')">
+  <div class="action">
     <div class="dh">📥</div>
     Deposit History
   </div>
-
-  <div class="action" onclick="alert('Withdraw history coming soon')">
+  <div class="action">
     <div class="wh">📤</div>
     Withdraw History
   </div>
 </div>
 
-<!-- BOTTOM NAV -->
-<div class="nav">
-  <div onclick="location.href='index.html'">Home</div>
-  <div class="active">Wallet</div>
-  <div>Promotion</div>
-  <div>Account</div>
+<div class="spacer"></div>
+
+<!-- 🔽 SAME BOTTOM NAV -->
+<div class="bottom-nav">
+  <div class="nav-btn" onclick="location.href='index.html'">
+    <div>🏠</div>
+    Home
+  </div>
+
+  <div class="nav-btn active">
+    <div>💰</div>
+    Wallet
+  </div>
+
+  <div class="nav-btn" onclick="location.href='promotion.html'">
+    <div>🎁</div>
+    Promotion
+  </div>
+
+  <div class="nav-btn" onclick="location.href='account.html'">
+    <div>👤</div>
+    Account
+  </div>
 </div>
 
 </body>
