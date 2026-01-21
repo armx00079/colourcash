@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>ADMIN – GOD DEVIL DRAW</title>
+</head>
+<body style="background:#111;color:#fff;font-family:Arial;text-align:center">
+
+<h2>ADMIN CONTROL</h2>
+<button onclick="start()">▶ START ROUND</button>
+<button onclick="setResult('GOD')">GOD</button>
+<button onclick="setResult('DEVIL')">DEVIL</button>
+<button onclick="setResult('DRAW')">DRAW</button>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, doc, updateDoc, increment, serverTimestamp } 
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "PASTE_API_KEY",
+  authDomain: "PASTE_DOMAIN",
+  projectId: "PASTE_PROJECT_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const ref = doc(db,"games","god_devil_draw");
+
+let interval;
+
+window.start = async () => {
+  clearInterval(interval);
+  await updateDoc(ref,{ phase:"Bet", time:25, result:"NONE" });
+
+  interval = setInterval(async ()=>{
+    await updateDoc(ref,{ time: increment(-1), updatedAt: serverTimestamp() });
+  },1000);
+};
+
+window.setResult = async (res)=>{
+  clearInterval(interval);
+  await updateDoc(ref,{
+    phase:"Result",
+    result:res,
+    time:5,
+    period:increment(1),
+    updatedAt:serverTimestamp()
+  });
+};
+</script>
+
+</body>
+</html>
