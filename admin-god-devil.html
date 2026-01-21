@@ -1,53 +1,112 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>ADMIN – GOD DEVIL DRAW</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{
+  margin:0;
+  background:#0f0f0f;
+  color:#fff;
+  font-family:Arial, sans-serif;
+  text-align:center;
+}
+h2{margin-top:30px}
+button{
+  padding:14px 20px;
+  margin:10px;
+  font-size:16px;
+  font-weight:bold;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+}
+.start{background:#2196f3;color:#fff}
+.god{background:#2196f3;color:#fff}
+.devil{background:#ff5722;color:#fff}
+.draw{background:#4caf50;color:#fff}
+.status{margin-top:20px;font-size:14px;opacity:.8}
+</style>
 </head>
-<body style="background:#111;color:#fff;font-family:Arial;text-align:center">
+
+<body>
 
 <h2>ADMIN CONTROL</h2>
-<button onclick="start()">▶ START ROUND</button>
-<button onclick="setResult('GOD')">GOD</button>
-<button onclick="setResult('DEVIL')">DEVIL</button>
-<button onclick="setResult('DRAW')">DRAW</button>
+
+<button class="start" id="startBtn">▶ START ROUND</button>
+<br>
+<button class="god" id="godBtn">GOD</button>
+<button class="devil" id="devilBtn">DEVIL</button>
+<button class="draw" id="drawBtn">DRAW</button>
+
+<div class="status" id="status">Waiting…</div>
 
 <script type="module">
+/* 🔥 FIREBASE IMPORTS */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, updateDoc, increment, serverTimestamp } 
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  getFirestore,
+  doc,
+  updateDoc,
+  increment,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+/* 🔥 FIREBASE CONFIG (APNA DALO) */
 const firebaseConfig = {
   apiKey: "PASTE_API_KEY",
-  authDomain: "PASTE_DOMAIN",
+  authDomain: "PASTE_PROJECT_ID.firebaseapp.com",
   projectId: "PASTE_PROJECT_ID"
 };
 
+/* 🔥 INIT */
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const ref = doc(db,"games","god_devil_draw");
+const gameRef = doc(db,"games","god_devil_draw");
 
-let interval;
+let timerInterval = null;
+const status = document.getElementById("status");
 
-window.start = async () => {
-  clearInterval(interval);
-  await updateDoc(ref,{ phase:"Bet", time:25, result:"NONE" });
+/* ▶ START ROUND */
+document.getElementById("startBtn").onclick = async () => {
+  clearInterval(timerInterval);
 
-  interval = setInterval(async ()=>{
-    await updateDoc(ref,{ time: increment(-1), updatedAt: serverTimestamp() });
+  await updateDoc(gameRef,{
+    phase:"BET",
+    time:25,
+    result:"NONE",
+    updatedAt:serverTimestamp()
+  });
+
+  status.innerText = "Round Started";
+
+  timerInterval = setInterval(async ()=>{
+    await updateDoc(gameRef,{
+      time: increment(-1),
+      updatedAt: serverTimestamp()
+    });
   },1000);
 };
 
-window.setResult = async (res)=>{
-  clearInterval(interval);
-  await updateDoc(ref,{
-    phase:"Result",
+/* 🎯 SET RESULT */
+async function setResult(res){
+  clearInterval(timerInterval);
+
+  await updateDoc(gameRef,{
+    phase:"RESULT",
     result:res,
     time:5,
-    period:increment(1),
-    updatedAt:serverTimestamp()
+    period: increment(1),
+    updatedAt: serverTimestamp()
   });
-};
+
+  status.innerText = "Result set: " + res;
+}
+
+document.getElementById("godBtn").onclick = ()=>setResult("GOD");
+document.getElementById("devilBtn").onclick = ()=>setResult("DEVIL");
+document.getElementById("drawBtn").onclick = ()=>setResult("DRAW");
 </script>
 
 </body>
