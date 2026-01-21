@@ -78,11 +78,9 @@ input{
   text-align:center;
   margin-top:12px;
 }
-.qr-box img{
-  width:180px;
-}
+.qr-box img{width:180px}
 
-/* APP BUTTONS */
+/* APPS */
 .apps{
   display:flex;
   gap:10px;
@@ -94,11 +92,51 @@ input{
   border-radius:10px;
   font-weight:bold;
   border:none;
-  cursor:pointer;
 }
 .gpay{background:#fff;color:#000}
 .phonepe{background:#6739b7}
 .paytm{background:#00baf2;color:#000}
+
+/* 🔔 CUSTOM POPUP */
+.popup-bg{
+  position:fixed;
+  top:0;left:0;right:0;bottom:0;
+  background:rgba(0,0,0,.6);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+}
+.popup{
+  background:#1c1c1c;
+  padding:22px;
+  border-radius:16px;
+  width:85%;
+  text-align:center;
+  animation:zoom .25s ease;
+}
+.popup h3{
+  margin:0 0 8px;
+  color:#4caf50;
+}
+.popup p{
+  font-size:14px;
+  color:#ccc;
+}
+.popup button{
+  margin-top:15px;
+  padding:12px;
+  width:100%;
+  background:#4caf50;
+  border:none;
+  border-radius:10px;
+  color:#fff;
+  font-size:16px;
+}
+@keyframes zoom{
+  from{transform:scale(.7);opacity:0}
+  to{transform:scale(1);opacity:1}
+}
 </style>
 </head>
 
@@ -108,76 +146,79 @@ input{
 
 <div class="card">
 
-  <label>Enter Amount (₹)</label>
-  <input type="number" id="amount" placeholder="Minimum ₹1" min="1">
+<label>Enter Amount (₹)</label>
+<input type="number" id="amount" placeholder="Minimum ₹100" min="100">
 
-  <div class="upi-box" id="upiId">8302299569@axl</div>
+<div class="upi-box" id="upiId">8302299569@axl</div>
+<button class="copy-btn" onclick="copyUPI()">Copy UPI ID</button>
 
-  <button class="copy-btn" onclick="copyUPI()">Copy UPI ID</button>
+<div class="qr-box">
+<img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=upi://pay?pa=8302299569@axl&pn=ColourCash">
+</div>
 
-  <!-- QR CODE -->
-  <div class="qr-box">
-    <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=upi://pay?pa=8302299569@axl&pn=ColourCash" alt="UPI QR">
-  </div>
+<div class="note">
+Pay to above UPI ID or scan QR, then enter UTR number below
+</div>
 
-  <div class="note">
-    Pay to above UPI ID or scan QR, then enter UTR number below
-  </div>
+<div class="apps">
+<button class="app-btn gpay" onclick="pay()">GPay</button>
+<button class="app-btn phonepe" onclick="pay()">PhonePe</button>
+<button class="app-btn paytm" onclick="pay()">Paytm</button>
+</div>
 
-  <!-- APP PAY BUTTONS -->
-  <div class="apps">
-    <button class="app-btn gpay" onclick="pay('gpay')">GPay</button>
-    <button class="app-btn phonepe" onclick="pay('phonepe')">PhonePe</button>
-    <button class="app-btn paytm" onclick="pay('paytm')">Paytm</button>
-  </div>
+<label style="margin-top:14px;display:block">Enter UTR Number</label>
+<input type="number" id="utr" placeholder="12 digit UTR number">
 
-  <label style="margin-top:14px;display:block">Enter UTR Number</label>
-  <input type="number" id="utr" placeholder="12 digit UTR number">
-
-  <button class="submit" onclick="submitDeposit()">Submit Deposit</button>
+<button class="submit" onclick="submitDeposit()">Submit Deposit</button>
 
 </div>
 
+<!-- 🔔 POPUP -->
+<div class="popup-bg" id="popupBg">
+  <div class="popup">
+    <h3 id="popupTitle"></h3>
+    <p id="popupMsg"></p>
+    <button onclick="closePopup()">OK</button>
+  </div>
+</div>
+
 <script>
-const UPI = "8302299569@axl";
+const UPI="8302299569@axl";
+
+function showPopup(title,msg){
+  document.getElementById("popupTitle").innerText=title;
+  document.getElementById("popupMsg").innerText=msg;
+  document.getElementById("popupBg").style.display="flex";
+}
+function closePopup(){
+  document.getElementById("popupBg").style.display="none";
+}
 
 function copyUPI(){
   navigator.clipboard.writeText(UPI);
-  alert("UPI ID Copied");
+  showPopup("Copied","UPI ID copied successfully");
 }
 
-function pay(app){
-  const amt = document.getElementById("amount").value;
-  if(!amt || amt < 1){
-    alert("Enter valid amount");
+function pay(){
+  const amt=document.getElementById("amount").value;
+  if(!amt||amt<1){
+    showPopup("Error","Enter valid amount");
     return;
   }
-
-  let url = `upi://pay?pa=${UPI}&pn=ColourCash&am=${amt}&cu=INR`;
-
-  if(app==="gpay") location.href = "intent://pay/#Intent;scheme=upi;package=com.google.android.apps.nbu.paisa.user;end";
-  else if(app==="phonepe") location.href = "intent://pay/#Intent;scheme=upi;package=com.phonepe.app;end";
-  else if(app==="paytm") location.href = "intent://pay/#Intent;scheme=upi;package=net.one97.paytm;end";
-
-  setTimeout(()=>{ location.href = url },300);
+  location.href=`upi://pay?pa=${UPI}&pn=ColourCash&am=${amt}&cu=INR`;
 }
 
 function submitDeposit(){
-  const amt = Number(document.getElementById("amount").value);
-  const utr = document.getElementById("utr").value;
-
-  if(amt<1 || utr.length<10){
-    alert("Enter valid amount & UTR");
+  const amt=Number(amount.value);
+  const utr=document.getElementById("utr").value;
+  if(amt<1||utr.length<10){
+    showPopup("Error","Enter valid amount & UTR");
     return;
   }
-
-  // TEMP LOCAL SAVE (ADMIN VERIFY LATER)
-  let totalDeposit = Number(localStorage.getItem("totalDeposit")) || 0;
-  totalDeposit += amt;
-  localStorage.setItem("totalDeposit", totalDeposit);
-
-  alert("Deposit submitted. Waiting for approval.");
-  location.href="wallet.html";
+  let totalDeposit=Number(localStorage.getItem("totalDeposit"))||0;
+  totalDeposit+=amt;
+  localStorage.setItem("totalDeposit",totalDeposit);
+  showPopup("Success","Deposit submitted. Waiting for approval.");
 }
 </script>
 
