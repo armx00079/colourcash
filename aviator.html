@@ -56,119 +56,161 @@ input,button{width:100%;padding:14px;margin-top:10px;border-radius:10px;border:n
 
 <script>
 const WAIT_TIME = 30;
-const BET_LOCK_TIME = 5;
+const BET_LOCK = 5;
 
-let s = JSON.parse(localStorage.getItem("aviator_v2"));
-if(!s){
-  s={
-    wallet:100,
-    period:1000,
-    phase:"WAIT",
-    start:Date.now(),
-    mult:1,
-    crash:(Math.random()*3+1.5).toFixed(2),
-    bets:[],
-    history:[]
+let state = JSON.parse(localStorage.getItem("aviator_final"));
+
+if (!state) {
+  state = {
+    wallet: 100,
+    period: 1000,
+    phase: "WAIT",
+    start: Date.now(),
+    multiplier: 1,
+    crash: genCrash(),
+    bets: [],
+    history: []
   };
   save();
 }
 
-function save(){localStorage.setItem("aviator_v2",JSON.stringify(s))}
-function ui(){
-  period.innerText=s.period;
-  wallet.innerText=s.wallet;
+function genCrash() {
+  return +(Math.random() * 3 + 1.2).toFixed(2);
 }
-ui();tick();
 
-function tick(){
-  let now=Date.now();
-  let t=Math.floor((now-s.start)/1000);
+function save() {
+  localStorage.setItem("aviator_final", JSON.stringify(state));
+}
 
-  if(s.phase==="WAIT"){
-    let r=WAIT_TIME-t;
-    timer.innerText=r+"s";
-    mult.innerText="WAIT";
+function popup(msg) {
+  popupText.innerHTML = msg;
+  popupBox.style.display = "flex";
+  setTimeout(() => popupBox.style.display = "none", 1500);
+}
 
-    if(r<=BET_LOCK_TIME) betBtn.classList.add("lock");
-    else betBtn.classList.remove("lock");
+function updateUI() {
+  period.innerText = state.period;
+  wallet.innerText = state.wallet;
+}
 
-    if(r<=0){
-      s.phase="FLY";
-      s.start=Date.now();
-      cashBtn.classList.remove("lock");
+updateUI();
+loop();
+
+function loop() {
+  let now = Date.now();
+  let elapsed = Math.floor((now - state.start) / 1000);
+
+  if (state.phase === "WAIT") {
+    let remain = WAIT_TIME - elapsed;
+    timer.innerText = remain + "s";
+    mult.innerText = "WAIT";
+
+    betBtn.disabled = remain <= BET_LOCK;
+
+    if (remain <= 0) {
+      state.phase = "FLY";
+      state.start = Date.now();
+      cashBtn.disabled = false;
+      popup("✈️ Plane Flying");
       save();
     }
   }
 
-  if(s.phase==="FLY"){
-    s.mult+=0.01;
-    mult.innerText=s.mult.toFixed(2)+"x";
-    timer.innerText="FLYING";
+  if (state.phase === "FLY") {
+    state.multiplier += 0.01;
+    mult.innerText = state.multiplier.toFixed(2) + "x";
+    timer.innerText = "FLYING";
 
-    if(s.mult>=s.crash){
-      endRound();
+    if (state.multiplier >= state.crash) {
+      crashRound();
       return;
     }
   }
 
   save();
-  setTimeout(tick,100);
+  setTimeout(loop, 100);
 }
 
-function placeBet(){
-  let a=+betAmt.value;
-  if(a<1)return popup("Min ₹1");
-  if(a>s.wallet)return popup("No balance");
-  if(betBtn.classList.contains("lock"))return popup("Bet Locked");
+function placeBet() {
+  let amt = +betAmt.value;
+  if (amt < 1) return popup("Min ₹1");
+  if (amt > state.wallet) return popup("Low Balance");
+  if (state.phase !== "WAIT") return popup("Bet Locked");
 
-  s.wallet-=a;
-  s.bets.push({amt:a,win:null});
-  ui();save();
-  popup("Bet Placed ₹"+a);
+  state.wallet -= amt;
+  state.bets.push({
+    period: state.period,
+    amount: amt,
+    cashedAt: null,
+    win: null
+  });
+
+  popup("Bet Placed ₹" + amt);
+  updateUI();
+  save();
 }
 
-function cashOut(){
-  if(s.phase!=="FLY")return;
-  let b=s.bets.find(x=>x.win===null);
-  if(!b)return;
+function cashOut() {
+  if (state.phase !== "FLY") return;
 
-  let win=Math.floor(b.amt*s.mult);
-  b.win=win;
-  s.wallet+=win;
-  cashBtn.classList.add("lock");
-  ui();save();
-  popup("Win ₹"+win);
+  let bet = state.bets.find(b => b.win === null);
+  if (!bet) return;
+
+  let payout = Math.floor(bet.amount * state.multiplier);
+  bet.cashedAt = state.multiplier.toFixed(2);
+  bet.win = payout;
+
+  state.wallet += payout;
+  popup(`✅ Win ₹${payout} @ ${bet.cashedAt}x`);
+  cashBtn.disabled = true;
+
+  updateUI();
+  save();
 }
 
-function endRound(){
-  s.bets.forEach(b=>{if(b.win===null)b.win=0});
-  s.history.unshift({p:s.period,x:s.crash});
-  s.history=s.history.slice(0,10);
+function crashRound() {
+  popup(`💥 Crashed @ ${state.crash}x`);
 
-  s.period++;
-  s.phase="WAIT";
-  s.start=Date.now();
-  s.mult=1;
-  s.crash=(Math.random()*3+1.5).toFixed(2);
-  s.bets=[];
-  save();ui();
+  state.bets.forEach(b => {
+    if (b.win === null) {
+      b.win = 0;
+      b.cashedAt = "CRASH";
+    }
+  });
+
+  state.history.unshift({
+    period: state.period,
+    crash: state.crash
+  });
+  state.history = state.history.slice(0, 10);
+
+  setTimeout(nextRound, 1200);
 }
 
-function showHistory(){
-  listBox.innerHTML="<b>Last 10 Games</b><br>"+
-  s.history.map(h=>`#${h.p} → ${h.x}x`).join("<br>");
+function nextRound() {
+  state.period++;
+  state.phase = "WAIT";
+  state.start = Date.now();
+  state.multiplier = 1;
+  state.crash = genCrash();
+  state.bets = [];
+  cashBtn.disabled = true;
+
+  updateHistory();
+  save();
 }
 
-function showBets(){
-  listBox.innerHTML="<b>My Bets</b><br>"+
-  s.history.map(h=>`Period ${h.p}`).join("<br>");
+function updateHistory() {
+  historyBox.innerHTML = "<b>Last 10 Games</b><br>" +
+    state.history.map(h => `#${h.period} → ${h.crash}x`).join("<br>");
 }
 
-function popup(t){
-  popupText.innerText=t;
-  popup.style.display="flex";
-  setTimeout(()=>popup.style.display="none",1200);
+function showMyBets() {
+  historyBox.innerHTML = "<b>My Bets</b><br>" +
+    state.history.map(h => {
+      let bet = state.bets.find(b => b.period === h.period);
+      if (!bet) return "";
+      return `#${bet.period} | ₹${bet.amount} | ${bet.cashedAt} | ₹${bet.win}`;
+    }).join("<br>");
 }
-</script>
-</body>
-</html>
+    </script>
