@@ -11,13 +11,19 @@ body{
   font-family:Arial, sans-serif;
   background:#0f0f0f;
   color:#fff;
-  text-align:center;
 }
+
+/* HEADER */
 .header{
   padding:15px;
   font-size:22px;
   font-weight:bold;
+  text-align:center;
 }
+
+/* PAGES */
+.page{display:none}
+.page.active{display:block}
 
 /* 🎮 GAME MENU */
 .menu{
@@ -31,29 +37,50 @@ body{
   padding:24px 10px;
   cursor:pointer;
   transition:0.2s;
+  text-align:center;
 }
-.game-card:active{
-  transform:scale(0.97);
-}
-.game-card h3{
-  margin:6px 0 0;
-  font-size:18px;
-}
-.game-card p{
-  font-size:13px;
-  color:#fff;
-  opacity:0.85;
-}
+.game-card:active{transform:scale(0.97)}
+.game-card h3{margin:6px 0 0;font-size:18px}
+.game-card p{font-size:13px;opacity:.85}
 
-/* 🔥 GAME COLORS */
+/* GAME COLORS */
 .wingo{background:linear-gradient(135deg,#2196f3,#21cbf3)}
 .mines{background:linear-gradient(135deg,#ff5252,#ff1744)}
 .aviator{background:linear-gradient(135deg,#ff9800,#ff5722)}
 .goddevil{background:linear-gradient(135deg,#5f2c82,#49a09d)}
 .chicken{background:linear-gradient(135deg,#f7971e,#ffd200)}
-
-/* ICON */
 .icon{font-size:32px}
+
+/* 🔽 BOTTOM NAV */
+.bottom-nav{
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  background:#111;
+  display:flex;
+  border-top:1px solid #222;
+}
+.nav-btn{
+  flex:1;
+  padding:10px 0;
+  text-align:center;
+  font-size:12px;
+  color:#aaa;
+}
+.nav-btn.active{color:#4caf50}
+.nav-btn div{font-size:20px}
+
+/* PADDING FOR NAV */
+.spacer{height:70px}
+
+/* SIMPLE PAGES */
+.simple-page{
+  padding:30px;
+  text-align:center;
+  font-size:18px;
+  color:#ccc;
+}
 </style>
 </head>
 
@@ -61,60 +88,83 @@ body{
 
 <div class="header">🎨 Colour Cash</div>
 
-<div class="menu">
+<!-- HOME PAGE -->
+<div class="page active" id="home">
 
-  <div class="game-card wingo" onclick="location.href='wingo.html'">
-    <div class="icon">🎨</div>
-    <h3>WIN GO</h3>
-    <p>30s Colour Trading</p>
-  </div>
+  <div class="menu">
+    <div class="game-card wingo" onclick="location.href='wingo.html'">
+      <div class="icon">🎨</div><h3>WIN GO</h3><p>30s Colour Trading</p>
+    </div>
 
-  <div class="game-card mines" onclick="location.href='mines.html'">
-    <div class="icon">💣</div>
-    <h3>MINES</h3>
-    <p>Spribe Style Game</p>
-  </div>
+    <div class="game-card mines" onclick="location.href='mines.html'">
+      <div class="icon">💣</div><h3>MINES</h3><p>Spribe Style Game</p>
+    </div>
 
-  <div class="game-card aviator" onclick="location.href='aviator.html'">
-    <div class="icon">✈️</div>
-    <h3>AVIATOR</h3>
-    <p>Crash Multiplier Game</p>
-  </div>
+    <div class="game-card aviator" onclick="location.href='aviator.html'">
+      <div class="icon">✈️</div><h3>AVIATOR</h3><p>Crash Multiplier</p>
+    </div>
 
-  <div class="game-card goddevil" onclick="location.href='god-devil-draw.html'">
-    <div class="icon">👑</div>
-    <h3>GOD • DEVIL • DRAW</h3>
-    <p>Card Battle Game</p>
-  </div>
+    <div class="game-card goddevil" onclick="location.href='god-devil-draw.html'">
+      <div class="icon">👑</div><h3>GOD • DEVIL • DRAW</h3><p>Card Battle</p>
+    </div>
 
-  <div class="game-card chicken" onclick="location.href='chicken-road.html'">
-    <div class="icon">🐔</div>
-    <h3>CHICKEN ROAD</h3>
-    <p>High Risk • High Reward</p>
+    <div class="game-card chicken" onclick="location.href='chicken-road.html'">
+      <div class="icon">🐔</div><h3>CHICKEN ROAD</h3><p>High Risk • High Reward</p>
+    </div>
   </div>
 
 </div>
 
-<!-- 🔐 LOGIN CHECK -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, onAuthStateChanged } from
-"https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+<!-- WALLET PAGE -->
+<div class="page" id="wallet">
+  <div class="simple-page">
+    💰 Wallet Page<br><br>
+    Balance & Transactions (later)
+  </div>
+</div>
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
-  authDomain: "colourcash-ea60e.firebaseapp.com",
-  projectId: "colourcash-ea60e"
-};
+<!-- PROMOTION PAGE -->
+<div class="page" id="promotion">
+  <div class="simple-page">
+    🎁 Promotion Page<br><br>
+    Bonus • Offers (later)
+  </div>
+</div>
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+<!-- ACCOUNT PAGE -->
+<div class="page" id="account">
+  <div class="simple-page">
+    👤 Account Page<br><br>
+    Profile • Logout (later)
+  </div>
+</div>
 
-onAuthStateChanged(auth, user=>{
-  if(!user){
-    location.href="login.html";
-  }
-});
+<div class="spacer"></div>
+
+<!-- 🔽 BOTTOM NAV BAR -->
+<div class="bottom-nav">
+  <div class="nav-btn active" onclick="showPage('home',this)">
+    <div>🏠</div>Home
+  </div>
+  <div class="nav-btn" onclick="showPage('wallet',this)">
+    <div>💰</div>Wallet
+  </div>
+  <div class="nav-btn" onclick="showPage('promotion',this)">
+    <div>🎁</div>Promotion
+  </div>
+  <div class="nav-btn" onclick="showPage('account',this)">
+    <div>👤</div>Account
+  </div>
+</div>
+
+<script>
+function showPage(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+}
 </script>
 
 </body>
