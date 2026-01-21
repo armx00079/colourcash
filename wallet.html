@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Wallet – Colour Cash</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:#f2f2f2;
+  color:#222;
+}
+
+/* HEADER */
+.header{
+  background:linear-gradient(135deg,#ff6a6a,#ff8e8e);
+  color:#fff;
+  padding:16px;
+  text-align:center;
+  font-size:20px;
+  font-weight:bold;
+}
+
+/* TOP WALLET CARD */
+.wallet-card{
+  background:linear-gradient(135deg,#ff6a6a,#ff8e8e);
+  color:#fff;
+  margin:15px;
+  border-radius:16px;
+  padding:20px;
+  text-align:center;
+}
+.wallet-card h1{
+  margin:10px 0 4px;
+  font-size:34px;
+}
+.wallet-card p{
+  margin:0;
+  opacity:0.9;
+  font-size:14px;
+}
+
+/* STATS */
+.stats{
+  display:flex;
+  justify-content:space-between;
+  margin-top:15px;
+}
+.stat{
+  flex:1;
+  text-align:center;
+}
+.stat h3{
+  margin:0;
+  font-size:18px;
+}
+.stat span{
+  font-size:12px;
+  opacity:0.9;
+}
+
+/* ACTIONS */
+.actions{
+  background:#fff;
+  margin:15px;
+  border-radius:16px;
+  padding:15px;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+}
+.action{
+  text-align:center;
+  font-size:13px;
+  cursor:pointer;
+}
+.action div{
+  width:44px;
+  height:44px;
+  margin:auto;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:20px;
+  margin-bottom:6px;
+}
+.deposit{background:#ffe0b2;color:#ff9800}
+.withdraw{background:#e1bee7;color:#9c27b0}
+.dh{background:#bbdefb;color:#2196f3}
+.wh{background:#ffcdd2;color:#f44336}
+
+/* BOTTOM NAV */
+.nav{
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  background:#fff;
+  display:flex;
+  border-top:1px solid #ddd;
+}
+.nav div{
+  flex:1;
+  text-align:center;
+  padding:10px 0;
+  font-size:12px;
+  color:#777;
+}
+.nav .active{
+  color:#ff6a6a;
+  font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">Wallet</div>
+
+<!-- WALLET INFO -->
+<div class="wallet-card">
+  <p>Total Balance</p>
+  <h1>₹<span id="balance">5.12</span></h1>
+
+  <div class="stats">
+    <div class="stat">
+      <h3 id="withdrawn">19883</h3>
+      <span>Total Amount</span>
+    </div>
+    <div class="stat">
+      <h3 id="deposit">11870</h3>
+      <span>Total Deposit Amount</span>
+    </div>
+  </div>
+</div>
+
+<!-- ACTION BUTTONS -->
+<div class="actions">
+  <div class="action" onclick="alert('Deposit page coming soon')">
+    <div class="deposit">💰</div>
+    Deposit
+  </div>
+
+  <div class="action" onclick="alert('Withdraw page coming soon')">
+    <div class="withdraw">🏦</div>
+    Withdraw
+  </div>
+
+  <div class="action" onclick="alert('Deposit history coming soon')">
+    <div class="dh">📥</div>
+    Deposit History
+  </div>
+
+  <div class="action" onclick="alert('Withdraw history coming soon')">
+    <div class="wh">📤</div>
+    Withdraw History
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="nav">
+  <div onclick="location.href='index.html'">Home</div>
+  <div class="active">Wallet</div>
+  <div>Promotion</div>
+  <div>Account</div>
+</div>
+
+</body>
+</html>
