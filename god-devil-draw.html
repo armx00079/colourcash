@@ -23,10 +23,6 @@ button{width:100%;padding:14px;margin-top:10px;border:none;border-radius:10px;fo
 button:disabled{opacity:.5}
 .small button{flex:1;background:#333}
 .history{font-size:14px;line-height:1.6;margin-top:6px}
-.popup{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6)}
-.popup div{background:#1e1e1e;padding:25px;border-radius:14px;font-size:18px}
-.flip{animation:flip .6s}
-@keyframes flip{from{transform:rotateY(0)}to{transform:rotateY(360deg)}}
 </style>
 </head>
 
@@ -36,7 +32,7 @@ button:disabled{opacity:.5}
 
 <div class="card center">
   <div id="info"></div>
-  <div class="status" id="status">BET NOW</div>
+  <div class="status" id="status">--</div>
   <div class="timer" id="timer">--</div>
 </div>
 
@@ -55,72 +51,65 @@ button:disabled{opacity:.5}
     <button onclick="selectBet('DEVIL')">DEVIL</button>
   </div>
 
-  <button id="betBtn" onclick="placeBet()">PLACE BET</button>
+  <button id="betBtn">PLACE BET</button>
 </div>
 
 <div class="card">
   <b>Last 10 Games</b>
-  <div class="history" id="last10"></div>
+  <div class="history" id="last10">Coming soon</div>
 </div>
 
 <div class="card">
   <b>My Bets</b>
-  <div class="history" id="myBets"></div>
+  <div class="history" id="myBets">Coming soon</div>
 </div>
 
-<div class="popup" id="popup"><div id="popupText"></div></div>
-
-<!-- 🔥 FIREBASE -->
 <script type="module">
+/* 🔥 FIREBASE */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, onSnapshot, updateDoc, serverTimestamp } 
+import { getFirestore, doc, onSnapshot } 
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-/* 🔥 CONFIG (APNI FIREBASE DETAILS YAHAN PASTE KARNA) */
 const firebaseConfig = {
-  apiKey: "PASTE_API_KEY",
-  authDomain: "PASTE_DOMAIN",
-  projectId: "PASTE_PROJECT_ID"
+  apiKey: "AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
+  authDomain: "colourcash-ea60e.firebaseapp.com",
+  projectId: "colourcash-ea60e"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const gameRef = doc(db, "games", "god_devil_draw");
+const gameRef = doc(db,"games","god_devil_draw");
 
-/* 🔁 LIVE LISTENER */
-onSnapshot(gameRef, snap => {
-  const g = snap.data();
-  info.innerText = `Period: ${g.period}`;
-  status.innerText = g.phase === "Bet" ? "BET NOW" : g.phase === "Lock" ? "LOCKED" : "RESULT";
-  timer.innerText = g.time + "s";
+/* 🔁 REALTIME LISTENER */
+onSnapshot(gameRef,(snap)=>{
+  if(!snap.exists()) return;
+  const d = snap.data();
 
-  godCard.innerText = g.godCard || "GOD";
-  devilCard.innerText = g.devilCard || "DEVIL";
+  info.innerText = `Period: ${d.period}`;
+  status.innerText = d.phase;
+  timer.innerText = d.time + "s";
 
-  betBtn.disabled = g.phase !== "Bet";
+  if(d.phase !== "BET"){
+    betBtn.disabled = true;
+  } else {
+    betBtn.disabled = false;
+  }
 
-  last10.innerHTML = (g.last10||[]).map(r=>`#${r.p} → ${r.r}`).join("<br>");
+  if(d.phase === "RESULT"){
+    godCard.innerText = d.result === "GOD" ? "WIN" : "GOD";
+    devilCard.innerText = d.result === "DEVIL" ? "WIN" : "DEVIL";
+  } else {
+    godCard.innerText = "GOD";
+    devilCard.innerText = "DEVIL";
+  }
 });
 
-/* 🔘 BET UI */
+/* UI ONLY */
 let selected = null;
 function selectBet(s){
   selected = s;
   godCard.classList.toggle("active",s==="GOD");
   devilCard.classList.toggle("active",s==="DEVIL");
-}
-
-/* 💰 BET PLACE (LOCAL ONLY – SERVER LATER) */
-function placeBet(){
-  if(!selected) return;
-  popup("Bet Placed");
-}
-
-/* 🔔 POPUP */
-function popup(msg){
-  popupText.innerText = msg;
-  popup.style.display = "flex";
-  setTimeout(()=>popup.style.display="none",1500);
 }
 </script>
 
