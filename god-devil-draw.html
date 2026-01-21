@@ -21,11 +21,10 @@ body{margin:0;background:#0b0b0b;color:#fff;font-family:Arial}
 input{width:100%;padding:14px;font-size:16px;border-radius:10px;border:none;margin-top:10px}
 button{width:100%;padding:14px;margin-top:10px;border:none;border-radius:10px;font-size:16px;font-weight:bold;background:#2196f3;color:#fff}
 button:disabled{opacity:.5}
+.small button{flex:1;background:#333}
 .history{font-size:14px;line-height:1.6;margin-top:6px}
-
-.popup{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);z-index:999}
+.popup{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6)}
 .popup div{background:#1e1e1e;padding:25px;border-radius:14px;font-size:18px}
-
 .flip{animation:flip .6s}
 @keyframes flip{from{transform:rotateY(0)}to{transform:rotateY(360deg)}}
 </style>
@@ -38,7 +37,7 @@ button:disabled{opacity:.5}
 <div class="card center">
   <div id="info"></div>
   <div class="status" id="status">BET NOW</div>
-  <div class="timer" id="timer">25s</div>
+  <div class="timer" id="timer">--</div>
 </div>
 
 <div class="card">
@@ -50,7 +49,7 @@ button:disabled{opacity:.5}
 
   <input id="amount" type="number" min="1" placeholder="Min ₹1">
 
-  <div class="row">
+  <div class="row small">
     <button onclick="selectBet('GOD')">GOD</button>
     <button onclick="selectBet('DRAW')">DRAW</button>
     <button onclick="selectBet('DEVIL')">DEVIL</button>
@@ -71,128 +70,57 @@ button:disabled{opacity:.5}
 
 <div class="popup" id="popup"><div id="popupText"></div></div>
 
-<!-- ================= GAME LOGIC ================= -->
-<script>
-const cards=["A","K","Q","J","10","9","8","7","6","5","4","3","2"];
-let selected=null;
+<!-- 🔥 FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, doc, onSnapshot, updateDoc, serverTimestamp } 
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-let state = JSON.parse(localStorage.getItem("gdd_user")) || {
-  wallet:100,
-  bets:[]
+/* 🔥 CONFIG (APNI FIREBASE DETAILS YAHAN PASTE KARNA) */
+const firebaseConfig = {
+  apiKey: "PASTE_API_KEY",
+  authDomain: "PASTE_DOMAIN",
+  projectId: "PASTE_PROJECT_ID"
 };
 
-function popupMsg(t){
-  popupText.innerText=t;
-  popup.style.display="flex";
-  setTimeout(()=>popup.style.display="none",1500);
-}
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const gameRef = doc(db, "games", "god_devil_draw");
 
+/* 🔁 LIVE LISTENER */
+onSnapshot(gameRef, snap => {
+  const g = snap.data();
+  info.innerText = `Period: ${g.period}`;
+  status.innerText = g.phase === "Bet" ? "BET NOW" : g.phase === "Lock" ? "LOCKED" : "RESULT";
+  timer.innerText = g.time + "s";
+
+  godCard.innerText = g.godCard || "GOD";
+  devilCard.innerText = g.devilCard || "DEVIL";
+
+  betBtn.disabled = g.phase !== "Bet";
+
+  last10.innerHTML = (g.last10||[]).map(r=>`#${r.p} → ${r.r}`).join("<br>");
+});
+
+/* 🔘 BET UI */
+let selected = null;
 function selectBet(s){
-  if(game.phase!=="BET") return;
-  selected=s;
+  selected = s;
   godCard.classList.toggle("active",s==="GOD");
   devilCard.classList.toggle("active",s==="DEVIL");
 }
 
+/* 💰 BET PLACE (LOCAL ONLY – SERVER LATER) */
 function placeBet(){
-  let amt=+amount.value;
-  if(!selected||amt<1||amt>state.wallet||game.phase!=="BET") return;
-  state.wallet-=amt;
-  state.bets.unshift({p:game.period,side:selected,amt,res:"PENDING"});
-  popupMsg("Bet Placed");
-  saveUser();
+  if(!selected) return;
+  popup("Bet Placed");
 }
 
-function saveUser(){
-  localStorage.setItem("gdd_user",JSON.stringify(state));
-}
-
-function renderUser(){
-  myBets.innerHTML=state.bets.map(b=>`P${b.p} | ${b.side} | ₹${b.amt} | ${b.res}`).join("<br>");
-}
-</script>
-
-<!-- ================= FIREBASE SYNC ================= -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, serverTimestamp } 
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-/* 🔥 PASTE YOUR FIREBASE CONFIG HERE */
-const firebaseConfig={
-  apiKey:"YOUR_API_KEY",
-  authDomain:"YOUR_PROJECT.firebaseapp.com",
-  projectId:"YOUR_PROJECT_ID"
-};
-
-const app=initializeApp(firebaseConfig);
-const db=getFirestore(app);
-const gameRef=doc(db,"games","god-devil-draw");
-
-let game={period:1000,phase:"BET",time:25,last10:[]};
-
-async function init(){
-  const snap=await getDoc(gameRef);
-  if(!snap.exists()){
-    await setDoc(gameRef,{...game,updatedAt:serverTimestamp()});
-  }
-}
-init();
-
-onSnapshot(gameRef,(snap)=>{
-  if(!snap.exists()) return;
-  game=snap.data();
-  renderGame();
-});
-
-function renderGame(){
-  info.innerText=`Period: ${game.period} | Wallet: ₹${state.wallet}`;
-  status.innerText=game.phase==="BET"?"BET NOW":game.phase==="LOCK"?"LOCKED":"RESULT";
-  timer.innerText=game.time+"s";
-  betBtn.disabled=game.phase!=="BET";
-  last10.innerHTML=(game.last10||[]).map(r=>`#${r.p} → ${r.r}`).join("<br>");
-  renderUser();
-}
-
-let master = !localStorage.getItem("gdd_master");
-if(master) localStorage.setItem("gdd_master","1");
-
-if(master){
-  setInterval(async()=>{
-    if(game.time>0){game.time--}
-    else{
-      if(game.phase==="BET"){game.phase="LOCK";game.time=5}
-      else if(game.phase==="LOCK"){resolveRound()}
-      else{game.period++;game.phase="BET";game.time=25}
-    }
-    await updateDoc(gameRef,{...game,updatedAt:serverTimestamp()});
-  },1000);
-}
-
-function resolveRound(){
-  game.phase="RESULT";game.time=5;
-  let g=cards[Math.random()*cards.length|0];
-  let d=cards[Math.random()*cards.length|0];
-  godCard.innerText=g;devilCard.innerText=d;
-  godCard.classList.add("flip");devilCard.classList.add("flip");
-  let res=cards.indexOf(g)<cards.indexOf(d)?"GOD":cards.indexOf(d)<cards.indexOf(g)?"DEVIL":"DRAW";
-  game.last10.unshift({p:game.period,r:res});
-  game.last10=game.last10.slice(0,10);
-
-  state.bets.forEach(b=>{
-    if(b.p===game.period&&b.res==="PENDING"){
-      if(b.side===res){
-        let win=b.amt*2;
-        state.wallet+=win;
-        b.res="WIN ₹"+win;
-        popupMsg("YOU WIN ₹"+win);
-      }else{
-        b.res="LOSS";
-        popupMsg("YOU LOST");
-      }
-    }
-  });
-  saveUser();
+/* 🔔 POPUP */
+function popup(msg){
+  popupText.innerText = msg;
+  popup.style.display = "flex";
+  setTimeout(()=>popup.style.display="none",1500);
 }
 </script>
 
