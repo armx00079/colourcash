@@ -46,26 +46,14 @@ body{
 }
 
 /* 🔥 GAME COLORS */
-.wingo{
-  background:linear-gradient(135deg,#2196f3,#21cbf3);
-}
-.mines{
-  background:linear-gradient(135deg,#ff5252,#ff1744);
-}
-.aviator{
-  background:linear-gradient(135deg,#ff9800,#ff5722);
-}
-.goddevil{
-  background:linear-gradient(135deg,#5f2c82,#49a09d);
-}
-.chicken{
-  background:linear-gradient(135deg,#f7971e,#ffd200);
-}
+.wingo{background:linear-gradient(135deg,#2196f3,#21cbf3)}
+.mines{background:linear-gradient(135deg,#ff5252,#ff1744)}
+.aviator{background:linear-gradient(135deg,#ff9800,#ff5722)}
+.goddevil{background:linear-gradient(135deg,#5f2c82,#49a09d)}
+.chicken{background:linear-gradient(135deg,#f7971e,#ffd200)}
 
 /* ICON */
-.icon{
-  font-size:32px;
-}
+.icon{font-size:32px}
 </style>
 </head>
 
@@ -75,35 +63,30 @@ body{
 
 <div class="menu">
 
-  <!-- 🎨 WIN GO -->
   <div class="game-card wingo" onclick="location.href='wingo.html'">
     <div class="icon">🎨</div>
     <h3>WIN GO</h3>
     <p>30s Colour Trading</p>
   </div>
 
-  <!-- 💣 MINES -->
   <div class="game-card mines" onclick="location.href='mines.html'">
     <div class="icon">💣</div>
     <h3>MINES</h3>
     <p>Spribe Style Game</p>
   </div>
 
-  <!-- ✈️ AVIATOR -->
   <div class="game-card aviator" onclick="location.href='aviator.html'">
     <div class="icon">✈️</div>
     <h3>AVIATOR</h3>
     <p>Crash Multiplier Game</p>
   </div>
 
-  <!-- 👑 GOD DEVIL DRAW -->
   <div class="game-card goddevil" onclick="location.href='god-devil-draw.html'">
     <div class="icon">👑</div>
     <h3>GOD • DEVIL • DRAW</h3>
     <p>Card Battle Game</p>
   </div>
 
-  <!-- 🐔 CHICKEN ROAD (NEW GAME) -->
   <div class="game-card chicken" onclick="location.href='chicken-road.html'">
     <div class="icon">🐔</div>
     <h3>CHICKEN ROAD</h3>
@@ -111,6 +94,28 @@ body{
   </div>
 
 </div>
+
+<!-- 🔐 LOGIN CHECK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, onAuthStateChanged } from
+"https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
+  authDomain: "colourcash-ea60e.firebaseapp.com",
+  projectId: "colourcash-ea60e"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+onAuthStateChanged(auth, user=>{
+  if(!user){
+    location.href="login.html";
+  }
+});
+</script>
 
 </body>
 </html>
