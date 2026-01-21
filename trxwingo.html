@@ -2,208 +2,166 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>GOD • DEVIL • DRAW</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GOD DEVIL DRAW</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
-body{
-  margin:0;background:#0f0f0f;color:#fff;
-  font-family:Arial,Helvetica,sans-serif;
-}
+body{margin:0;background:#0b0b0b;font-family:Arial;color:#fff}
 .container{max-width:420px;margin:auto;padding:15px}
-h1{text-align:center;margin:10px 0}
-.card{
-  background:#1c1c1c;border-radius:12px;padding:15px;margin-bottom:12px
-}
-.row{display:flex;justify-content:space-between;align-items:center}
-.center{text-align:center}
-.timer{font-size:26px;color:#ff4d6d}
-.state{font-size:22px;font-weight:bold}
-.btns{display:flex;gap:8px;margin-top:10px}
-.btn{
-  flex:1;padding:12px;border-radius:10px;
-  text-align:center;font-weight:bold;cursor:pointer
-}
+.card{background:#1c1c1c;border-radius:16px;padding:20px;margin-bottom:15px;text-align:center}
+h1{text-align:center}
+.timer{font-size:22px;color:#ff4d4d}
+.big{font-size:36px;margin:10px 0}
+.row{display:flex;gap:10px;justify-content:center}
+.box{flex:1;padding:18px;border-radius:12px;font-weight:bold}
 .god{background:#2196f3}
 .draw{background:#4caf50}
 .devil{background:#ff5722}
-.selected{outline:3px solid #fff}
-input{
-  width:100%;padding:12px;border-radius:10px;
-  border:none;font-size:16px;margin-top:10px
-}
-button{
-  width:100%;padding:14px;border:none;
-  border-radius:12px;font-size:16px;
-  background:#2979ff;color:#fff;margin-top:10px
-}
-.log{font-size:14px;margin-top:8px}
-.popup{
-  position:fixed;inset:0;background:rgba(0,0,0,.7);
-  display:none;align-items:center;justify-content:center
-}
-.popup div{
-  background:#1c1c1c;padding:20px;border-radius:12px;
-  text-align:center
-}
+input{width:100%;padding:12px;border-radius:10px;border:none;font-size:18px;margin-top:10px}
+button{width:100%;padding:14px;border:none;border-radius:12px;font-size:18px;margin-top:10px}
+.primary{background:#2196f3;color:#fff}
+.disabled{opacity:.4}
+.list{background:#151515;border-radius:12px;padding:10px;margin-top:10px;text-align:left;font-size:14px}
+.popup{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center}
+.popup div{background:#222;padding:20px;border-radius:14px}
+.flip{animation:flip .6s}
+@keyframes flip{0%{transform:rotateY(0)}50%{transform:rotateY(90deg)}100%{transform:rotateY(0)}}
 </style>
 </head>
-
 <body>
+
 <div class="container">
 <h1>👑 GOD • DEVIL • DRAW</h1>
 
 <div class="card">
-  <div class="row">
-    <div>Period: <span id="period"></span></div>
-    <div>Wallet: ₹<span id="wallet"></span></div>
-  </div>
-  <div class="center">
-    <div class="state" id="state">BET NOW</div>
-    <div class="timer" id="timer"></div>
-  </div>
+<div id="info"></div>
+<div class="timer" id="timer"></div>
+<div class="big" id="state"></div>
+
+<div class="row">
+<div class="box god" id="godCard">GOD</div>
+<div class="box draw">DRAW</div>
+<div class="box devil" id="devilCard">DEVIL</div>
 </div>
-
-<div class="card center">
-  <div class="row">
-    <div class="btn god" id="godCard">GOD</div>
-    <div class="btn draw">VS</div>
-    <div class="btn devil" id="devilCard">DEVIL</div>
-  </div>
-
-  <input type="number" id="amount" placeholder="Min ₹1">
-
-  <div class="btns">
-    <div class="btn god" onclick="selectBet('GOD')">GOD</div>
-    <div class="btn draw" onclick="selectBet('DRAW')">DRAW</div>
-    <div class="btn devil" onclick="selectBet('DEVIL')">DEVIL</div>
-  </div>
-
-  <button onclick="placeBet()">PLACE BET</button>
 </div>
 
 <div class="card">
-  <b>Last 10 Games</b>
-  <div id="history" class="log"></div>
+<input id="amount" type="number" min="1" value="1">
+<div class="row">
+<button class="god" onclick="select('GOD')">GOD</button>
+<button class="draw" onclick="select('DRAW')">DRAW</button>
+<button class="devil" onclick="select('DEVIL')">DEVIL</button>
+</div>
+<button id="betBtn" class="primary" onclick="placeBet()">PLACE BET</button>
 </div>
 
-<div class="card">
-  <b>My Bets</b>
-  <div id="mybets" class="log"></div>
+<div class="list">
+<b>Last 10 Games</b>
+<div id="last10"></div>
+</div>
+
+<div class="list">
+<b>My Bets</b>
+<div id="mybets"></div>
 </div>
 </div>
 
-<div class="popup" id="popup">
-  <div id="popupText"></div>
-</div>
+<div class="popup" id="popup"><div id="popText"></div></div>
 
 <script>
-const ROUND = 40;
-const BET_TIME = 25;
-const LOCK_TIME = 30;
-const FLIP_TIME = 35;
-
-let data = JSON.parse(localStorage.getItem("gdd")) || {
-  wallet:100,
-  period:1000,
-  start:Date.now(),
-  history:[],
-  bets:[]
+const CARDS=["A","K","Q","J",10,9,8,7,6,5,4,3,2];
+let data=JSON.parse(localStorage.getItem("gdd"))||{
+wallet:100,period:Date.now(),phase:"BET",start:Date.now(),
+bets:[],last10:[],mybets:[]
 };
+let selected=null,locked=false;
 
-let selected = null;
-let bet = null;
-
-function save(){localStorage.setItem("gdd",JSON.stringify(data));}
-
-function card(){
-  const c=["A","K","Q","J","10","9","8","7","6","5","4","3","2"];
-  return c[Math.floor(Math.random()*c.length)];
-}
-function val(c){
-  return c==="A"?14:c==="K"?13:c==="Q"?12:c==="J"?11:parseInt(c);
+function save(){localStorage.setItem("gdd",JSON.stringify(data))}
+function showPopup(t){
+popText.innerHTML=t;
+popup.style.display="flex";
+setTimeout(()=>popup.style.display="none",2000);
 }
 
-function update(){
-  let now=Date.now();
-  let diff=Math.floor((now-data.start)/1000);
-  if(diff>=ROUND){
-    data.start+=ROUND*1000;
-    data.period++;
-    save();
-  }
-  let t=ROUND-diff;
-  document.getElementById("timer").innerText=t+"s";
-  document.getElementById("period").innerText=data.period;
-  document.getElementById("wallet").innerText=data.wallet.toFixed(2);
-
-  if(t>ROUND-BET_TIME){
-    document.getElementById("state").innerText="BET NOW";
-  }else if(t>ROUND-LOCK_TIME){
-    document.getElementById("state").innerText="LOCKED";
-  }else if(t>ROUND-FLIP_TIME){
-    document.getElementById("state").innerText="FLIPPING";
-  }else{
-    document.getElementById("state").innerText="RESULT";
-  }
-}
-setInterval(update,500);
-
-function selectBet(x){
-  selected=x;
-  document.querySelectorAll(".btn").forEach(b=>b.classList.remove("selected"));
-  event.target.classList.add("selected");
-}
-
-function popup(msg){
-  let p=document.getElementById("popup");
-  document.getElementById("popupText").innerHTML=msg;
-  p.style.display="flex";
-  setTimeout(()=>p.style.display="none",1500);
-}
+function select(x){selected=x}
 
 function placeBet(){
-  let amt=parseFloat(amount.value);
-  if(!selected||amt<1||amt>data.wallet)return;
-  bet={choice:selected,amt,period:data.period};
-  data.wallet-=amt;
-  data.bets.unshift(`P${data.period} | ${selected} | -₹${amt}`);
-  popup("BET PLACED");
-  save();
+if(locked||!selected)return;
+let amt=+amount.value;
+if(amt>data.wallet)return alert("Low balance");
+data.wallet-=amt;
+data.bets.push({side:selected,amt});
+data.mybets.unshift(`P${data.period} | ${selected} | ₹${amt}`);
+save();
+showPopup("Bet Placed");
 }
 
-function result(){
-  let g=card(),d=card();
-  godCard.innerText="GOD "+g;
-  devilCard.innerText="DEVIL "+d;
-  let r="DRAW";
-  if(val(g)>val(d))r="GOD";
-  if(val(d)>val(g))r="DEVIL";
-  data.history.unshift(`#${data.period} → ${r}`);
-  if(bet&&bet.period===data.period){
-    if(bet.choice===r){
-      let win=bet.amt*2;
-      data.wallet+=win;
-      popup("YOU WIN ₹"+win);
-      data.bets.unshift(`P${data.period} | WIN +₹${win}`);
-    }else{
-      popup("YOU LOST");
-      data.bets.unshift(`P${data.period} | LOSS`);
-    }
-  }
-  bet=null;
-  save();
+function randomCard(){return CARDS[Math.floor(Math.random()*CARDS.length)]}
+
+function value(c){
+if(c==="A")return 14;
+if(c==="K")return 13;
+if(c==="Q")return 12;
+if(c==="J")return 11;
+return c;
 }
 
-setInterval(()=>{
-  let t=ROUND-Math.floor((Date.now()-data.start)/1000);
-  if(t===5) result();
-},1000);
+function resolve(){
+let g=randomCard(),d=randomCard();
+godCard.innerText=g;
+devilCard.innerText=d;
+godCard.classList.add("flip");
+devilCard.classList.add("flip");
+
+let res="DRAW";
+if(value(g)>value(d))res="GOD";
+if(value(d)>value(g))res="DEVIL";
+
+data.bets.forEach(b=>{
+if(b.side===res){
+let win=b.amt*2;
+data.wallet+=win;
+showPopup("WIN ₹"+win);
+}else{
+showPopup("LOSS");
+}
+});
+data.last10.unshift(`#${data.period} → ${res}`);
+data.last10=data.last10.slice(0,10);
+data.bets=[];
+data.period++;
+save();
+}
+
+function tick(){
+let now=Date.now();
+let diff=30-Math.floor((now-data.start)/1000);
+timer.innerText=diff+"s";
+info.innerText=`Period: ${data.period} | Wallet: ₹${data.wallet.toFixed(2)}`;
+
+if(diff<=5 && diff>0){
+locked=true;
+betBtn.classList.add("disabled");
+state.innerText="LOCKED";
+}
+if(diff<=0){
+state.innerText="RESULT";
+resolve();
+data.start=Date.now();
+locked=false;
+betBtn.classList.remove("disabled");
+}
+save();
+render();
+}
 
 function render(){
-  history.innerHTML=data.history.slice(0,10).join("<br>");
-  mybets.innerHTML=data.bets.slice(0,10).join("<br>");
+last10.innerHTML=data.last10.join("<br>");
+mybets.innerHTML=data.mybets.join("<br>");
 }
-setInterval(render,1000);
+
+setInterval(tick,1000);
+render();
 </script>
+
 </body>
 </html>
