@@ -11,7 +11,7 @@ body{
   font-family:Arial, sans-serif;
   background:#f2f2f2;
   color:#222;
-  padding-bottom:70px;
+  padding-bottom:90px; /* ✅ NAV SPACE */
 }
 
 /* HEADER */
@@ -92,32 +92,29 @@ body{
 .dh{background:#bbdefb}
 .wh{background:#ffcdd2}
 
-/* 🔥 BOTTOM NAV FIXED */
-.nav{
+/* 🔽 BOTTOM NAV (FIXED) */
+.bottom-nav{
   position:fixed;
   bottom:0;
   left:0;
   right:0;
-  height:60px;
   background:#111;
   display:flex;
-  z-index:999;
+  border-top:1px solid #222;
+  z-index:9999; /* ✅ CLICK FIX */
 }
-.nav div{
+.nav-btn{
   flex:1;
+  padding:10px 0;
   text-align:center;
-  padding-top:6px;
   font-size:12px;
   color:#aaa;
 }
-.nav .active{
+.nav-btn.active{
   color:#ff6a6a;
   font-weight:bold;
 }
-.nav div span{
-  display:block;
-  font-size:20px;
-}
+.nav-btn div{font-size:20px}
 </style>
 </head>
 
@@ -125,74 +122,64 @@ body{
 
 <div class="header">Wallet</div>
 
+<!-- WALLET INFO -->
 <div class="wallet-card">
   <p>Total Balance</p>
-  <h1>₹<span id="balance">0.00</span></h1>
+  <h1>₹<span id="balance">5.12</span></h1>
 
   <div class="stats">
     <div class="stat">
-      <h3 id="totalWithdraw">0</h3>
+      <h3 id="withdrawTotal">19883</h3>
       <span>Total Amount</span>
     </div>
     <div class="stat">
-      <h3 id="totalDeposit">0</h3>
+      <h3 id="depositTotal">11870</h3>
       <span>Total Deposit Amount</span>
     </div>
   </div>
 </div>
 
+<!-- ACTION BUTTONS -->
 <div class="actions">
-  <div class="action"><div class="deposit">💰</div>Deposit</div>
-  <div class="action"><div class="withdraw">🏦</div>Withdraw</div>
-  <div class="action"><div class="dh">📥</div>Deposit History</div>
-  <div class="action"><div class="wh">📤</div>Withdraw History</div>
+  <div class="action">
+    <div class="deposit">💰</div>Deposit
+  </div>
+  <div class="action">
+    <div class="withdraw">🏦</div>Withdraw
+  </div>
+  <div class="action">
+    <div class="dh">📥</div>Deposit History
+  </div>
+  <div class="action">
+    <div class="wh">📤</div>Withdraw History
+  </div>
 </div>
 
 <!-- 🔽 BOTTOM NAV -->
-<div class="nav">
-  <div onclick="location.href='index.html'"><span>🏠</span>Home</div>
-  <div class="active"><span>💰</span>Wallet</div>
-  <div><span>🎁</span>Promotion</div>
-  <div><span>👤</span>Account</div>
+<div class="bottom-nav">
+  <div class="nav-btn" onclick="location.href='index.html'">
+    <div>🏠</div>Home
+  </div>
+  <div class="nav-btn active">
+    <div>💰</div>Wallet
+  </div>
+  <div class="nav-btn" onclick="location.href='promotion.html'">
+    <div>🎁</div>Promotion
+  </div>
+  <div class="nav-btn" onclick="location.href='account.html'">
+    <div>👤</div>Account
+  </div>
 </div>
 
 <script>
-/* WALLET DATA */
-let walletBalance = Number(localStorage.getItem("wallet_balance")) || 5.12;
-let totalDeposit = Number(localStorage.getItem("total_deposit")) || 11870;
-let totalWithdraw = Number(localStorage.getItem("total_withdraw")) || 19883;
+/* 🔥 LIVE WALLET DATA (TEMP LOCAL) */
+let balance = Number(localStorage.getItem("balance")) || 5.12;
+let totalDeposit = Number(localStorage.getItem("totalDeposit")) || 11870;
+let totalWithdraw = Number(localStorage.getItem("totalWithdraw")) || 19883;
 
-function render(){
-  balance.innerText = walletBalance.toFixed(2);
-  totalDepositEl.innerText = totalDeposit;
-  totalWithdrawEl.innerText = totalWithdraw;
-}
-
-const balance = document.getElementById("balance");
-const totalDepositEl = document.getElementById("totalDeposit");
-const totalWithdrawEl = document.getElementById("totalWithdraw");
-
-render();
-
-/* 🔥 FUNCTIONS (GAME SE CALL HONGE) */
-function addDeposit(amount){
-  walletBalance += amount;
-  totalDeposit += amount;
-  save();
-}
-
-function addWithdraw(amount){
-  walletBalance -= amount;
-  totalWithdraw += amount;
-  save();
-}
-
-function save(){
-  localStorage.setItem("wallet_balance", walletBalance);
-  localStorage.setItem("total_deposit", totalDeposit);
-  localStorage.setItem("total_withdraw", totalWithdraw);
-  render();
-}
+document.getElementById("balance").innerText = balance.toFixed(2);
+document.getElementById("depositTotal").innerText = totalDeposit;
+document.getElementById("withdrawTotal").innerText = totalWithdraw;
 </script>
 
 </body>
