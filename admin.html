@@ -6,21 +6,70 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-/* ⚠️ ORIGINAL CSS – NOT TOUCHED */
 body{margin:0;font-family:Arial;background:#0f0f0f;color:#fff}
-header{background:linear-gradient(135deg,#ff6a6a,#ff8e8e);padding:18px;text-align:center;font-size:22px;font-weight:bold}
-.dashboard{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:15px}
-.d-card{background:#1c1c1c;border-radius:14px;padding:14px;text-align:center}
+header{
+  background:linear-gradient(135deg,#ff6a6a,#ff8e8e);
+  padding:18px;
+  text-align:center;
+  font-size:22px;
+  font-weight:bold
+}
+.dashboard{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+  padding:15px
+}
+.d-card{
+  background:#1c1c1c;
+  border-radius:14px;
+  padding:14px;
+  text-align:center
+}
 .d-card h2{margin:0;font-size:22px;color:#ff8e8e}
 .d-card span{font-size:12px;color:#aaa}
+
+.profit{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+  padding:0 15px 15px
+}
+.p-card{
+  background:#121212;
+  border-radius:14px;
+  padding:14px;
+  text-align:center;
+  border:1px solid #222
+}
+.p-card h3{margin:0;font-size:18px}
+.p-card span{font-size:12px;color:#aaa}
+
 .tabs{display:flex;background:#111}
-.tab{flex:1;padding:14px;text-align:center;cursor:pointer;color:#aaa;font-weight:bold}
+.tab{
+  flex:1;padding:14px;text-align:center;
+  cursor:pointer;color:#aaa;font-weight:bold
+}
 .tab.active{background:#1c1c1c;color:#ff8e8e}
+
 .section{display:none;padding:15px}
 .section.active{display:block}
-.card{background:#1c1c1c;border-radius:16px;padding:16px;margin-bottom:14px}
+
+.card{
+  background:#1c1c1c;
+  border-radius:16px;
+  padding:16px;
+  margin-bottom:14px
+}
 .row{display:flex;justify-content:space-between;font-size:14px;margin:6px 0}
-.btn{padding:8px 12px;border:none;border-radius:8px;font-weight:bold;cursor:pointer}
+
+.btn{
+  padding:8px 12px;
+  border:none;
+  border-radius:8px;
+  font-weight:bold;
+  cursor:pointer
+}
 .plus{background:#2e7d32;color:#fff}
 .minus{background:#c62828;color:#fff}
 </style>
@@ -36,6 +85,21 @@ header{background:linear-gradient(135deg,#ff6a6a,#ff8e8e);padding:18px;text-alig
   <div class="d-card"><h2 id="pendingWithdraws">0</h2><span>Pending Withdraws</span></div>
 </div>
 
+<div class="profit">
+  <div class="p-card">
+    <h3 id="totalDepositAmt">₹0</h3>
+    <span>Total Deposit</span>
+  </div>
+  <div class="p-card">
+    <h3 id="totalWithdrawAmt">₹0</h3>
+    <span>Total Withdraw</span>
+  </div>
+  <div class="p-card">
+    <h3 id="netProfit">₹0</h3>
+    <span>Net Profit</span>
+  </div>
+</div>
+
 <div class="tabs">
   <div class="tab active" onclick="openTab(0)">Deposits</div>
   <div class="tab" onclick="openTab(1)">Withdraws</div>
@@ -48,8 +112,8 @@ header{background:linear-gradient(135deg,#ff6a6a,#ff8e8e);padding:18px;text-alig
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, getDocs, updateDoc, doc } 
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, getDocs, updateDoc, doc, increment } from
+"https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
@@ -63,44 +127,43 @@ window.openTab=i=>{
   document.querySelectorAll(".section").forEach((s,n)=>s.classList.toggle("active",n===i));
 };
 
-/* USERS (🔥 PASSWORD + BALANCE +/- ADDED) */
-async function loadUsers(){
-  const box = sec2;
-  const snap = await getDocs(collection(db,"users"));
-  totalUsers.innerText = snap.size;
-  box.innerHTML = "";
+async function loadDashboard(){
+  const users=await getDocs(collection(db,"users"));
+  totalUsers.innerText=users.size;
+}
 
+/* ================= USERS ================= */
+async function loadUsers(){
+  const box=sec2;
+  const snap=await getDocs(collection(db,"users"));
+  box.innerHTML="";
   snap.forEach(d=>{
-    const u = d.data();
-    box.innerHTML += `
+    const u=d.data();
+    box.innerHTML+=`
       <div class="card">
         <div class="row"><b>${u.email}</b></div>
         <div class="row">Password: <span>${u.password || "N/A"}</span></div>
-        <div class="row">Balance: ₹${u.balance || 0}</div>
-
+        <div class="row">Balance: ₹${u.balance||0}</div>
         <div class="row">
-          <button class="btn plus" onclick="changeBal('${d.id}',100)">+100</button>
-          <button class="btn minus" onclick="changeBal('${d.id}',-100)">-100</button>
+          <button class="btn plus" onclick="addBal('${d.id}')">+100</button>
+          <button class="btn minus" onclick="minusBal('${d.id}')">-100</button>
         </div>
       </div>
     `;
   });
 }
 
-/* 🔥 BALANCE CHANGE FUNCTION */
-window.changeBal = async (id, amt)=>{
-  const ref = doc(db,"users",id);
-  const snap = await getDocs(collection(db,"users"));
-  snap.forEach(async d=>{
-    if(d.id === id){
-      const bal = d.data().balance || 0;
-      await updateDoc(ref,{ balance: bal + amt });
-      loadUsers();
-    }
-  });
+/* 🔥 ADDITION FUNCTIONS (SAFE) */
+window.addBal = async (id)=>{
+  await updateDoc(doc(db,"users",id),{ balance: increment(100) });
+  loadUsers(); loadDashboard();
+};
+window.minusBal = async (id)=>{
+  await updateDoc(doc(db,"users",id),{ balance: increment(-100) });
+  loadUsers(); loadDashboard();
 };
 
-/* INIT */
+loadDashboard();
 loadUsers();
 </script>
 
