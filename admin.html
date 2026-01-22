@@ -50,7 +50,6 @@ header{
 <div class="section" id="sec3"></div>
 
 <script type="module">
-/* ================= FIREBASE (ONLY FOR USERS) ================= */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, collection, getDocs } from
 "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -64,68 +63,18 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* ================= TAB CONTROL ================= */
 window.openTab = function(i){
   document.querySelectorAll(".tab").forEach((t,n)=>t.classList.toggle("active",n===i));
   document.querySelectorAll(".section").forEach((s,n)=>s.classList.toggle("active",n===i));
 };
 
-/* ================= DEPOSITS (LOCALSTORAGE – UNCHANGED) ================= */
-function loadDeposits(){
-  const box=document.getElementById("sec0");
-  box.innerHTML="";
-  let deposits=JSON.parse(localStorage.getItem("deposits"))||[];
-  let pending=deposits.filter(d=>d.status==="PENDING");
-
-  if(!pending.length){
-    box.innerHTML="<p>No pending deposits</p>";
-    return;
-  }
-
-  pending.forEach(d=>{
-    box.innerHTML+=`
-      <div class="card">
-        <div class="row"><span>Amount</span><span>₹${d.amount}</span></div>
-        <div class="row"><span>UTR</span><span>${d.utr}</span></div>
-        <div class="row"><span>Order ID</span><span>${d.orderId}</span></div>
-        <div class="row"><span>Time</span><span>${d.time}</span></div>
-        <button class="btn approve" onclick="approveDeposit('${d.orderId}')">Approve</button>
-        <button class="btn reject" onclick="rejectDeposit('${d.orderId}')">Reject</button>
-      </div>`;
-  });
-}
-window.approveDeposit=function(id){
-  let deposits=JSON.parse(localStorage.getItem("deposits"))||[];
-  let balance=Number(localStorage.getItem("balance"))||0;
-  deposits=deposits.map(d=>{
-    if(d.orderId===id && d.status==="PENDING"){
-      balance+=d.amount;
-      return {...d,status:"APPROVED"};
-    }
-    return d;
-  });
-  localStorage.setItem("deposits",JSON.stringify(deposits));
-  localStorage.setItem("balance",balance);
-  loadDeposits();
-};
-window.rejectDeposit=function(id){
-  let deposits=JSON.parse(localStorage.getItem("deposits"))||[];
-  deposits=deposits.map(d=>{
-    if(d.orderId===id && d.status==="PENDING"){
-      return {...d,status:"REJECTED"};
-    }
-    return d;
-  });
-  localStorage.setItem("deposits",JSON.stringify(deposits));
-  loadDeposits();
-};
-
-/* ================= WITHDRAWS (LOCALSTORAGE – UNCHANGED) ================= */
+/* ================= WITHDRAWS (🔥 BANK DETAILS FIX) ================= */
 function loadWithdraws(){
   const box=document.getElementById("sec1");
   box.innerHTML="";
-  let req=JSON.parse(localStorage.getItem("withdrawRequests"))||[];
-  let pending=req.filter(w=>w.status==="PENDING");
+
+  let req = JSON.parse(localStorage.getItem("withdrawRequests")) || [];
+  let pending = req.filter(w=>w.status==="PENDING");
 
   if(!pending.length){
     box.innerHTML="<p>No pending withdraw requests</p>";
@@ -137,14 +86,27 @@ function loadWithdraws(){
       <div class="card">
         <div class="row"><span>Amount</span><span>₹${w.amount}</span></div>
         <div class="row"><span>Method</span><span>${w.method}</span></div>
-        <div class="row"><span>UPI ID</span><span>${w.upiId || "-"}</span></div>
+
+        ${
+          w.method === "UPI"
+          ? `<div class="row"><span>UPI ID</span><span>${w.upiId || "-"}</span></div>`
+          : `
+            <div class="row"><span>Account Holder</span><span>${w.bankDetails?.holder || "-"}</span></div>
+            <div class="row"><span>Bank Name</span><span>${w.bankDetails?.bank || "-"}</span></div>
+            <div class="row"><span>Account No</span><span>${w.bankDetails?.account || "-"}</span></div>
+            <div class="row"><span>IFSC</span><span>${w.bankDetails?.ifsc || "-"}</span></div>
+          `
+        }
+
         <div class="row"><span>Order ID</span><span>${w.orderId}</span></div>
         <div class="row"><span>Time</span><span>${w.time}</span></div>
+
         <button class="btn approve" onclick="approveWithdraw('${w.orderId}')">Approve</button>
         <button class="btn reject" onclick="rejectWithdraw('${w.orderId}')">Reject</button>
       </div>`;
   });
 }
+
 window.approveWithdraw=function(id){
   let req=JSON.parse(localStorage.getItem("withdrawRequests"))||[];
   let hist=JSON.parse(localStorage.getItem("withdrawHistory"))||[];
@@ -159,6 +121,7 @@ window.approveWithdraw=function(id){
   localStorage.setItem("withdrawHistory",JSON.stringify(hist));
   loadWithdraws();
 };
+
 window.rejectWithdraw=function(id){
   let req=JSON.parse(localStorage.getItem("withdrawRequests"))||[];
   let hist=JSON.parse(localStorage.getItem("withdrawHistory"))||[];
@@ -177,17 +140,11 @@ window.rejectWithdraw=function(id){
   loadWithdraws();
 };
 
-/* ================= USERS (🔥 REAL FIX – FIRESTORE) ================= */
+/* ================= USERS ================= */
 async function loadUsers(){
   const box=document.getElementById("sec2");
   box.innerHTML="<p>Loading users...</p>";
-
   const snap = await getDocs(collection(db,"users"));
-  if(snap.empty){
-    box.innerHTML="<p>No users found</p>";
-    return;
-  }
-
   box.innerHTML="";
   snap.forEach(doc=>{
     const u=doc.data();
@@ -199,16 +156,11 @@ async function loadUsers(){
   });
 }
 
-/* ================= GAMES ================= */
-function loadGames(){
-  document.getElementById("sec3").innerHTML="Game control coming soon";
-}
+function loadDeposits(){}
+function loadGames(){document.getElementById("sec3").innerHTML="Game control coming soon";}
 
-/* ================= INIT ================= */
-loadDeposits();
 loadWithdraws();
 loadUsers();
-loadGames();
 </script>
 
 </body>
