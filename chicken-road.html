@@ -26,18 +26,32 @@ input{width:100%;padding:12px;border-radius:10px;border:none;font-size:16px;marg
 .chicken{font-size:34px;transition:.3s}
 .jump{transform:translateX(8px) scale(1.1)}
 
+/* 🔥 CLICK FIX HERE */
 .popup{
-  position:fixed;inset:0;display:none;
-  align-items:center;justify-content:center;
-  background:rgba(0,0,0,.6);z-index:10
+  position:fixed;
+  inset:0;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.6);
+  z-index:10;
+  pointer-events:none;      /* IMPORTANT */
+}
+.popup.show{
+  display:flex;
+  pointer-events:auto;      /* IMPORTANT */
 }
 .popup div{
-  background:#222;padding:22px;border-radius:14px;
-  font-size:18px;text-align:center;min-width:240px
+  background:#222;
+  padding:22px;
+  border-radius:14px;
+  font-size:18px;
+  text-align:center;
+  min-width:240px
 }
+
 .win{color:#4caf50}
 .lose{color:#ff5252}
-
 .history{font-size:14px;line-height:1.6;margin-top:6px}
 </style>
 </head>
@@ -47,7 +61,7 @@ input{width:100%;padding:12px;border-radius:10px;border:none;font-size:16px;marg
 <div class="header">🐔 CHICKEN ROAD</div>
 
 <div class="card center">
-  <div style="font-size:26px">Balance: ₹<span id="bal">0.00</span></div>
+  <div style="font-size:26px">Balance: ₹<span id="bal">100.00</span></div>
   <div style="margin-top:6px">Current X: <b id="curX">1.00x</b></div>
   <div class="chicken" id="chicken">🐔</div>
 </div>
@@ -78,33 +92,9 @@ input{width:100%;padding:12px;border-radius:10px;border:none;font-size:16px;marg
   <div class="history" id="betsDiv">No bets yet</div>
 </div>
 
-<div class="popup" id="popup"><div id="popupText"></div></div>
-
-<!-- 🔥🔥🔥 FIRESTORE WALLET ADD (ONLY ADDITION) 🔥🔥🔥 -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import {
-  getFirestore,
-  getDocs,
-  collection,
-  query,
-  where,
-  doc,
-  updateDoc
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
-  authDomain: "colourcash-ea60e.firebaseapp.com",
-  projectId: "colourcash-ea60e"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-const userEmail = localStorage.getItem("userEmail");
-let userDocId = "";
-</script>
+<div class="popup" id="popup">
+  <div id="popupText"></div>
+</div>
 
 <script>
 const MODES={
@@ -114,28 +104,18 @@ hard:[1.19,1.47,1.84,2.32,2.97,3.84,5.05,6.73,9.13,12.65,17.92,26.07,39.11,60.84
 veryhard:[1.45,2.22,3.47,5.56,9.13,15.46,27.06,49.21,93.5,187.01,397.39,908.33,2270.83,6358.35,20664.63,82658.55,456622.02,4546220.25]
 };
 
-let balance=0,mode="easy",steps=MODES.easy;
+let balance=100,mode="easy",steps=MODES.easy;
 let index=-1,bet=0,alive=false;
 let bets=[];
-
 const bomb=()=>Math.random()<0.10;
 
+/* 🔥 FIXED POPUP FUNCTION */
 function popupMsg(msg,cls=""){
   popupText.className=cls;
   popupText.innerHTML=msg;
-  popup.style.display="flex";
-  setTimeout(()=>popup.style.display="none",1600);
+  popup.classList.add("show");
+  setTimeout(()=>popup.classList.remove("show"),1600);
 }
-
-/* 🔥 LOAD BALANCE FROM FIRESTORE */
-(async()=>{
-  const snap = await getDocs(query(collection(db,"users"),where("email","==",userEmail)));
-  snap.forEach(d=>{
-    userDocId = d.id;
-    balance = d.data().balance || 0;
-  });
-  bal.innerText = balance.toFixed(2);
-})();
 
 function setMode(m,el){
   mode=m;steps=MODES[m];index=-1;alive=false;
@@ -154,14 +134,10 @@ function renderTrack(){
   });
 }
 
-async function startGame(){
+function startGame(){
   const a=+amt.value;
   if(a<1||a>balance)return;
-  bet=a;
-  balance-=bet;
-
-  await updateDoc(doc(db,"users",userDocId),{balance});
-
+  bet=a;balance-=bet;
   bal.innerText=balance.toFixed(2);
   index=-1;alive=true;
   curX.innerText="1.00x";
@@ -185,13 +161,10 @@ function nextStep(){
   renderTrack();
 }
 
-async function cashOut(){
+function cashOut(){
   if(!alive||index<0)return;
   const win=bet*steps[index];
   balance+=win;
-
-  await updateDoc(doc(db,"users",userDocId),{balance});
-
   bal.innerText=balance.toFixed(2);
   alive=false;
   popupMsg("🎉 WIN ₹"+win.toFixed(2),"win");
