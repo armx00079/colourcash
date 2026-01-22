@@ -10,24 +10,25 @@ body{
   margin:0;
   font-family:Arial, sans-serif;
   background:#f2f2f2;
+  padding-bottom:80px;
 }
 .header{
   background:linear-gradient(135deg,#ff6a6a,#ff8e8e);
   color:#fff;
-  text-align:center;
   padding:16px;
+  text-align:center;
   font-size:20px;
   font-weight:bold;
 }
 .list{
-  padding:12px;
+  padding:15px;
 }
 .card{
   background:#fff;
   border-radius:14px;
   padding:14px;
   margin-bottom:12px;
-  box-shadow:0 2px 6px rgba(0,0,0,.1);
+  box-shadow:0 2px 6px rgba(0,0,0,.08);
 }
 .row{
   display:flex;
@@ -35,26 +36,15 @@ body{
   margin-bottom:6px;
   font-size:14px;
 }
-.amount{
-  font-size:18px;
+.status{
   font-weight:bold;
 }
-.pending{
-  color:#ff9800;
-  font-weight:bold;
-}
-.approved{
-  color:#4caf50;
-  font-weight:bold;
-}
-.order{
-  font-size:12px;
-  color:#666;
-}
+.pending{color:#f57c00}
+.approved{color:#2e7d32}
 .empty{
   text-align:center;
   margin-top:60px;
-  color:#888;
+  color:#777;
   font-size:16px;
 }
 </style>
@@ -67,34 +57,40 @@ body{
 <div class="list" id="list"></div>
 
 <script>
-const list=document.getElementById("list");
-let deposits=JSON.parse(localStorage.getItem("deposits"))||[];
+const list = document.getElementById("list");
 
-if(deposits.length===0){
-  list.innerHTML='<div class="empty">No deposit history found</div>';
+let deposits = JSON.parse(localStorage.getItem("pendingDeposits")) || [];
+
+if(deposits.length === 0){
+  list.innerHTML = `<div class="empty">No deposit history found</div>`;
 }else{
-  deposits.reverse().forEach(d=>{
-    const div=document.createElement("div");
-    div.className="card";
-    div.innerHTML=`
-      <div class="row">
-        <span class="amount">₹${d.amount}</span>
-        <span class="${d.status==="APPROVED"?"approved":"pending"}">
-          ${d.status}
-        </span>
-      </div>
-
-      <div class="row">
-        <span>UTR</span>
-        <span>${d.utr}</span>
-      </div>
-
-      <div class="row order">
-        <span>Order ID: ${d.orderId}</span>
-        <span>${d.time}</span>
+  deposits.reverse().forEach(d => {
+    list.innerHTML += `
+      <div class="card">
+        <div class="row">
+          <span>Amount</span>
+          <span>₹${d.amount}</span>
+        </div>
+        <div class="row">
+          <span>Order ID</span>
+          <span>${d.orderId}</span>
+        </div>
+        <div class="row">
+          <span>UTR</span>
+          <span>${d.utr}</span>
+        </div>
+        <div class="row">
+          <span>Time</span>
+          <span>${d.time}</span>
+        </div>
+        <div class="row">
+          <span>Status</span>
+          <span class="status ${d.status === 'APPROVED' ? 'approved' : 'pending'}">
+            ${d.status}
+          </span>
+        </div>
       </div>
     `;
-    list.appendChild(div);
   });
 }
 </script>
