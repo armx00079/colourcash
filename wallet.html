@@ -163,7 +163,6 @@ body{
   </div>
 </div>
 
-<!-- 🔥 ONLY SCRIPT FIXED -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
@@ -185,7 +184,6 @@ const db = getFirestore(app);
 
 const userEmail = localStorage.getItem("userEmail");
 
-/* 🔥 LOAD WALLET DATA FROM FIRESTORE */
 async function loadWallet(){
   let balance = 0;
   let totalDeposit = 0;
@@ -210,9 +208,12 @@ async function loadWallet(){
     }
   });
 
-  /* WITHDRAWS */
-  const wd = JSON.parse(localStorage.getItem("withdrawHistory")) || [];
-  wd.forEach(w=>{
+  /* ✅ WITHDRAWS (🔥 FIXED – FIRESTORE) */
+  const wdSnap = await getDocs(
+    query(collection(db,"withdraws"), where("email","==",userEmail))
+  );
+  wdSnap.forEach(d=>{
+    const w=d.data();
     if(w.status==="APPROVED"){
       totalWithdraw += Number(w.amount);
     }
