@@ -52,11 +52,13 @@ th{background:#ff6f6f}
 
 <div class="card" id="betBox">
   <input id="amount" type="number" placeholder="Min ₹1">
+
   <div class="grid3">
     <button class="btn red" onclick="bet('color','RED')">RED</button>
     <button class="btn green" onclick="bet('color','GREEN')">GREEN</button>
     <button class="btn violet" onclick="bet('color','VIOLET')">VIOLET</button>
   </div>
+
   <div class="grid5">
     <button class="btn dark" onclick="bet('number',0)">0</button>
     <button class="btn dark" onclick="bet('number',1)">1</button>
@@ -69,6 +71,7 @@ th{background:#ff6f6f}
     <button class="btn dark" onclick="bet('number',8)">8</button>
     <button class="btn dark" onclick="bet('number',9)">9</button>
   </div>
+
   <div class="grid5">
     <button class="multi active" onclick="setMulti(1,this)">X1</button>
     <button class="multi" onclick="setMulti(5,this)">X5</button>
@@ -76,6 +79,7 @@ th{background:#ff6f6f}
     <button class="multi" onclick="setMulti(20,this)">X20</button>
     <button class="multi" onclick="setMulti(50,this)">X50</button>
   </div>
+
   <div class="bigsmall">
     <button class="big" onclick="bet('bs','BIG')">Big</button>
     <button class="small" onclick="bet('bs','SMALL')">Small</button>
@@ -94,20 +98,52 @@ th{background:#ff6f6f}
   </table>
 </div>
 
-<script>
-/* 🔥 MAIN WALLET HELPERS (ADDED) */
-const getMainBalance=()=>Number(localStorage.getItem("balance"))||0;
-const setMainBalance=v=>localStorage.setItem("balance",v);
+<!-- 🔥 FIRESTORE MAIN WALLET -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getFirestore,
+  getDocs,
+  collection,
+  query,
+  where,
+  doc,
+  updateDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
+  authDomain: "colourcash-ea60e.firebaseapp.com",
+  projectId: "colourcash-ea60e"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const userEmail = localStorage.getItem("userEmail");
+let userDocId = "";
 
 /* ORIGINAL STATE – NOT TOUCHED */
-let S=JSON.parse(localStorage.getItem("WG"))||{
- period:20260120100001,time:30,wallet:getMainBalance(),
- bets:[],history:[],mybets:[]
+let S = JSON.parse(localStorage.getItem("WG")) || {
+  period:20260120100001,time:30,wallet:0,
+  bets:[],history:[],mybets:[]
 };
 
 let multi=1,tab="game",locked=false;
 const save=()=>localStorage.setItem("WG",JSON.stringify(S));
 const $=i=>document.getElementById(i);
+
+/* 🔥 LOAD MAIN WALLET */
+async function loadMainWallet(){
+  const snap = await getDocs(
+    query(collection(db,"users"), where("email","==",userEmail))
+  );
+  snap.forEach(d=>{
+    userDocId = d.id;
+    S.wallet = d.data().balance || 0;
+  });
+  save(); render();
+}
 
 /* MULTI SAME */
 function setMulti(x,e){
@@ -116,25 +152,26 @@ function setMulti(x,e){
  e.classList.add('active');
 }
 
-/* 🔥 BET = MAIN WALLET CUT */
-function bet(type,val){
+/* 🔥 BET = INSTANT CUT */
+async function bet(type,val){
  if(locked) return alert("Bet closed");
  let amt=Number(amount.value||0);
  if(amt<1) return alert("Min ₹1");
-
  let total=amt*multi;
- let mainBal=getMainBalance();
- if(total>mainBal) return alert("Low balance");
+ if(total>S.wallet) return alert("Low balance");
 
- setMainBalance(mainBal-total);      // 🔥 CUT MAIN WALLET
- S.wallet=getMainBalance();          // sync UI
+ S.wallet -= total;
+
+ await updateDoc(doc(db,"users",userDocId),{
+   balance:S.wallet
+ });
 
  S.bets.push({type,val,amt:total,p:S.period});
  save();render();
 }
 
-/* 🔥 RESULT = MAIN WALLET ADD */
-function finish(){
+/* 🔥 RESULT = INSTANT ADD */
+async function finish(){
  let n=Math.floor(Math.random()*10);
  let c=n==0||n==5?'VIOLET':n%2?'GREEN':'RED';
  let bs=n>=5?'BIG':'SMALL';
@@ -142,24 +179,23 @@ function finish(){
  S.history.unshift({p:S.period,n,bs,c});
  S.history=S.history.slice(0,10);
 
- let mainBal=getMainBalance();
-
- S.bets.forEach(b=>{
+ for(const b of S.bets){
   let win=0;
   if(b.type=='number'&&b.val==n) win=b.amt*10;
   if(b.type=='color'&&b.val==c) win=b.amt*(c=='VIOLET'?5:2);
   if(b.type=='bs'&&b.val==bs) win=b.amt*2;
 
-  mainBal+=win; // 🔥 ADD TO MAIN WALLET
+  S.wallet+=win;
 
   S.mybets.unshift({
    p:b.p,b:b.type+":"+b.val,a:b.amt,
    r:win?`+₹${win}`:`-₹${b.amt}`,w:win>0
   });
- });
+ }
 
- setMainBalance(mainBal);
- S.wallet=mainBal;   // sync UI
+ await updateDoc(doc(db,"users",userDocId),{
+   balance:S.wallet
+ });
 
  S.mybets=S.mybets.slice(0,50);
  S.bets=[];
@@ -208,7 +244,9 @@ setInterval(()=>{
  save();render();
 },1000);
 
+loadMainWallet();
 render();draw();
 </script>
+
 </body>
 </html>
