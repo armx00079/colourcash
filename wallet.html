@@ -8,66 +8,42 @@
 <style>
 body{
   margin:0;
-  font-family:Arial, sans-serif;
+  font-family:Arial;
   background:#f2f2f2;
-  color:#222;
   padding-bottom:90px;
 }
-
-/* HEADER */
 .header{
   background:linear-gradient(135deg,#ff6a6a,#ff8e8e);
-  color:#fff;
   padding:16px;
+  color:#fff;
   text-align:center;
   font-size:20px;
-  font-weight:bold;
 }
-
-/* WALLET CARD */
-.wallet-card{
+.wallet{
   background:linear-gradient(135deg,#ff6a6a,#ff8e8e);
-  color:#fff;
   margin:15px;
-  border-radius:16px;
   padding:20px;
+  border-radius:16px;
+  color:#fff;
   text-align:center;
 }
-.wallet-card h1{
-  margin:10px 0 4px;
+.wallet h1{
+  margin:10px 0;
   font-size:34px;
 }
-.wallet-card p{
-  margin:0;
-  opacity:0.9;
-  font-size:14px;
-}
-
-/* STATS */
 .stats{
   display:flex;
-  justify-content:space-between;
   margin-top:15px;
 }
 .stat{
   flex:1;
   text-align:center;
 }
-.stat h3{
-  margin:0;
-  font-size:18px;
-}
-.stat span{
-  font-size:12px;
-  opacity:0.9;
-}
-
-/* ACTIONS */
 .actions{
   background:#fff;
   margin:15px;
-  border-radius:16px;
   padding:15px;
+  border-radius:16px;
   display:grid;
   grid-template-columns:repeat(4,1fr);
   gap:10px;
@@ -75,13 +51,12 @@ body{
 .action{
   text-align:center;
   font-size:13px;
-  cursor:pointer;
 }
 .action div{
   width:44px;
   height:44px;
-  margin:auto;
   border-radius:50%;
+  margin:auto;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -90,32 +65,6 @@ body{
 }
 .deposit{background:#ffe0b2}
 .withdraw{background:#e1bee7}
-.dh{background:#bbdefb}
-.wh{background:#ffcdd2}
-
-/* 🔽 BOTTOM NAV */
-.bottom-nav{
-  position:fixed;
-  bottom:0;
-  left:0;
-  right:0;
-  background:#111;
-  display:flex;
-  border-top:1px solid #222;
-  z-index:9999;
-}
-.nav-btn{
-  flex:1;
-  padding:10px 0;
-  text-align:center;
-  font-size:12px;
-  color:#aaa;
-}
-.nav-btn.active{
-  color:#ff6a6a;
-  font-weight:bold;
-}
-.nav-btn div{font-size:20px}
 </style>
 </head>
 
@@ -123,76 +72,44 @@ body{
 
 <div class="header">Wallet</div>
 
-<!-- WALLET INFO -->
-<div class="wallet-card">
+<div class="wallet">
   <p>Total Balance</p>
-  <h1>₹<span id="balance">5.12</span></h1>
+  <h1>₹<span id="balance">0.00</span></h1>
 
   <div class="stats">
     <div class="stat">
-      <h3 id="withdrawTotal">19883</h3>
-      <span>Total Amount</span>
+      <h3 id="totalWithdraw">0</h3>
+      <span>Total Withdraw</span>
     </div>
     <div class="stat">
-      <h3 id="depositTotal">11870</h3>
-      <span>Total Deposit Amount</span>
+      <h3 id="totalDeposit">0</h3>
+      <span>Total Deposit</span>
     </div>
   </div>
 </div>
 
-<!-- ACTION BUTTONS -->
 <div class="actions">
-
-  <!-- DEPOSIT -->
   <div class="action" onclick="location.href='deposit.html'">
     <div class="deposit">💰</div>
     Deposit
   </div>
-
-  <!-- ✅ WITHDRAW (FIXED) -->
   <div class="action" onclick="location.href='withdraw.html'">
     <div class="withdraw">🏦</div>
     Withdraw
   </div>
-
-  <div class="action">
-    <div class="dh">📥</div>
-    Deposit History
-  </div>
-
-  <div class="action">
-    <div class="wh">📤</div>
-    Withdraw History
-  </div>
-
-</div>
-
-<!-- 🔽 BOTTOM NAV -->
-<div class="bottom-nav">
-  <div class="nav-btn" onclick="location.href='index.html'">
-    <div>🏠</div>Home
-  </div>
-  <div class="nav-btn active">
-    <div>💰</div>Wallet
-  </div>
-  <div class="nav-btn" onclick="location.href='promotion.html'">
-    <div>🎁</div>Promotion
-  </div>
-  <div class="nav-btn" onclick="location.href='account.html'">
-    <div>👤</div>Account
-  </div>
 </div>
 
 <script>
-/* LIVE WALLET DATA (LOCAL FOR NOW) */
-let balance = Number(localStorage.getItem("balance")) || 5.12;
-let totalDeposit = Number(localStorage.getItem("totalDeposit")) || 11870;
-let totalWithdraw = Number(localStorage.getItem("totalWithdraw")) || 19883;
+// 🔥 WALLET DATA (ONLY APPROVED COUNTS)
+let balance = Number(localStorage.getItem("balance")) || 0;
+let totalDeposit = Number(localStorage.getItem("totalDeposit")) || 0;
+let totalWithdraw = Number(localStorage.getItem("totalWithdraw")) || 0;
 
+// ❌ Pending deposits wallet me add nahi honge
 document.getElementById("balance").innerText = balance.toFixed(2);
-document.getElementById("depositTotal").innerText = totalDeposit;
-document.getElementById("withdrawTotal").innerText = totalWithdraw;
+document.getElementById("totalDeposit").innerText = totalDeposit;
+document.getElementById("totalWithdraw").innerText = totalWithdraw;
 </script>
 
 </body>
-  </html>
+</html>
