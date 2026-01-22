@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 
 <style>
-/* ⚠️ CSS EXACT SAME – NOT TOUCHED */
+/* ⚠️ ORIGINAL CSS – NOT TOUCHED */
 body{margin:0;font-family:Arial;background:#0f0f0f;color:#fff}
 .header{text-align:center;padding:15px;font-size:22px}
 .top{display:flex;justify-content:space-between;padding:0 15px;color:#bbb}
@@ -37,6 +37,37 @@ th{background:#ff6f6f}
 .win{color:#4caf50}
 .loss{color:#f44336}
 .lock{pointer-events:none;opacity:.4}
+
+/* 🔥 POPUP CSS (ADDED – SAFE) */
+.popup-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.65);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+}
+.popup{
+  background:#1c1c1c;
+  border-radius:16px;
+  padding:22px;
+  text-align:center;
+  width:80%;
+  max-width:320px;
+  animation:pop .25s ease;
+}
+.popup.win{border:2px solid #4caf50}
+.popup.loss{border:2px solid #f44336}
+.popup.bet{border:2px solid #2196f3}
+.popup h2{margin:8px 0}
+.popup p{opacity:.8}
+.popup img{width:80px;margin-bottom:10px}
+
+@keyframes pop{
+  from{transform:scale(.7);opacity:0}
+  to{transform:scale(1);opacity:1}
+}
 </style>
 </head>
 
@@ -99,12 +130,15 @@ th{background:#ff6f6f}
   </table>
 </div>
 
-<!-- 🔥 FINAL SCRIPT (FIREBASE + CLICK FIX) -->
+<!-- 🔥 POPUP HTML -->
+<div class="popup-overlay" id="popupOverlay">
+  <div class="popup" id="popupBox"></div>
+</div>
+
+<!-- 🔥 SCRIPT (ORIGINAL + POPUP CALLS ONLY) -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import {
-  getFirestore,getDocs,collection,query,where,doc,updateDoc
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore,getDocs,collection,query,where,doc,updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
@@ -114,25 +148,30 @@ const app = initializeApp({
 const db = getFirestore(app);
 
 const userEmail = localStorage.getItem("userEmail");
-let userDocId = "";
+let userDocId="";
 
-let S = JSON.parse(localStorage.getItem("WG")) || {
-  period:20260120100001,time:30,wallet:0,
-  bets:[],history:[],mybets:[]
+let S=JSON.parse(localStorage.getItem("WG"))||{
+ period:20260120100001,time:30,wallet:0,
+ bets:[],history:[],mybets:[]
 };
 
 let multi=1,tab="game",locked=false;
 const save=()=>localStorage.setItem("WG",JSON.stringify(S));
 const $=i=>document.getElementById(i);
 
+/* 🔥 POPUP FUNCTION */
+function showPopup(type,html){
+ popupBox.className="popup "+type;
+ popupBox.innerHTML=html;
+ popupOverlay.style.display="flex";
+ setTimeout(()=>popupOverlay.style.display="none",2000);
+}
+
 /* LOAD WALLET */
 async function loadMainWallet(){
-  const snap = await getDocs(query(collection(db,"users"),where("email","==",userEmail)));
-  snap.forEach(d=>{
-    userDocId=d.id;
-    S.wallet=d.data().balance||0;
-  });
-  save();render();
+ const snap=await getDocs(query(collection(db,"users"),where("email","==",userEmail)));
+ snap.forEach(d=>{userDocId=d.id;S.wallet=d.data().balance||0});
+ save();render();
 }
 
 function setMulti(x,e){
@@ -142,15 +181,21 @@ function setMulti(x,e){
 }
 
 async function bet(type,val){
- if(locked) return alert("Bet closed");
+ if(locked) return;
  let amt=Number(amount.value||0);
- if(amt<1) return alert("Min ₹1");
+ if(amt<1) return showPopup("loss","<h2>Min ₹1</h2>");
  let total=amt*multi;
- if(total>S.wallet) return alert("Low balance");
+ if(total>S.wallet) return showPopup("loss","<h2>Low Balance</h2>");
 
  S.wallet-=total;
  await updateDoc(doc(db,"users",userDocId),{balance:S.wallet});
  S.bets.push({type,val,amt:total,p:S.period});
+
+ showPopup("bet",`
+  <img src="https://cdn-icons-png.flaticon.com/512/3135/3135706.png">
+  <h2>Bet Placed</h2><p>₹${total}</p>
+ `);
+
  save();render();
 }
 
@@ -169,14 +214,17 @@ async function finish(){
   if(b.type=='bs'&&b.val==bs) win=b.amt*2;
 
   S.wallet+=win;
-  S.mybets.unshift({
-   p:b.p,b:b.type+":"+b.val,a:b.amt,
-   r:win?`+₹${win}`:`-₹${b.amt}`,w:win>0
-  });
+
+  showPopup(win>0?"win":"loss",`
+   <img src="https://cdn-icons-png.flaticon.com/512/${win>0?"190/190411":"1828/1828843"}.png">
+   <h2>${win>0?"You Win 🎉":"You Lost ❌"}</h2>
+   <p>₹${win||b.amt}</p>
+  `);
+
+  S.mybets.unshift({p:b.p,b:b.type+":"+b.val,a:b.amt,r:win?`+₹${win}`:`-₹${b.amt}`,w:win>0});
  }
 
  await updateDoc(doc(db,"users",userDocId),{balance:S.wallet});
-
  S.bets=[];S.period++;S.time=30;locked=false;
  save();draw();render();
 }
@@ -193,15 +241,10 @@ function draw(){
  th.innerHTML=tb.innerHTML="";
  if(tab=="game"){
   th.innerHTML="<tr><th>Period</th><th>Number</th><th>Big/Small</th><th>Color</th></tr>";
-  S.history.forEach(r=>{
-   tb.innerHTML+=`<tr><td>${r.p}</td><td>${r.n}</td><td>${r.bs}</td><td>${r.c}</td></tr>`;
-  });
+  S.history.forEach(r=>tb.innerHTML+=`<tr><td>${r.p}</td><td>${r.n}</td><td>${r.bs}</td><td>${r.c}</td></tr>`);
  }else{
   th.innerHTML="<tr><th>Period</th><th>Bet</th><th>Amount</th><th>Result</th></tr>";
-  S.mybets.forEach(b=>{
-   tb.innerHTML+=`<tr><td>${b.p}</td><td>${b.b}</td><td>₹${b.a}</td>
-   <td class="${b.w?'win':'loss'}">${b.r}</td></tr>`;
-  });
+  S.mybets.forEach(b=>tb.innerHTML+=`<tr><td>${b.p}</td><td>${b.b}</td><td>₹${b.a}</td><td class="${b.w?'win':'loss'}">${b.r}</td></tr>`);
  }
 }
 
@@ -212,7 +255,6 @@ function showTab(t){
  draw();
 }
 
-/* 🔥 CLICK FIX */
 window.bet=bet;
 window.setMulti=setMulti;
 window.showTab=showTab;
