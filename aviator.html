@@ -1,157 +1,225 @@
-<!DOCTYPE html>  <html lang="en">  
-<head>  
-<meta charset="UTF-8">  
-<title>Aviator</title>  
-<meta name="viewport" content="width=device-width, initial-scale=1">  
-<style>  
-body{margin:0;font-family:Arial;background:#0f0f0f;color:#fff;text-align:center}  
-.card{background:#1c1c1c;margin:15px;padding:20px;border-radius:16px}  
-.btn{width:100%;padding:14px;border:none;border-radius:12px;font-size:16px;margin-top:10px}  
-.bet{background:#2196f3;color:#fff}  
-.cash{background:#e91e63;color:#fff}  
-.pink{background:#ff4081;color:#fff}  
-input{width:100%;padding:12px;border-radius:10px;border:none;margin-top:10px;font-size:16px}  
-.popup{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center}  
-.popup div{background:#222;padding:20px;border-radius:14px}  
-</style>  
-</head>  
-<body>  <h2>✈️ AVIATOR</h2>  <div class="card">  
-  <div id="top"></div>  
-  <div id="state" style="font-size:26px;color:#00e676">WAIT</div>  
-  <div id="timer" style="color:#ff4081;font-size:22px"></div>  
-  <div id="multiplier" style="font-size:34px;color:#00e676">1.00x</div>  
-</div>  <div class="card">  
-  <input id="amount" type="number" min="1" placeholder="Min ₹1">  
-  <button id="betBtn" class="btn bet" onclick="placeBet()">PLACE BET</button>  
-  <button id="cashBtn" class="btn cash" onclick="cashOut()">CASH OUT</button>  
-</div>  <div class="card">  
-  <button class="btn pink" onclick="toggle('history')">Game History</button>  
-  <button class="btn pink" onclick="toggle('bets')">My Bets</button>  
-</div>  <div class="card" id="history" style="display:none">  
-  <h3>Last 10 Games</h3>  
-  <div id="historyList"></div>  
-</div>  <div class="card" id="bets" style="display:none">  
-  <h3>My Bets</h3>  
-  <div id="betsList"></div>  
-</div>  <div class="popup" id="popup"><div id="popupText"></div></div>  <script>  
-let wallet = Number(localStorage.wallet ?? 100);  
-let period = Number(localStorage.period ?? 1000);  
-let history = JSON.parse(localStorage.history ?? "[]");  
-let bets = JSON.parse(localStorage.bets ?? "[]");  
-  
-let phase = localStorage.phase ?? "WAIT";  
-let time = Number(localStorage.time ?? 30);  
-let multiplier = Number(localStorage.multiplier ?? 1);  
-let crashAt = Number(localStorage.crashAt ?? (Math.random()*4+1));  
-let lastTick = Number(localStorage.lastTick ?? Date.now());  
-let bet = JSON.parse(localStorage.bet ?? "null");  
-let interval;  
-  
-function save(){  
-  localStorage.wallet=wallet;  
-  localStorage.period=period;  
-  localStorage.history=JSON.stringify(history);  
-  localStorage.bets=JSON.stringify(bets);  
-  localStorage.phase=phase;  
-  localStorage.time=time;  
-  localStorage.multiplier=multiplier;  
-  localStorage.crashAt=crashAt;  
-  localStorage.lastTick=Date.now();  
-  localStorage.bet=JSON.stringify(bet);  
-}  
-  
-function render(){  
-  document.getElementById("top").innerText=`Period: ${period} | Wallet: ₹${wallet.toFixed(2)}`;  
-  document.getElementById("state").innerText=phase;  
-  document.getElementById("timer").innerText=phase==="WAIT"?time+"s":"";  
-  document.getElementById("multiplier").innerText=multiplier.toFixed(2)+"x";  
-  
-  let betBtn=document.getElementById("betBtn");  
-  if(phase==="WAIT" && time>5){  
-    betBtn.disabled=false; betBtn.innerText="PLACE BET";  
-  }else{  
-    betBtn.disabled=true; betBtn.innerText="BET LOCKED";  
-  }  
-  
-  document.getElementById("historyList").innerHTML=  
-    history.map(h=>`#${h.p} → ${h.x}x`).join("<br>");  
-  document.getElementById("betsList").innerHTML=  
-    bets.map(b=>`#${b.p} ₹${b.a} ${b.r} @${b.x}`).join("<br>");  
-}  
-  
-function pop(msg){  
-  let p=document.getElementById("popup");  
-  document.getElementById("popupText").innerHTML=msg;  
-  p.style.display="flex";  
-  setTimeout(()=>p.style.display="none",1500);  
-}  
-  
-function startLoop(){  
-  clearInterval(interval);  
-  interval=setInterval(()=>{  
-    let now=Date.now();  
-    let diff=Math.floor((now-lastTick)/1000);  
-    if(diff<=0) return;  
-    lastTick=now;  
-  
-    if(phase==="WAIT"){  
-      time-=diff;  
-      if(time<=0){phase="FLYING";time=0;}  
-    }else if(phase==="FLYING"){  
-      multiplier+=diff*0.12;  
-      if(multiplier>=crashAt){crash();}  
-    }  
-    save(); render();  
-  },1000);  
-}  
-  
-function crash(){  
-  phase="CRASHED";  
-  history.unshift({p:period,x:multiplier.toFixed(2)});  
-  history=history.slice(0,10);  
-  if(bet){  
-    bets.unshift({p:period,a:bet.a,x:multiplier.toFixed(2),r:"LOSS"});  
-    bets=bets.slice(0,10);  
-    bet=null;  
-  }  
-  pop("💥 CRASH @ "+multiplier.toFixed(2)+"x");  
-  setTimeout(newRound,2000);  
-}  
-  
-function newRound(){  
-  period++;  
-  phase="WAIT";  
-  time=30;  
-  multiplier=1;  
-  crashAt=Math.random()*4+1;  
-  bet=null;  
-  save(); startLoop();  
-}  
-  
-function placeBet(){  
-  let a=Number(amount.value);  
-  if(a<1||a>wallet)return pop("Minimum ₹1");  
-  wallet-=a; bet={a:a};  
-  pop("Bet Placed ₹"+a);  
-  save(); render();  
-}  
-  
-function cashOut(){  
-  if(!bet||phase!=="FLYING")return;  
-  let win=bet.a*multiplier;  
-  wallet+=win;  
-  bets.unshift({p:period,a:bet.a,x:multiplier.toFixed(2),r:"WIN +₹"+win.toFixed(2)});  
-  bets=bets.slice(0,10);  
-  bet=null;  
-  pop("✅ WIN ₹"+win.toFixed(2));  
-  save(); render();  
-}  
-  
-function toggle(id){  
-  let e=document.getElementById(id);  
-  e.style.display=e.style.display==="none"?"block":"none";  
-}  
-  
-render(); startLoop();  
-</script>  </body>  
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Aviator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{margin:0;font-family:Arial;background:#0f0f0f;color:#fff;text-align:center}
+.card{background:#1c1c1c;margin:15px;padding:20px;border-radius:16px}
+.btn{width:100%;padding:14px;border:none;border-radius:12px;font-size:16px;margin-top:10px}
+.bet{background:#2196f3;color:#fff}
+.cash{background:#e91e63;color:#fff}
+.pink{background:#ff4081;color:#fff}
+input{width:100%;padding:12px;border-radius:10px;border:none;margin-top:10px;font-size:16px}
+.popup{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center}
+.popup div{background:#222;padding:20px;border-radius:14px}
+</style>
+</head>
+
+<body>
+
+<h2>✈️ AVIATOR</h2>
+
+<div class="card">
+  <div id="top"></div>
+  <div id="state" style="font-size:26px;color:#00e676">WAIT</div>
+  <div id="timer" style="color:#ff4081;font-size:22px"></div>
+  <div id="multiplier" style="font-size:34px;color:#00e676">1.00x</div>
+</div>
+
+<div class="card">
+  <input id="amount" type="number" min="1" placeholder="Min ₹1">
+  <button id="betBtn" class="btn bet" onclick="placeBet()">PLACE BET</button>
+  <button id="cashBtn" class="btn cash" onclick="cashOut()">CASH OUT</button>
+</div>
+
+<div class="card">
+  <button class="btn pink" onclick="toggle('history')">Game History</button>
+  <button class="btn pink" onclick="toggle('bets')">My Bets</button>
+</div>
+
+<div class="card" id="history" style="display:none">
+  <h3>Last 10 Games</h3>
+  <div id="historyList"></div>
+</div>
+
+<div class="card" id="bets" style="display:none">
+  <h3>My Bets</h3>
+  <div id="betsList"></div>
+</div>
+
+<div class="popup" id="popup"><div id="popupText"></div></div>
+
+<!-- 🔥 FIRESTORE WALLET CONNECT (ONLY ADDITION) -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getFirestore,
+  getDocs,
+  collection,
+  query,
+  where,
+  doc,
+  updateDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+/* 🔒 FIREBASE CONFIG (SAME AS PROJECT) */
+const firebaseConfig = {
+  apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
+  authDomain:"colourcash-ea60e.firebaseapp.com",
+  projectId:"colourcash-ea60e"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const userEmail = localStorage.getItem("userEmail");
+let userDocId = "";
+
+/* ===== ORIGINAL GAME STATE (UNCHANGED) ===== */
+let wallet = 0;
+let period = Number(localStorage.period ?? 1000);
+let history = JSON.parse(localStorage.history ?? "[]");
+let bets = JSON.parse(localStorage.bets ?? "[]");
+
+let phase = localStorage.phase ?? "WAIT";
+let time = Number(localStorage.time ?? 30);
+let multiplier = Number(localStorage.multiplier ?? 1);
+let crashAt = Number(localStorage.crashAt ?? (Math.random()*4+1));
+let lastTick = Number(localStorage.lastTick ?? Date.now());
+let bet = JSON.parse(localStorage.bet ?? "null");
+let interval;
+
+/* 🔥 LOAD WALLET FROM FIRESTORE */
+async function loadWallet(){
+  const snap = await getDocs(
+    query(collection(db,"users"), where("email","==",userEmail))
+  );
+  snap.forEach(d=>{
+    userDocId = d.id;
+    wallet = d.data().balance || 0;
+  });
+  render();
+}
+
+/* ===== SAVE (WITHOUT WALLET) ===== */
+function save(){
+  localStorage.period=period;
+  localStorage.history=JSON.stringify(history);
+  localStorage.bets=JSON.stringify(bets);
+  localStorage.phase=phase;
+  localStorage.time=time;
+  localStorage.multiplier=multiplier;
+  localStorage.crashAt=crashAt;
+  localStorage.lastTick=Date.now();
+  localStorage.bet=JSON.stringify(bet);
+}
+
+function render(){
+  document.getElementById("top").innerText=`Period: ${period} | Wallet: ₹${wallet.toFixed(2)}`;
+  document.getElementById("state").innerText=phase;
+  document.getElementById("timer").innerText=phase==="WAIT"?time+"s":"";
+  document.getElementById("multiplier").innerText=multiplier.toFixed(2)+"x";
+
+  let betBtn=document.getElementById("betBtn");
+  betBtn.disabled = !(phase==="WAIT" && time>5);
+  betBtn.innerText = betBtn.disabled ? "BET LOCKED" : "PLACE BET";
+
+  document.getElementById("historyList").innerHTML =
+    history.map(h=>`#${h.p} → ${h.x}x`).join("<br>");
+  document.getElementById("betsList").innerHTML =
+    bets.map(b=>`#${b.p} ₹${b.a} ${b.r} @${b.x}`).join("<br>");
+}
+
+function pop(msg){
+  let p=document.getElementById("popup");
+  document.getElementById("popupText").innerHTML=msg;
+  p.style.display="flex";
+  setTimeout(()=>p.style.display="none",1500);
+}
+
+/* ===== GAME LOOP (UNCHANGED) ===== */
+function startLoop(){
+  clearInterval(interval);
+  interval=setInterval(()=>{
+    let now=Date.now();
+    let diff=Math.floor((now-lastTick)/1000);
+    if(diff<=0) return;
+    lastTick=now;
+
+    if(phase==="WAIT"){
+      time-=diff;
+      if(time<=0){phase="FLYING";time=0;}
+    }else if(phase==="FLYING"){
+      multiplier+=diff*0.12;
+      if(multiplier>=crashAt){crash();}
+    }
+    save(); render();
+  },1000);
+}
+
+function crash(){
+  phase="CRASHED";
+  history.unshift({p:period,x:multiplier.toFixed(2)});
+  history=history.slice(0,10);
+  if(bet){
+    bets.unshift({p:period,a:bet.a,x:multiplier.toFixed(2),r:"LOSS"});
+    bets=bets.slice(0,10);
+    bet=null;
+  }
+  pop("💥 CRASH @ "+multiplier.toFixed(2)+"x");
+  setTimeout(newRound,2000);
+}
+
+function newRound(){
+  period++;
+  phase="WAIT";
+  time=30;
+  multiplier=1;
+  crashAt=Math.random()*4+1;
+  bet=null;
+  save(); startLoop();
+}
+
+/* 🔥 PLACE BET = FIRESTORE BALANCE CUT */
+async function placeBet(){
+  let a=Number(amount.value);
+  if(a<1||a>wallet) return pop("Minimum ₹1");
+
+  wallet -= a;
+  await updateDoc(doc(db,"users",userDocId),{ balance: wallet });
+
+  bet={a:a};
+  pop("Bet Placed ₹"+a);
+  save(); render();
+}
+
+/* 🔥 CASH OUT = FIRESTORE BALANCE ADD */
+async function cashOut(){
+  if(!bet||phase!=="FLYING")return;
+  let win=bet.a*multiplier;
+
+  wallet += win;
+  await updateDoc(doc(db,"users",userDocId),{ balance: wallet });
+
+  bets.unshift({p:period,a:bet.a,x:multiplier.toFixed(2),r:"WIN +₹"+win.toFixed(2)});
+  bets=bets.slice(0,10);
+  bet=null;
+  pop("✅ WIN ₹"+win.toFixed(2));
+  save(); render();
+}
+
+function toggle(id){
+  let e=document.getElementById(id);
+  e.style.display=e.style.display==="none"?"block":"none";
+}
+
+/* INIT */
+loadWallet();
+render();
+startLoop();
+</script>
+
+</body>
 </html>
