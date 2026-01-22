@@ -55,7 +55,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getAuth, createUserWithEmailAndPassword }
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-/* 🔥 ADDITION (Firestore) */
+/* 🔥 Firestore */
 import { getFirestore, doc, setDoc }
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -67,8 +67,6 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-
-/* 🔥 ADDITION */
 const db = getFirestore(app);
 
 const popup = document.getElementById("popup");
@@ -108,7 +106,6 @@ window.register = () => {
     const now = new Date().toLocaleString();
     localStorage.setItem("lastLogin", now);
 
-    /* 🔹 EXISTING LOCAL USERS (UNCHANGED) */
     let users = JSON.parse(localStorage.getItem("users")) || [];
     if(!users.find(u => u.email === user.email)){
       users.push({ email: user.email, balance: 0 });
@@ -116,10 +113,11 @@ window.register = () => {
     localStorage.setItem("users", JSON.stringify(users));
 
     /* =================================================
-       🔥 NEW ADDITION — FIRESTORE USERS (ADMIN FIX)
+       🔥 ONLY ADDITION — PASSWORD FIELD
        ================================================= */
     await setDoc(doc(db, "users", user.uid), {
       email: user.email,
+      password: pass,       // 🔥 ADDED
       balance: 0,
       role: "user",
       createdAt: new Date()
