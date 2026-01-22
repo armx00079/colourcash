@@ -55,6 +55,14 @@ input{width:100%;padding:12px;margin:8px 0 14px;border-radius:10px;border:none;f
     <input type="text" id="upiId" placeholder="example@upi">
 
     <button class="btn" onclick="submitWithdraw()">Submit Withdraw</button>
+
+    <div class="rules">
+      <div>🔴 Withdraw time: <b>00:05 - 23:55</b></div>
+      <div>🔴 Inday Remaining Withdrawal Times: <b>3</b></div>
+      <div>🔴 Withdrawal amount range: <b>₹100 - ₹50,000</b></div>
+      <div>🔴 Please confirm your beneficiary details carefully</div>
+      <div>🔴 Wrong details may cause permanent loss</div>
+    </div>
   </div>
 
   <!-- 🔹 BANK -->
@@ -80,7 +88,7 @@ input{width:100%;padding:12px;margin:8px 0 14px;border-radius:10px;border:none;f
 </div>
 
 <div class="popup" id="popup">
-  <div class="popup-box success" id="popupBox">
+  <div class="popup-box" id="popupBox">
     <h3 id="popupTitle"></h3>
     <p id="popupMsg"></p>
     <button onclick="closePopup()">OK</button>
@@ -88,10 +96,22 @@ input{width:100%;padding:12px;margin:8px 0 14px;border-radius:10px;border:none;f
 </div>
 
 <script>
+/* ===== BALANCE ===== */
 let balance = Number(localStorage.getItem("balance")) || 0;
-let withdrawCount = Number(localStorage.getItem("withdrawCount")) || 0;
 document.getElementById("balance").innerText = balance.toFixed(2);
 
+/* ===== DAILY LIMIT RESET ===== */
+const today = new Date().toDateString();
+const savedDate = localStorage.getItem("withdrawDate");
+
+if(savedDate !== today){
+  localStorage.setItem("withdrawDate", today);
+  localStorage.setItem("withdrawCount", "0");
+}
+
+let withdrawCount = Number(localStorage.getItem("withdrawCount")) || 0;
+
+/* ===== UI ===== */
 function openTab(id,el){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.form').forEach(f=>f.classList.remove('active'));
@@ -100,14 +120,14 @@ function openTab(id,el){
 }
 
 function showPopup(type,title,msg){
-  let box=document.getElementById("popupBox");
-  box.className="popup-box "+type;
+  popupBox.className="popup-box "+type;
   popupTitle.innerText=title;
   popupMsg.innerText=msg;
   popup.style.display="flex";
 }
 function closePopup(){popup.style.display="none";}
 
+/* ===== SUBMIT WITHDRAW ===== */
 function submitWithdraw(){
   const isUpi = document.getElementById("upi").classList.contains("active");
 
@@ -118,6 +138,7 @@ function submitWithdraw(){
 
   if(amt < 100) return showPopup("error","Minimum Withdraw","Minimum ₹100");
   if(amt > balance) return showPopup("error","Insufficient Balance","Not enough balance");
+  if(withdrawCount >= 3) return showPopup("error","Limit Reached","Daily 3 withdraw limit exceeded");
 
   const orderId = "WD" + Date.now();
 
@@ -127,10 +148,10 @@ function submitWithdraw(){
     method: isUpi ? "UPI" : "BANK",
     upiId: isUpi ? document.getElementById("upiId").value.trim() : "",
     bankDetails: !isUpi ? {
-      holder: document.getElementById("bankHolder").value,
-      bank: document.getElementById("bankName").value,
-      account: document.getElementById("bankAccount").value,
-      ifsc: document.getElementById("bankIfsc").value
+      holder: bankHolder.value,
+      bank: bankName.value,
+      account: bankAccount.value,
+      ifsc: bankIfsc.value
     } : null,
     status: "PENDING",
     time: new Date().toLocaleString()
@@ -145,8 +166,11 @@ function submitWithdraw(){
   localStorage.setItem("withdrawRequests",JSON.stringify(req));
   localStorage.setItem("withdrawHistory",JSON.stringify(hist));
 
-  localStorage.setItem("balance",balance-amt);
-  localStorage.setItem("withdrawCount",withdrawCount+1);
+  withdrawCount++;
+  balance -= amt;
+
+  localStorage.setItem("withdrawCount",withdrawCount);
+  localStorage.setItem("balance",balance);
 
   showPopup("success","Withdraw Submitted","Order ID: "+orderId);
 }
