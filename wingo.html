@@ -38,36 +38,18 @@ th{background:#ff6f6f}
 .loss{color:#f44336}
 .lock{pointer-events:none;opacity:.4}
 
-/* 🔥 POPUP CSS (ADDED – SAFE) */
+/* POPUP */
 .popup-overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.65);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  z-index:9999;
+  position:fixed;inset:0;background:rgba(0,0,0,.65);
+  display:none;align-items:center;justify-content:center;z-index:9999
 }
 .popup{
-  background:#1c1c1c;
-  border-radius:16px;
-  padding:22px;
-  text-align:center;
-  width:80%;
-  max-width:320px;
-  animation:pop .25s ease;
+  background:#1c1c1c;border-radius:16px;padding:22px;
+  text-align:center;width:80%;max-width:320px
 }
 .popup.win{border:2px solid #4caf50}
 .popup.loss{border:2px solid #f44336}
 .popup.bet{border:2px solid #2196f3}
-.popup h2{margin:8px 0}
-.popup p{opacity:.8}
-.popup img{width:80px;margin-bottom:10px}
-
-@keyframes pop{
-  from{transform:scale(.7);opacity:0}
-  to{transform:scale(1);opacity:1}
-}
 </style>
 </head>
 
@@ -130,12 +112,10 @@ th{background:#ff6f6f}
   </table>
 </div>
 
-<!-- 🔥 POPUP HTML -->
 <div class="popup-overlay" id="popupOverlay">
   <div class="popup" id="popupBox"></div>
 </div>
 
-<!-- 🔥 SCRIPT (ORIGINAL + POPUP CALLS ONLY) -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore,getDocs,collection,query,where,doc,updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -159,15 +139,13 @@ let multi=1,tab="game",locked=false;
 const save=()=>localStorage.setItem("WG",JSON.stringify(S));
 const $=i=>document.getElementById(i);
 
-/* 🔥 POPUP FUNCTION */
-function showPopup(type,html){
+function showPopup(type,msg){
  popupBox.className="popup "+type;
- popupBox.innerHTML=html;
+ popupBox.innerHTML=msg;
  popupOverlay.style.display="flex";
  setTimeout(()=>popupOverlay.style.display="none",2000);
 }
 
-/* LOAD WALLET */
 async function loadMainWallet(){
  const snap=await getDocs(query(collection(db,"users"),where("email","==",userEmail)));
  snap.forEach(d=>{userDocId=d.id;S.wallet=d.data().balance||0});
@@ -190,17 +168,40 @@ async function bet(type,val){
  S.wallet-=total;
  await updateDoc(doc(db,"users",userDocId),{balance:S.wallet});
  S.bets.push({type,val,amt:total,p:S.period});
-
- showPopup("bet",`
-  <img src="https://cdn-icons-png.flaticon.com/512/3135/3135706.png">
-  <h2>Bet Placed</h2><p>₹${total}</p>
- `);
-
+ showPopup("bet","<h2>Bet Placed</h2><p>₹"+total+"</p>");
  save();render();
 }
 
+/* 🔥🔥🔥 HOUSE CONTROL LOGIC ADDED 🔥🔥🔥 */
 async function finish(){
- let n=Math.floor(Math.random()*10);
+
+ let bigAmt=0,smallAmt=0,redAmt=0,greenAmt=0,violetAmt=0;
+
+ S.bets.forEach(b=>{
+  if(b.type==="bs"){
+    if(b.val==="BIG") bigAmt+=b.amt;
+    if(b.val==="SMALL") smallAmt+=b.amt;
+  }
+  if(b.type==="color"){
+    if(b.val==="RED") redAmt+=b.amt;
+    if(b.val==="GREEN") greenAmt+=b.amt;
+    if(b.val==="VIOLET") violetAmt+=b.amt;
+  }
+ });
+
+ let bsWin = bigAmt>smallAmt?"SMALL":"BIG";
+ let colorWin="RED";
+ if(redAmt>greenAmt && redAmt>violetAmt) colorWin="GREEN";
+ else if(greenAmt>redAmt && greenAmt>violetAmt) colorWin="RED";
+
+ let possible=[];
+ for(let i=0;i<=9;i++){
+  let c=i==0||i==5?'VIOLET':i%2?'GREEN':'RED';
+  let bs=i>=5?'BIG':'SMALL';
+  if(c===colorWin && bs===bsWin) possible.push(i);
+ }
+
+ let n=possible.length?possible[Math.floor(Math.random()*possible.length)]:Math.floor(Math.random()*10);
  let c=n==0||n==5?'VIOLET':n%2?'GREEN':'RED';
  let bs=n>=5?'BIG':'SMALL';
 
@@ -214,13 +215,7 @@ async function finish(){
   if(b.type=='bs'&&b.val==bs) win=b.amt*2;
 
   S.wallet+=win;
-
-  showPopup(win>0?"win":"loss",`
-   <img src="https://cdn-icons-png.flaticon.com/512/${win>0?"190/190411":"1828/1828843"}.png">
-   <h2>${win>0?"You Win 🎉":"You Lost ❌"}</h2>
-   <p>₹${win||b.amt}</p>
-  `);
-
+  showPopup(win?"win":"loss",`<h2>${win?"YOU WIN":"YOU LOST"}</h2><p>₹${win||b.amt}</p>`);
   S.mybets.unshift({p:b.p,b:b.type+":"+b.val,a:b.amt,r:win?`+₹${win}`:`-₹${b.amt}`,w:win>0});
  }
 
