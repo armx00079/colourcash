@@ -6,25 +6,63 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-/* ⚠️ ORIGINAL CSS – NOT TOUCHED */
+/* ORIGINAL CSS – NOT TOUCHED */
 body{margin:0;font-family:Arial,sans-serif;background:#0e0e0e;color:#fff}
 .header{padding:15px;font-size:20px;font-weight:bold;text-align:center}
 .wallet{text-align:center;margin:10px 0;font-size:16px}
 .container{padding:15px}
 .controls{background:#1c1c1c;padding:15px;border-radius:12px}
-.controls input,.controls select{width:100%;padding:12px;margin-top:8px;border-radius:8px;border:none;font-size:16px}
-.btn{margin-top:10px;width:100%;padding:12px;border:none;border-radius:8px;font-size:16px;cursor:pointer}
+.controls input,.controls select{
+  width:100%;padding:12px;margin-top:8px;
+  border-radius:8px;border:none;font-size:16px
+}
+
+/* 🔥 BUTTON FIX */
+.btn{
+  margin-top:10px;width:100%;padding:12px;
+  border:none;border-radius:8px;font-size:16px;
+  cursor:pointer;
+  position:relative;
+  z-index:5;
+}
 .start{background:#4caf50;color:#fff}
 .cashout{background:#ff4081;color:#fff}
+
 .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:15px}
-.cell{background:#2a2a2a;aspect-ratio:1/1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer}
+.cell{
+  background:#2a2a2a;aspect-ratio:1/1;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;cursor:pointer
+}
 .cell.open.safe{background:#4caf50}
 .cell.open.mine{background:#e53935}
 .history{margin-top:15px;background:#1c1c1c;padding:12px;border-radius:12px}
 .history h3{margin:0 0 8px;color:#ff4081}
 .history-item{font-size:14px;border-bottom:1px solid #333;padding:6px 0}
-.popup{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.65);z-index:999}
-.popup-box{background:#1e1e1e;padding:25px 30px;border-radius:14px;font-size:20px;font-weight:bold;text-align:center}
+
+/* 🔥 POPUP FIX */
+.popup{
+  position:fixed;
+  inset:0;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.65);
+  z-index:999;
+  pointer-events:none;
+}
+.popup.show{
+  display:flex;
+  pointer-events:auto;
+}
+.popup-box{
+  background:#1e1e1e;
+  padding:25px 30px;
+  border-radius:14px;
+  font-size:20px;
+  font-weight:bold;
+  text-align:center;
+}
 </style>
 </head>
 
@@ -37,7 +75,8 @@ body{margin:0;font-family:Arial,sans-serif;background:#0e0e0e;color:#fff}
 
 <div class="controls">
 <label>Bet Amount</label>
-<input type="number" id="betAmount" value="10" min="1">
+<!-- 🔥 FIXED PLACEHOLDER -->
+<input type="number" id="betAmount" placeholder="Min ₹1" min="1">
 
 <label>Mines (1–24)</label>
 <select id="mineCount"></select>
@@ -57,11 +96,11 @@ Cashout (x<span id="multi">1.00</span>)
 
 </div>
 
+<!-- POPUP -->
 <div class="popup" id="popup">
-<div class="popup-box" id="popupBox"></div>
+  <div class="popup-box" id="popupBox"></div>
 </div>
 
-<!-- 🔥 FIREBASE + GAME SCRIPT -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
@@ -75,12 +114,10 @@ const app = initializeApp({
 });
 const db = getFirestore(app);
 
-/* 🔥 WALLET STATE */
 const userEmail = localStorage.getItem("userEmail");
-let userDocId = "";
-let wallet = 0;
+let userDocId="";
+let wallet=0;
 
-/* GAME STATE (UNCHANGED) */
 let bet=0,mines=3,opened=0,multiplier=1,active=false;
 let minePositions=[];
 const HOUSE_EDGE=0.10;
@@ -95,11 +132,11 @@ loadWallet();
 function showPopup(text,color){
  popupBox.innerText=text;
  popupBox.style.color=color;
- popup.style.display="flex";
- setTimeout(()=>popup.style.display="none",1500);
+ popup.classList.add("show");
+ setTimeout(()=>popup.classList.remove("show"),1500);
 }
 
-/* 🔥 LOAD WALLET FROM FIRESTORE */
+/* LOAD WALLET */
 async function loadWallet(){
  const snap=await getDocs(query(collection(db,"users"),where("email","==",userEmail)));
  snap.forEach(d=>{
@@ -120,13 +157,13 @@ function createGrid(){
  }
 }
 
-/* START GAME – 🔥 CUT WALLET */
+/* START GAME */
 async function startGame(){
  bet=Number(betAmount.value);
  mines=Number(mineCount.value);
 
- if(bet<1) return alert("Min ₹1");
- if(bet>wallet) return alert("Low balance");
+ if(bet<1) return showPopup("Min ₹1","#ff5252");
+ if(bet>wallet) return showPopup("Low Balance","#ff5252");
 
  wallet-=bet;
  await updateDoc(doc(db,"users",userDocId),{balance:wallet});
@@ -146,7 +183,7 @@ async function startGame(){
  createGrid();
 }
 
-/* CELL CLICK */
+/* CELL */
 function clickCell(i,el){
  if(!active||el.classList.contains("open"))return;
  el.classList.add("open");
@@ -166,7 +203,7 @@ function calcMultiplier(){
  multi.innerText=multiplier.toFixed(2);
 }
 
-/* CASHOUT – 🔥 ADD WALLET */
+/* CASHOUT */
 async function cashOut(){
  if(!active)return;
  const win=Math.floor(bet*multiplier);
