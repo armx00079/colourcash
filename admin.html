@@ -51,8 +51,13 @@ header{
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, getDocs } from
-"https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  updateDoc,
+  doc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
@@ -68,11 +73,71 @@ window.openTab = function(i){
   document.querySelectorAll(".section").forEach((s,n)=>s.classList.toggle("active",n===i));
 };
 
-/* ================= WITHDRAWS (🔥 BANK DETAILS FIX) ================= */
+
+
+
+
+/* ================= 🔥 DEPOSITS (FIRESTORE – FINAL FIX) ================= */
+async function loadDeposits(){
+  const box = document.getElementById("sec0");
+  box.innerHTML = "<p>Loading deposits...</p>";
+
+  const snap = await getDocs(collection(db,"deposits"));
+  box.innerHTML = "";
+
+  if(snap.empty){
+    box.innerHTML="<p>No pending deposits</p>";
+    return;
+  }
+
+  snap.forEach(d=>{
+    const x = d.data();
+    if(x.status !== "PENDING") return;
+
+    box.innerHTML += `
+      <div class="card">
+        <div class="row"><span>Email</span><span>${x.email}</span></div>
+        <div class="row"><span>Amount</span><span>₹${x.amount}</span></div>
+        <div class="row"><span>UTR</span><span>${x.utr}</span></div>
+        <div class="row"><span>Time</span><span>${x.time}</span></div>
+
+        <button class="btn approve" onclick="approveDeposit('${d.id}','${x.email}',${x.amount})">Approve</button>
+        <button class="btn reject" onclick="rejectDeposit('${d.id}')">Reject</button>
+      </div>
+    `;
+  });
+}
+
+window.approveDeposit = async function(depositId,email,amount){
+  await updateDoc(doc(db,"deposits",depositId),{status:"APPROVED"});
+
+  const usersSnap = await getDocs(collection(db,"users"));
+  usersSnap.forEach(async u=>{
+    const data = u.data();
+    if(data.email === email){
+      await updateDoc(doc(db,"users",u.id),{
+        balance:(data.balance||0)+amount
+      });
+    }
+  });
+
+  loadDeposits();
+  loadUsers();
+};
+
+window.rejectDeposit = async function(depositId){
+  await updateDoc(doc(db,"deposits",depositId),{status:"REJECTED"});
+  loadDeposits();
+};
+
+
+
+
+
+/* ================= WITHDRAWS (LOCAL – OK) ================= */
 function loadWithdraws(){
   const box=document.getElementById("sec1");
   box.innerHTML="";
-
   let req = JSON.parse(localStorage.getItem("withdrawRequests")) || [];
   let pending = req.filter(w=>w.status==="PENDING");
 
@@ -88,79 +153,68 @@ function loadWithdraws(){
         <div class="row"><span>Method</span><span>${w.method}</span></div>
 
         ${
-          w.method === "UPI"
-          ? `<div class="row"><span>UPI ID</span><span>${w.upiId || "-"}</span></div>`
+          w.method==="UPI"
+          ? `<div class="row"><span>UPI</span><span>${w.upiId}</span></div>`
           : `
-            <div class="row"><span>Account Holder</span><span>${w.bankDetails?.holder || "-"}</span></div>
-            <div class="row"><span>Bank Name</span><span>${w.bankDetails?.bank || "-"}</span></div>
-            <div class="row"><span>Account No</span><span>${w.bankDetails?.account || "-"}</span></div>
-            <div class="row"><span>IFSC</span><span>${w.bankDetails?.ifsc || "-"}</span></div>
+            <div class="row"><span>Holder</span><span>${w.bankDetails.holder}</span></div>
+            <div class="row"><span>Bank</span><span>${w.bankDetails.bank}</span></div>
+            <div class="row"><span>Account</span><span>${w.bankDetails.account}</span></div>
+            <div class="row"><span>IFSC</span><span>${w.bankDetails.ifsc}</span></div>
           `
         }
 
-        <div class="row"><span>Order ID</span><span>${w.orderId}</span></div>
-        <div class="row"><span>Time</span><span>${w.time}</span></div>
-
         <button class="btn approve" onclick="approveWithdraw('${w.orderId}')">Approve</button>
         <button class="btn reject" onclick="rejectWithdraw('${w.orderId}')">Reject</button>
-      </div>`;
+      </div>
+    `;
   });
 }
 
 window.approveWithdraw=function(id){
   let req=JSON.parse(localStorage.getItem("withdrawRequests"))||[];
-  let hist=JSON.parse(localStorage.getItem("withdrawHistory"))||[];
-  req=req.map(w=>{
-    if(w.orderId===id && w.status==="PENDING"){
-      hist.push({...w,status:"APPROVED"});
-      return {...w,status:"APPROVED"};
-    }
-    return w;
-  });
+  req=req.map(w=>w.orderId===id?{...w,status:"APPROVED"}:w);
   localStorage.setItem("withdrawRequests",JSON.stringify(req));
-  localStorage.setItem("withdrawHistory",JSON.stringify(hist));
   loadWithdraws();
 };
 
 window.rejectWithdraw=function(id){
   let req=JSON.parse(localStorage.getItem("withdrawRequests"))||[];
-  let hist=JSON.parse(localStorage.getItem("withdrawHistory"))||[];
-  let balance=Number(localStorage.getItem("balance"))||0;
-  req=req.map(w=>{
-    if(w.orderId===id && w.status==="PENDING"){
-      balance+=w.amount;
-      hist.push({...w,status:"REJECTED"});
-      return {...w,status:"REJECTED"};
-    }
-    return w;
-  });
-  localStorage.setItem("balance",balance);
+  req=req.map(w=>w.orderId===id?{...w,status:"REJECTED"}:w);
   localStorage.setItem("withdrawRequests",JSON.stringify(req));
-  localStorage.setItem("withdrawHistory",JSON.stringify(hist));
   loadWithdraws();
 };
+
+
+
+
 
 /* ================= USERS ================= */
 async function loadUsers(){
   const box=document.getElementById("sec2");
   box.innerHTML="<p>Loading users...</p>";
+
   const snap = await getDocs(collection(db,"users"));
   box.innerHTML="";
-  snap.forEach(doc=>{
-    const u=doc.data();
+
+  snap.forEach(d=>{
+    const u=d.data();
     box.innerHTML+=`
       <div class="card">
         <div class="row"><span>Email</span><span>${u.email}</span></div>
-        <div class="row"><span>Balance</span><span>₹${u.balance || 0}</span></div>
-      </div>`;
+        <div class="row"><span>Balance</span><span>₹${u.balance||0}</span></div>
+      </div>
+    `;
   });
 }
 
-function loadDeposits(){}
-function loadGames(){document.getElementById("sec3").innerHTML="Game control coming soon";}
+function loadGames(){
+  document.getElementById("sec3").innerHTML="Game control coming soon";
+}
 
+loadDeposits();
 loadWithdraws();
 loadUsers();
+loadGames();
 </script>
 
 </body>
