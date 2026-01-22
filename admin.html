@@ -56,7 +56,7 @@ function openTab(i){
   document.querySelectorAll(".section").forEach((s,n)=>s.classList.toggle("active",n===i));
 }
 
-/* ================= DEPOSITS (AS IT IS) ================= */
+/* ================= DEPOSITS ================= */
 function loadDeposits(){
   const box=document.getElementById("sec0");
   box.innerHTML="";
@@ -110,7 +110,7 @@ function rejectDeposit(id){
   loadDeposits();
 }
 
-/* ================= WITHDRAWS (🔥 FIXED) ================= */
+/* ================= WITHDRAWS (UPI ID FIXED) ================= */
 function loadWithdraws(){
   const box=document.getElementById("sec1");
   box.innerHTML="";
@@ -127,7 +127,8 @@ function loadWithdraws(){
     box.innerHTML+=`
     <div class="card">
       <div class="row"><span>Amount</span><span>₹${w.amount}</span></div>
-      <div class="row"><span>Method</span><span>${w.method || "-"}</span></div>
+      <div class="row"><span>Method</span><span>${w.method}</span></div>
+      <div class="row"><span>UPI ID</span><span>${w.upiId || "-"}</span></div>
       <div class="row"><span>Order ID</span><span>${w.orderId}</span></div>
       <div class="row"><span>Time</span><span>${w.time}</span></div>
       <button class="btn approve" onclick="approveWithdraw('${w.orderId}')">Approve</button>
@@ -160,7 +161,7 @@ function rejectWithdraw(id){
 
   req = req.map(w=>{
     if(w.orderId===id && w.status==="PENDING"){
-      balance += w.amount; // refund
+      balance += w.amount;
       hist.push({...w,status:"REJECTED"});
       return {...w,status:"REJECTED"};
     }
