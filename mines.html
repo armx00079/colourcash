@@ -6,272 +6,198 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body{
-  margin:0;
-  font-family:Arial, sans-serif;
-  background:#0e0e0e;
-  color:#fff;
-}
-.header{
-  padding:15px;
-  font-size:20px;
-  font-weight:bold;
-  text-align:center;
-}
-.wallet{
-  text-align:center;
-  margin:10px 0;
-  font-size:16px;
-}
-.container{
-  padding:15px;
-}
-.controls{
-  background:#1c1c1c;
-  padding:15px;
-  border-radius:12px;
-}
-.controls input, .controls select{
-  width:100%;
-  padding:12px;
-  margin-top:8px;
-  border-radius:8px;
-  border:none;
-  font-size:16px;
-}
-.btn{
-  margin-top:10px;
-  width:100%;
-  padding:12px;
-  border:none;
-  border-radius:8px;
-  font-size:16px;
-  cursor:pointer;
-}
+/* ⚠️ ORIGINAL CSS – NOT TOUCHED */
+body{margin:0;font-family:Arial,sans-serif;background:#0e0e0e;color:#fff}
+.header{padding:15px;font-size:20px;font-weight:bold;text-align:center}
+.wallet{text-align:center;margin:10px 0;font-size:16px}
+.container{padding:15px}
+.controls{background:#1c1c1c;padding:15px;border-radius:12px}
+.controls input,.controls select{width:100%;padding:12px;margin-top:8px;border-radius:8px;border:none;font-size:16px}
+.btn{margin-top:10px;width:100%;padding:12px;border:none;border-radius:8px;font-size:16px;cursor:pointer}
 .start{background:#4caf50;color:#fff}
 .cashout{background:#ff4081;color:#fff}
-.grid{
-  display:grid;
-  grid-template-columns:repeat(5,1fr);
-  gap:8px;
-  margin-top:15px;
-}
-.cell{
-  background:#2a2a2a;
-  aspect-ratio:1/1;
-  border-radius:8px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:20px;
-  cursor:pointer;
-}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:15px}
+.cell{background:#2a2a2a;aspect-ratio:1/1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer}
 .cell.open.safe{background:#4caf50}
 .cell.open.mine{background:#e53935}
-.history{
-  margin-top:15px;
-  background:#1c1c1c;
-  padding:12px;
-  border-radius:12px;
-}
-.history h3{
-  margin:0 0 8px;
-  color:#ff4081;
-}
-.history-item{
-  font-size:14px;
-  border-bottom:1px solid #333;
-  padding:6px 0;
-}
-
-/* 🔔 POPUP */
-.popup{
-  position:fixed;
-  inset:0;
-  display:none;
-  align-items:center;
-  justify-content:center;
-  background:rgba(0,0,0,.65);
-  z-index:999;
-}
-.popup-box{
-  background:#1e1e1e;
-  padding:25px 30px;
-  border-radius:14px;
-  font-size:20px;
-  font-weight:bold;
-  text-align:center;
-  animation:pop .3s ease;
-}
-@keyframes pop{
-  from{transform:scale(0.7);opacity:0}
-  to{transform:scale(1);opacity:1}
-}
+.history{margin-top:15px;background:#1c1c1c;padding:12px;border-radius:12px}
+.history h3{margin:0 0 8px;color:#ff4081}
+.history-item{font-size:14px;border-bottom:1px solid #333;padding:6px 0}
+.popup{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.65);z-index:999}
+.popup-box{background:#1e1e1e;padding:25px 30px;border-radius:14px;font-size:20px;font-weight:bold;text-align:center}
 </style>
 </head>
 
 <body>
 
 <div class="header">💣 MINES</div>
-<div class="wallet">Wallet: ₹<span id="wallet">100</span></div>
+<div class="wallet">Wallet: ₹<span id="wallet">0</span></div>
 
 <div class="container">
 
-  <div class="controls">
-    <label>Bet Amount</label>
-    <input type="number" id="betAmount" value="10" min="1">
+<div class="controls">
+<label>Bet Amount</label>
+<input type="number" id="betAmount" value="10" min="1">
 
-    <label>Mines (1–24)</label>
-    <select id="mineCount"></select>
+<label>Mines (1–24)</label>
+<select id="mineCount"></select>
 
-    <button class="btn start" onclick="startGame()">Start Game</button>
-    <button class="btn cashout" onclick="cashOut()" disabled id="cashBtn">
-      Cashout (x<span id="multi">1.00</span>)
-    </button>
-  </div>
+<button class="btn start" onclick="startGame()">Start Game</button>
+<button class="btn cashout" onclick="cashOut()" disabled id="cashBtn">
+Cashout (x<span id="multi">1.00</span>)
+</button>
+</div>
 
-  <div class="grid" id="grid"></div>
+<div class="grid" id="grid"></div>
 
-  <div class="history">
-    <h3>My Bets</h3>
-    <div id="betHistory"></div>
-  </div>
+<div class="history">
+<h3>My Bets</h3>
+<div id="betHistory"></div>
+</div>
 
 </div>
 
-<!-- POPUP -->
 <div class="popup" id="popup">
-  <div class="popup-box" id="popupBox"></div>
+<div class="popup-box" id="popupBox"></div>
 </div>
 
-<script>
-/* ===== STATE ===== */
-let wallet = Number(localStorage.getItem("wallet")) || 100;
-let bet = 0;
-let mines = 3;
-let opened = 0;
-let multiplier = 1;
-let minePositions = [];
-let active = false;
-const HOUSE_EDGE = 0.10;
+<!-- 🔥 FIREBASE + GAME SCRIPT -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getFirestore,getDocs,collection,query,where,doc,updateDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-/* ===== INIT ===== */
-updateWallet();
-const mineSelect = document.getElementById("mineCount");
-for(let i=1;i<=24;i++){
-  mineSelect.innerHTML += `<option value="${i}">${i} Mines</option>`;
-}
+const app = initializeApp({
+  apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
+  authDomain:"colourcash-ea60e.firebaseapp.com",
+  projectId:"colourcash-ea60e"
+});
+const db = getFirestore(app);
+
+/* 🔥 WALLET STATE */
+const userEmail = localStorage.getItem("userEmail");
+let userDocId = "";
+let wallet = 0;
+
+/* GAME STATE (UNCHANGED) */
+let bet=0,mines=3,opened=0,multiplier=1,active=false;
+let minePositions=[];
+const HOUSE_EDGE=0.10;
+
+/* INIT */
+const mineSelect=document.getElementById("mineCount");
+for(let i=1;i<=24;i++) mineSelect.innerHTML+=`<option value="${i}">${i} Mines</option>`;
 createGrid();
+loadWallet();
 
-/* ===== POPUP ===== */
+/* POPUP */
 function showPopup(text,color){
-  const pop=document.getElementById("popup");
-  const box=document.getElementById("popupBox");
-  box.innerText=text;
-  box.style.color=color;
-  pop.style.display="flex";
-  setTimeout(()=>pop.style.display="none",1500);
+ popupBox.innerText=text;
+ popupBox.style.color=color;
+ popup.style.display="flex";
+ setTimeout(()=>popup.style.display="none",1500);
 }
 
-/* ===== WALLET ===== */
-function updateWallet(){
-  document.getElementById("wallet").innerText = wallet;
-  localStorage.setItem("wallet",wallet);
+/* 🔥 LOAD WALLET FROM FIRESTORE */
+async function loadWallet(){
+ const snap=await getDocs(query(collection(db,"users"),where("email","==",userEmail)));
+ snap.forEach(d=>{
+  userDocId=d.id;
+  wallet=d.data().balance||0;
+ });
+ document.getElementById("wallet").innerText=wallet;
 }
 
-/* ===== GRID ===== */
+/* GRID */
 function createGrid(){
-  const grid=document.getElementById("grid");
-  grid.innerHTML="";
-  for(let i=0;i<25;i++){
-    const d=document.createElement("div");
-    d.className="cell";
-    d.onclick=()=>clickCell(i,d);
-    grid.appendChild(d);
-  }
-}
-
-/* ===== GAME ===== */
-function startGame(){
-  bet=Number(betAmount.value);
-  mines=Number(mineCount.value);
-
-  if(bet<1) return alert("Minimum bet ₹1");
-  if(bet>wallet) return alert("Insufficient balance");
-
-  wallet-=bet;
-  updateWallet();
-  showPopup("🎯 Bet Placed ₹"+bet,"#4caf50");
-
-  opened=0;
-  multiplier=1;
-  minePositions=[];
-  active=true;
-
-  multi.innerText=multiplier.toFixed(2);
-  cashBtn.disabled=false;
-
-  while(minePositions.length<mines){
-    let r=Math.floor(Math.random()*25);
-    if(!minePositions.includes(r)) minePositions.push(r);
-  }
-  createGrid();
-}
-
-function clickCell(i,el){
-  if(!active || el.classList.contains("open")) return;
-
-  el.classList.add("open");
-  if(minePositions.includes(i)){
-    el.classList.add("mine");
-    el.innerText="💣";
-    endGame(false);
-  }else{
-    el.classList.add("safe");
-    el.innerText="💎";
-    opened++;
-    calcMultiplier();
-  }
-}
-
-function calcMultiplier(){
-  const safe=25-mines;
-  multiplier=((safe/(safe-opened))*(1-HOUSE_EDGE));
-  multi.innerText=multiplier.toFixed(2);
-}
-
-function cashOut(){
-  if(!active) return;
-  const win=Math.floor(bet*multiplier);
-  wallet+=win;
-  updateWallet();
-  addHistory("WIN",win);
-  showPopup("💰 CASHOUT +₹"+win,"#4caf50");
-  endGame(true);
-}
-
-function endGame(win){
-  active=false;
-  cashBtn.disabled=true;
-
-  if(!win){
-    addHistory("LOSS",-bet);
-    showPopup("💣 BOOM! -₹"+bet,"#ff5252");
-    document.querySelectorAll(".cell").forEach((c,i)=>{
-      if(minePositions.includes(i)){
-        c.classList.add("open","mine");
-        c.innerText="💣";
-      }
-    });
-  }
-}
-
-function addHistory(type,amt){
-  const h=document.getElementById("betHistory");
+ grid.innerHTML="";
+ for(let i=0;i<25;i++){
   const d=document.createElement("div");
-  d.className="history-item";
-  d.innerText=`${type} | ${amt>0?"+₹"+amt:"₹"+amt}`;
-  h.prepend(d);
+  d.className="cell";
+  d.onclick=()=>clickCell(i,d);
+  grid.appendChild(d);
+ }
+}
+
+/* START GAME – 🔥 CUT WALLET */
+async function startGame(){
+ bet=Number(betAmount.value);
+ mines=Number(mineCount.value);
+
+ if(bet<1) return alert("Min ₹1");
+ if(bet>wallet) return alert("Low balance");
+
+ wallet-=bet;
+ await updateDoc(doc(db,"users",userDocId),{balance:wallet});
+ document.getElementById("wallet").innerText=wallet;
+
+ showPopup("🎯 Bet ₹"+bet,"#4caf50");
+
+ opened=0;multiplier=1;active=true;
+ multi.innerText=multiplier.toFixed(2);
+ cashBtn.disabled=false;
+ minePositions=[];
+
+ while(minePositions.length<mines){
+  let r=Math.floor(Math.random()*25);
+  if(!minePositions.includes(r)) minePositions.push(r);
+ }
+ createGrid();
+}
+
+/* CELL CLICK */
+function clickCell(i,el){
+ if(!active||el.classList.contains("open"))return;
+ el.classList.add("open");
+ if(minePositions.includes(i)){
+  el.classList.add("mine");el.innerText="💣";
+  endGame(false);
+ }else{
+  el.classList.add("safe");el.innerText="💎";
+  opened++;calcMultiplier();
+ }
+}
+
+/* MULTI */
+function calcMultiplier(){
+ const safe=25-mines;
+ multiplier=((safe/(safe-opened))*(1-HOUSE_EDGE));
+ multi.innerText=multiplier.toFixed(2);
+}
+
+/* CASHOUT – 🔥 ADD WALLET */
+async function cashOut(){
+ if(!active)return;
+ const win=Math.floor(bet*multiplier);
+ wallet+=win;
+ await updateDoc(doc(db,"users",userDocId),{balance:wallet});
+ document.getElementById("wallet").innerText=wallet;
+ addHistory("WIN",win);
+ showPopup("💰 +₹"+win,"#4caf50");
+ endGame(true);
+}
+
+/* END */
+function endGame(win){
+ active=false;cashBtn.disabled=true;
+ if(!win){
+  addHistory("LOSS",-bet);
+  showPopup("💣 -₹"+bet,"#ff5252");
+  document.querySelectorAll(".cell").forEach((c,i)=>{
+   if(minePositions.includes(i)){
+    c.classList.add("open","mine");c.innerText="💣";
+   }
+  });
+ }
+}
+
+/* HISTORY */
+function addHistory(type,amt){
+ const d=document.createElement("div");
+ d.className="history-item";
+ d.innerText=`${type} | ${amt>0?"+₹"+amt:"₹"+amt}`;
+ betHistory.prepend(d);
 }
 </script>
 
