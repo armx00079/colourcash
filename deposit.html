@@ -203,6 +203,7 @@ function pay(){
   window.location.href = `upi://pay?pa=${UPI}&pn=ColourCash&am=${amt}&cu=INR`;
 }
 
+/* ✅ FINAL FIXED LOGIC */
 function submitDeposit(){
   const amt = Number(amountInput.value);
   const utr = utrInput.value.trim();
@@ -212,11 +213,11 @@ function submitDeposit(){
     return;
   }
 
-  let pending = JSON.parse(localStorage.getItem("pendingDeposits")) || [];
+  let deposits = JSON.parse(localStorage.getItem("deposits")) || [];
 
   const orderId = "ORD" + Date.now();
 
-  pending.push({
+  deposits.push({
     orderId: orderId,
     amount: amt,
     utr: utr,
@@ -224,7 +225,7 @@ function submitDeposit(){
     time: new Date().toLocaleString()
   });
 
-  localStorage.setItem("pendingDeposits", JSON.stringify(pending));
+  localStorage.setItem("deposits", JSON.stringify(deposits));
 
   showPopup(
     "Success",
