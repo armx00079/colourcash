@@ -138,7 +138,7 @@ input{
 <label>Enter Amount (₹)</label>
 <input type="number" id="amount" placeholder="Minimum ₹100" min="100">
 
-<div class="upi-box" id="upiId">8302299569@axl</div>
+<div class="upi-box">8302299569@axl</div>
 <button class="copy-btn" onclick="copyUPI()">Copy UPI ID</button>
 
 <div class="qr-box">
@@ -174,6 +174,12 @@ Pay to above UPI ID or scan QR, then enter UTR number below
 <script>
 const UPI = "8302299569@axl";
 
+const popupBg = document.getElementById("popupBg");
+const popupTitle = document.getElementById("popupTitle");
+const popupMsg = document.getElementById("popupMsg");
+const amountInput = document.getElementById("amount");
+const utrInput = document.getElementById("utr");
+
 function showPopup(title,msg){
   popupTitle.innerText = title;
   popupMsg.innerText = msg;
@@ -189,18 +195,17 @@ function copyUPI(){
 }
 
 function pay(){
-  const amt = Number(amount.value);
+  const amt = Number(amountInput.value);
   if(amt < 100){
     showPopup("Error","Minimum deposit ₹100");
     return;
   }
-  const url = `upi://pay?pa=${UPI}&pn=ColourCash&am=${amt}&cu=INR`;
-  window.location.href = url;
+  window.location.href = `upi://pay?pa=${UPI}&pn=ColourCash&am=${amt}&cu=INR`;
 }
 
 function submitDeposit(){
-  const amt = Number(amount.value);
-  const utr = utrInput.value = document.getElementById("utr").value;
+  const amt = Number(amountInput.value);
+  const utr = utrInput.value.trim();
 
   if(amt < 100 || utr.length < 10){
     showPopup("Error","Enter valid amount & UTR");
@@ -209,7 +214,10 @@ function submitDeposit(){
 
   let pending = JSON.parse(localStorage.getItem("pendingDeposits")) || [];
 
+  const orderId = "ORD" + Date.now();
+
   pending.push({
+    orderId: orderId,
     amount: amt,
     utr: utr,
     status: "PENDING",
@@ -218,10 +226,13 @@ function submitDeposit(){
 
   localStorage.setItem("pendingDeposits", JSON.stringify(pending));
 
-  showPopup("Success","Deposit submitted. Waiting for admin approval ⏳");
+  showPopup(
+    "Success",
+    "Deposit submitted\nOrder ID: " + orderId + "\nWaiting for approval ⏳"
+  );
 
-  amount.value = "";
-  document.getElementById("utr").value = "";
+  amountInput.value = "";
+  utrInput.value = "";
 }
 </script>
 
