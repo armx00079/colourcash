@@ -56,7 +56,6 @@ input{width:100%;padding:12px;margin:8px 0 14px;border-radius:10px;border:none;f
 
     <button class="btn" onclick="submitWithdraw()">Submit Withdraw</button>
 
-    <!-- ✅ RULES (WAPAS ADD – SAME AS PEHLE) -->
     <div class="rules">
       <div>🔴 Withdraw time: <b>00:05 - 23:55</b></div>
       <div>🔴 Inday Remaining Withdrawal Times: <b>3</b></div>
@@ -84,15 +83,6 @@ input{width:100%;padding:12px;margin:8px 0 14px;border-radius:10px;border:none;f
     <input type="text" id="bankIfsc">
 
     <button class="btn" onclick="submitWithdraw()">Submit Withdraw</button>
-
-    <!-- ✅ BANK RULES BHI SAME -->
-    <div class="rules">
-      <div>🔴 Withdraw time: <b>00:05 - 23:55</b></div>
-      <div>🔴 Inday Remaining Withdrawal Times: <b>3</b></div>
-      <div>🔴 Withdrawal amount range: <b>₹100 - ₹50,000</b></div>
-      <div>🔴 Please confirm your beneficiary details carefully</div>
-      <div>🔴 Wrong details may cause permanent loss</div>
-    </div>
   </div>
 
 </div>
@@ -105,20 +95,49 @@ input{width:100%;padding:12px;margin:8px 0 14px;border-radius:10px;border:none;f
   </div>
 </div>
 
+<!-- 🔥 FIREBASE BALANCE SYNC (FINAL FIX) -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, getDocs } from
+"https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
+  authDomain: "colourcash-ea60e.firebaseapp.com",
+  projectId: "colourcash-ea60e"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const userEmail = localStorage.getItem("userEmail");
+
+async function syncBalance(){
+  if(!userEmail) return;
+  const snap = await getDocs(collection(db,"users"));
+  snap.forEach(d=>{
+    const u = d.data();
+    if(u.email === userEmail){
+      localStorage.setItem("balance", u.balance || 0);
+      document.getElementById("balance").innerText =
+        Number(u.balance || 0).toFixed(2);
+    }
+  });
+}
+syncBalance();
+</script>
+
 <script>
-/* ===== BALANCE ===== */
+/* ===== BALANCE (LOCAL CACHE) ===== */
 let balance = Number(localStorage.getItem("balance")) || 0;
 document.getElementById("balance").innerText = balance.toFixed(2);
 
 /* ===== DAILY LIMIT RESET ===== */
 const today = new Date().toDateString();
-const savedDate = localStorage.getItem("withdrawDate");
-
-if(savedDate !== today){
+if(localStorage.getItem("withdrawDate") !== today){
   localStorage.setItem("withdrawDate", today);
   localStorage.setItem("withdrawCount", "0");
 }
-
 let withdrawCount = Number(localStorage.getItem("withdrawCount")) || 0;
 
 /* ===== UI ===== */
@@ -140,15 +159,14 @@ function closePopup(){popup.style.display="none";}
 /* ===== SUBMIT WITHDRAW ===== */
 function submitWithdraw(){
   const isUpi = document.getElementById("upi").classList.contains("active");
-
   const amt = Number(isUpi
-    ? document.getElementById("upiAmount").value
-    : document.getElementById("bankAmount").value
+    ? upiAmount.value
+    : bankAmount.value
   );
 
   if(amt < 100) return showPopup("error","Minimum Withdraw","Minimum ₹100");
   if(amt > balance) return showPopup("error","Insufficient Balance","Not enough balance");
-  if(withdrawCount >= 3) return showPopup("error","Limit Reached","Daily 3 withdraw limit exceeded");
+  if(withdrawCount >= 3) return showPopup("error","Limit Reached","Daily limit exceeded");
 
   const orderId = "WD" + Date.now();
 
@@ -156,7 +174,7 @@ function submitWithdraw(){
     orderId,
     amount: amt,
     method: isUpi ? "UPI" : "BANK",
-    upiId: isUpi ? document.getElementById("upiId").value.trim() : "",
+    upiId: isUpi ? upiId.value.trim() : "",
     bankDetails: !isUpi ? {
       holder: bankHolder.value,
       bank: bankName.value,
@@ -173,17 +191,15 @@ function submitWithdraw(){
   req.push(record);
   hist.push(record);
 
+  balance -= amt;
+  withdrawCount++;
+
   localStorage.setItem("withdrawRequests",JSON.stringify(req));
   localStorage.setItem("withdrawHistory",JSON.stringify(hist));
-
-  withdrawCount++;
-  balance -= amt;
-
-  localStorage.setItem("withdrawCount",withdrawCount);
   localStorage.setItem("balance",balance);
+  localStorage.setItem("withdrawCount",withdrawCount);
 
   document.getElementById("balance").innerText = balance.toFixed(2);
-
   showPopup("success","Withdraw Submitted","Order ID: "+orderId);
 }
 </script>
