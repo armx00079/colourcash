@@ -16,18 +16,13 @@ body{margin:0;font-family:Arial,sans-serif;background:#0e0e0e;color:#fff}
   width:100%;padding:12px;margin-top:8px;
   border-radius:8px;border:none;font-size:16px
 }
-
-/* 🔥 BUTTON FIX */
 .btn{
   margin-top:10px;width:100%;padding:12px;
   border:none;border-radius:8px;font-size:16px;
   cursor:pointer;
-  position:relative;
-  z-index:5;
 }
 .start{background:#4caf50;color:#fff}
 .cashout{background:#ff4081;color:#fff}
-
 .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:15px}
 .cell{
   background:#2a2a2a;aspect-ratio:1/1;border-radius:8px;
@@ -40,7 +35,7 @@ body{margin:0;font-family:Arial,sans-serif;background:#0e0e0e;color:#fff}
 .history h3{margin:0 0 8px;color:#ff4081}
 .history-item{font-size:14px;border-bottom:1px solid #333;padding:6px 0}
 
-/* 🔥 POPUP FIX */
+/* POPUP */
 .popup{
   position:fixed;
   inset:0;
@@ -49,12 +44,8 @@ body{margin:0;font-family:Arial,sans-serif;background:#0e0e0e;color:#fff}
   justify-content:center;
   background:rgba(0,0,0,.65);
   z-index:999;
-  pointer-events:none;
 }
-.popup.show{
-  display:flex;
-  pointer-events:auto;
-}
+.popup.show{display:flex}
 .popup-box{
   background:#1e1e1e;
   padding:25px 30px;
@@ -75,7 +66,6 @@ body{margin:0;font-family:Arial,sans-serif;background:#0e0e0e;color:#fff}
 
 <div class="controls">
 <label>Bet Amount</label>
-<!-- 🔥 FIXED PLACEHOLDER -->
 <input type="number" id="betAmount" placeholder="Min ₹1" min="1">
 
 <label>Mines (1–24)</label>
@@ -196,7 +186,7 @@ function clickCell(i,el){
  }
 }
 
-/* MULTI */
+/* MULTIPLIER */
 function calcMultiplier(){
  const safe=25-mines;
  multiplier=((safe/(safe-opened))*(1-HOUSE_EDGE));
@@ -215,7 +205,7 @@ async function cashOut(){
  endGame(true);
 }
 
-/* END */
+/* END GAME */
 function endGame(win){
  active=false;cashBtn.disabled=true;
  if(!win){
@@ -236,6 +226,10 @@ function addHistory(type,amt){
  d.innerText=`${type} | ${amt>0?"+₹"+amt:"₹"+amt}`;
  betHistory.prepend(d);
 }
+
+/* 🔥 VERY IMPORTANT FIX (BUTTON CLICK WORKS NOW) */
+window.startGame = startGame;
+window.cashOut = cashOut;
 </script>
 
 </body>
