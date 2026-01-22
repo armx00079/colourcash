@@ -6,7 +6,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-/* ===== BASE ===== */
 body{margin:0;font-family:Arial;background:#0f0f0f;color:#fff}
 header{
   background:linear-gradient(135deg,#ff6a6a,#ff8e8e);
@@ -15,8 +14,6 @@ header{
   font-size:22px;
   font-weight:bold
 }
-
-/* ===== DASHBOARD ===== */
 .dashboard{
   display:grid;
   grid-template-columns:repeat(3,1fr);
@@ -32,7 +29,6 @@ header{
 .d-card h2{margin:0;font-size:22px;color:#ff8e8e}
 .d-card span{font-size:12px;color:#aaa}
 
-/* ===== TABS ===== */
 .tabs{display:flex;background:#111}
 .tab{
   flex:1;padding:14px;text-align:center;
@@ -43,21 +39,11 @@ header{
 .section{display:none;padding:15px}
 .section.active{display:block}
 
-/* ===== FILTER + SEARCH ===== */
-.tools{
-  display:flex;
-  gap:10px;
-  margin-bottom:12px
-}
+.tools{display:flex;gap:10px;margin-bottom:12px}
 .tools input,.tools select{
-  flex:1;
-  padding:10px;
-  border-radius:10px;
-  border:none;
-  font-size:14px
+  flex:1;padding:10px;border-radius:10px;border:none
 }
 
-/* ===== CARD ===== */
 .card{
   background:#1c1c1c;
   border-radius:16px;
@@ -65,6 +51,7 @@ header{
   margin-bottom:14px
 }
 .row{display:flex;justify-content:space-between;font-size:14px;margin:6px 0}
+
 .btn{
   padding:10px 14px;
   border:none;
@@ -77,7 +64,6 @@ header{
 .reject{background:#c62828;color:#fff}
 .view{background:#2196f3;color:#fff}
 
-/* ===== MODAL ===== */
 .modal{
   position:fixed;
   inset:0;
@@ -94,10 +80,8 @@ header{
   border-radius:16px;
   padding:18px
 }
-.modal-box h3{text-align:center;margin-top:0}
-.modal-box button{width:100%;margin-top:14px}
+.modal-box button{width:100%}
 
-/* ===== MOBILE ===== */
 @media(max-width:600px){
   .dashboard{grid-template-columns:1fr}
 }
@@ -108,23 +92,12 @@ header{
 
 <header>🛠️ Colour Cash – Admin Panel</header>
 
-<!-- 📊 DASHBOARD -->
 <div class="dashboard">
-  <div class="d-card">
-    <h2 id="totalUsers">0</h2>
-    <span>Total Users</span>
-  </div>
-  <div class="d-card">
-    <h2 id="pendingDeposits">0</h2>
-    <span>Pending Deposits</span>
-  </div>
-  <div class="d-card">
-    <h2 id="pendingWithdraws">0</h2>
-    <span>Pending Withdraws</span>
-  </div>
+  <div class="d-card"><h2 id="totalUsers">0</h2><span>Total Users</span></div>
+  <div class="d-card"><h2 id="pendingDeposits">0</h2><span>Pending Deposits</span></div>
+  <div class="d-card"><h2 id="pendingWithdraws">0</h2><span>Pending Withdraws</span></div>
 </div>
 
-<!-- TABS -->
 <div class="tabs">
   <div class="tab active" onclick="openTab(0)">Deposits</div>
   <div class="tab" onclick="openTab(1)">Withdraws</div>
@@ -135,15 +108,15 @@ header{
 <div class="section" id="sec1"></div>
 <div class="section" id="sec2"></div>
 
-<!-- 🧾 WITHDRAW MODAL -->
 <div class="modal" id="modal">
   <div class="modal-box" id="modalBox"></div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, getDocs, updateDoc, doc } from
-"https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  getFirestore, collection, getDocs, updateDoc, doc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
@@ -152,92 +125,115 @@ const app = initializeApp({
 });
 const db = getFirestore(app);
 
-window.openTab = i=>{
+window.openTab=i=>{
   document.querySelectorAll(".tab").forEach((t,n)=>t.classList.toggle("active",n===i));
   document.querySelectorAll(".section").forEach((s,n)=>s.classList.toggle("active",n===i));
 };
 
-/* ===== DASHBOARD COUNTS ===== */
 async function loadDashboard(){
-  const users = await getDocs(collection(db,"users"));
-  const dep = await getDocs(collection(db,"deposits"));
-  const wd = await getDocs(collection(db,"withdraws"));
+  const users=await getDocs(collection(db,"users"));
+  const dep=await getDocs(collection(db,"deposits"));
+  const wd=await getDocs(collection(db,"withdraws"));
 
-  document.getElementById("totalUsers").innerText = users.size;
-  document.getElementById("pendingDeposits").innerText =
-    dep.docs.filter(d=>d.data().status==="PENDING").length;
-  document.getElementById("pendingWithdraws").innerText =
-    wd.docs.filter(d=>d.data().status==="PENDING").length;
+  totalUsers.innerText=users.size;
+  pendingDeposits.innerText=dep.docs.filter(d=>d.data().status==="PENDING").length;
+  pendingWithdraws.innerText=wd.docs.filter(d=>d.data().status==="PENDING").length;
 }
 
-/* ===== USERS + SEARCH ===== */
-async function loadUsers(){
-  const box=document.getElementById("sec2");
-  const snap=await getDocs(collection(db,"users"));
-
-  box.innerHTML=`
-    <div class="tools">
-      <input placeholder="Search email..." oninput="filterUsers(this.value)">
-    </div>
-    <div id="userList"></div>
-  `;
-
-  const list=document.getElementById("userList");
+/* ===== DEPOSITS ===== */
+async function loadDeposits(){
+  const box=sec0;
+  const snap=await getDocs(collection(db,"deposits"));
+  box.innerHTML="";
   snap.forEach(d=>{
-    const u=d.data();
-    list.innerHTML+=`
-      <div class="card user">
-        <div class="row"><span>${u.email}</span><span>₹${u.balance||0}</span></div>
+    const x=d.data();
+    if(x.status!=="PENDING")return;
+    box.innerHTML+=`
+      <div class="card">
+        <div class="row"><span>${x.email}</span><span>₹${x.amount}</span></div>
+        <div class="row"><span>UTR</span><span>${x.utr}</span></div>
+        <button class="btn approve" onclick="approveDeposit('${d.id}','${x.email}',${x.amount})">Approve</button>
+        <button class="btn reject" onclick="rejectDeposit('${d.id}')">Reject</button>
       </div>`;
   });
 }
-window.filterUsers=q=>{
-  document.querySelectorAll(".user").forEach(u=>{
-    u.style.display=u.innerText.toLowerCase().includes(q.toLowerCase())?"block":"none";
+
+window.approveDeposit=async(id,email,amt)=>{
+  await updateDoc(doc(db,"deposits",id),{status:"APPROVED"});
+  const u=await getDocs(collection(db,"users"));
+  u.forEach(async d=>{
+    if(d.data().email===email){
+      await updateDoc(doc(db,"users",d.id),{
+        balance:(d.data().balance||0)+amt
+      });
+    }
   });
+  loadDeposits();loadDashboard();
 };
 
-/* ===== WITHDRAW LIST + MODAL ===== */
-async function loadWithdraws(){
-  const box=document.getElementById("sec1");
-  const snap=await getDocs(collection(db,"withdraws"));
-  box.innerHTML=`<div class="tools">
-    <select onchange="filterTime(this.value)">
-      <option value="all">All</option>
-      <option value="today">Today</option>
-      <option value="yesterday">Yesterday</option>
-    </select>
-  </div>`;
+window.rejectDeposit=async id=>{
+  await updateDoc(doc(db,"deposits",id),{status:"REJECTED"});
+  loadDeposits();loadDashboard();
+};
 
+/* ===== WITHDRAWS ===== */
+async function loadWithdraws(){
+  const box=sec1;
+  const snap=await getDocs(collection(db,"withdraws"));
+  box.innerHTML="";
   snap.forEach(d=>{
     const w=d.data();
     if(w.status!=="PENDING")return;
     box.innerHTML+=`
       <div class="card">
         <div class="row"><span>${w.email}</span><span>₹${w.amount}</span></div>
-        <button class="btn view" onclick='viewWithdraw(${JSON.stringify(w)})'>View</button>
+        <button class="btn view" onclick='viewWithdraw("${d.id}",${JSON.stringify(w)})'>View</button>
       </div>`;
   });
 }
 
-window.viewWithdraw=w=>{
+window.viewWithdraw=(id,w)=>{
   modalBox.innerHTML=`
     <h3>Withdraw Detail</h3>
-    <p>Email: ${w.email}</p>
-    <p>Amount: ₹${w.amount}</p>
-    <p>Method: ${w.method}</p>
+    <p>${w.email}</p>
+    <p>₹${w.amount}</p>
     ${w.method==="UPI"
       ? `<p>UPI: ${w.upiId}</p>`
       : `<p>${w.bankDetails.holder}<br>${w.bankDetails.bank}<br>${w.bankDetails.account}<br>${w.bankDetails.ifsc}</p>`}
-    <button class="btn approve" onclick="closeModal()">Close</button>`;
+    <button class="btn approve" onclick="approveWithdraw('${id}')">Approve</button>
+    <button class="btn reject" onclick="rejectWithdraw('${id}')">Reject</button>
+    <button class="btn view" onclick="closeModal()">Close</button>`;
   modal.style.display="flex";
+};
+
+window.approveWithdraw=async id=>{
+  await updateDoc(doc(db,"withdraws",id),{status:"APPROVED"});
+  closeModal();loadWithdraws();loadDashboard();
+};
+window.rejectWithdraw=async id=>{
+  await updateDoc(doc(db,"withdraws",id),{status:"REJECTED"});
+  closeModal();loadWithdraws();loadDashboard();
 };
 window.closeModal=()=>modal.style.display="none";
 
-/* INIT */
+/* ===== USERS ===== */
+async function loadUsers(){
+  const box=sec2;
+  const snap=await getDocs(collection(db,"users"));
+  box.innerHTML="";
+  snap.forEach(d=>{
+    const u=d.data();
+    box.innerHTML+=`
+      <div class="card">
+        <div class="row"><span>${u.email}</span><span>₹${u.balance||0}</span></div>
+      </div>`;
+  });
+}
+
 loadDashboard();
-loadUsers();
+loadDeposits();
 loadWithdraws();
+loadUsers();
 </script>
 
 </body>
