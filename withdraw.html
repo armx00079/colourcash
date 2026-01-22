@@ -87,11 +87,13 @@ input{width:100%;padding:12px;margin:8px 0 14px;border-radius:10px;border:none;f
 
 </div>
 
+<!-- 🔥 POPUP -->
 <div class="popup" id="popup">
   <div class="popup-box" id="popupBox">
     <h3 id="popupTitle"></h3>
     <p id="popupMsg"></p>
-    <button onclick="closePopup()">OK</button>
+    <!-- ✅ ONLY CHANGE HERE -->
+    <button id="popupOk">OK</button>
   </div>
 </div>
 
@@ -123,13 +125,17 @@ const popupBox = document.getElementById("popupBox");
 const popupTitle = document.getElementById("popupTitle");
 const popupMsg = document.getElementById("popupMsg");
 
+/* 🔥 POPUP FIX */
 function showPopup(type,title,msg){
   popupBox.className="popup-box "+type;
   popupTitle.innerText=title;
   popupMsg.innerText=msg;
   popup.style.display="flex";
 }
-function closePopup(){popup.style.display="none";}
+function closePopup(){
+  popup.style.display="none";
+}
+document.getElementById("popupOk").addEventListener("click", closePopup);
 
 /* ===== LOAD BALANCE (FIRESTORE ONLY) ===== */
 const userEmail = localStorage.getItem("userEmail");
@@ -164,7 +170,7 @@ window.openTab = function(id,el){
   document.getElementById(id).classList.add('active');
 };
 
-/* ===== SUBMIT WITHDRAW (🔥 FINAL LOGIC) ===== */
+/* ===== SUBMIT WITHDRAW ===== */
 window.submitWithdraw = async function(){
   const isUpi = document.getElementById("upi").classList.contains("active");
   const amt = Number(isUpi ? upiAmount.value : bankAmount.value);
@@ -173,7 +179,6 @@ window.submitWithdraw = async function(){
   if(amt > balance) return showPopup("error","Insufficient Balance","Not enough balance");
   if(withdrawCount >= 3) return showPopup("error","Limit Reached","Daily 3 withdraw limit exceeded");
 
-  // 🔥 BALANCE CUT IMMEDIATELY
   await updateDoc(doc(db,"users",userDocId),{
     balance: balance - amt
   });
