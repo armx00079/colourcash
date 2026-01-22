@@ -73,18 +73,13 @@ window.openTab = function(i){
   document.querySelectorAll(".section").forEach((s,n)=>s.classList.toggle("active",n===i));
 };
 
-/* ================= 🔥 DEPOSITS (FINAL + WALLET FIX) ================= */
+/* ================= DEPOSITS (UNCHANGED) ================= */
 async function loadDeposits(){
   const box = document.getElementById("sec0");
   box.innerHTML = "<p>Loading deposits...</p>";
 
   const snap = await getDocs(collection(db,"deposits"));
   box.innerHTML = "";
-
-  if(snap.empty){
-    box.innerHTML="<p>No pending deposits</p>";
-    return;
-  }
 
   snap.forEach(d=>{
     const x = d.data();
@@ -96,7 +91,6 @@ async function loadDeposits(){
         <div class="row"><span>Amount</span><span>₹${x.amount}</span></div>
         <div class="row"><span>UTR</span><span>${x.utr}</span></div>
         <div class="row"><span>Time</span><span>${x.time}</span></div>
-
         <button class="btn approve" onclick="approveDeposit('${d.id}','${x.email}',${x.amount})">Approve</button>
         <button class="btn reject" onclick="rejectDeposit('${d.id}')">Reject</button>
       </div>
@@ -104,98 +98,90 @@ async function loadDeposits(){
   });
 }
 
-/* ✅ ONLY FIXED FUNCTION (बाकी कुछ नहीं बदला) */
-window.approveDeposit = async function(depositId,email,amount){
-  // approve deposit
-  await updateDoc(doc(db,"deposits",depositId),{
-    status:"APPROVED"
-  });
-
-  // find user safely
-  const usersSnap = await getDocs(collection(db,"users"));
-  let userDocId = null;
-  let oldBalance = 0;
-
-  usersSnap.forEach(d=>{
-    const u = d.data();
-    if(u.email === email){
-      userDocId = d.id;
-      oldBalance = u.balance || 0;
+window.approveDeposit = async function(id,email,amount){
+  await updateDoc(doc(db,"deposits",id),{status:"APPROVED"});
+  const snap = await getDocs(collection(db,"users"));
+  snap.forEach(async u=>{
+    if(u.data().email===email){
+      await updateDoc(doc(db,"users",u.id),{
+        balance:(u.data().balance||0)+amount
+      });
     }
   });
-
-  // update wallet balance
-  if(userDocId){
-    await updateDoc(doc(db,"users",userDocId),{
-      balance: oldBalance + amount
-    });
-  }
-
-  loadDeposits();
-  loadUsers();
+  loadDeposits(); loadUsers();
 };
 
-window.rejectDeposit = async function(depositId){
-  await updateDoc(doc(db,"deposits",depositId),{
-    status:"REJECTED"
-  });
+window.rejectDeposit = async function(id){
+  await updateDoc(doc(db,"deposits",id),{status:"REJECTED"});
   loadDeposits();
 };
 
-/* ================= WITHDRAWS (UNCHANGED) ================= */
-function loadWithdraws(){
-  const box=document.getElementById("sec1");
-  box.innerHTML="";
-  let req = JSON.parse(localStorage.getItem("withdrawRequests")) || [];
-  let pending = req.filter(w=>w.status==="PENDING");
+/* ================= 🔥 WITHDRAWS (FINAL FIRESTORE FIX) ================= */
+async function loadWithdraws(){
+  const box = document.getElementById("sec1");
+  box.innerHTML = "<p>Loading withdraws...</p>";
 
-  if(!pending.length){
+  const snap = await getDocs(collection(db,"withdraws"));
+  box.innerHTML = "";
+
+  if(snap.empty){
     box.innerHTML="<p>No pending withdraw requests</p>";
     return;
   }
 
-  pending.forEach(w=>{
-    box.innerHTML+=`
+  snap.forEach(d=>{
+    const w = d.data();
+    if(w.status!=="PENDING") return;
+
+    box.innerHTML += `
       <div class="card">
+        <div class="row"><span>Email</span><span>${w.email}</span></div>
         <div class="row"><span>Amount</span><span>₹${w.amount}</span></div>
         <div class="row"><span>Method</span><span>${w.method}</span></div>
-        <button class="btn approve" onclick="approveWithdraw('${w.orderId}')">Approve</button>
-        <button class="btn reject" onclick="rejectWithdraw('${w.orderId}')">Reject</button>
+
+        ${
+          w.method==="UPI"
+          ? `<div class="row"><span>UPI ID</span><span>${w.upiId}</span></div>`
+          : `
+            <div class="row"><span>Holder</span><span>${w.bankDetails.holder}</span></div>
+            <div class="row"><span>Bank</span><span>${w.bankDetails.bank}</span></div>
+            <div class="row"><span>Account</span><span>${w.bankDetails.account}</span></div>
+            <div class="row"><span>IFSC</span><span>${w.bankDetails.ifsc}</span></div>
+          `
+        }
+
+        <div class="row"><span>Time</span><span>${w.time}</span></div>
+
+        <button class="btn approve" onclick="approveWithdraw('${d.id}')">Approve</button>
+        <button class="btn reject" onclick="rejectWithdraw('${d.id}')">Reject</button>
       </div>
     `;
   });
 }
 
-window.approveWithdraw=function(id){
-  let req=JSON.parse(localStorage.getItem("withdrawRequests"))||[];
-  req=req.map(w=>w.orderId===id?{...w,status:"APPROVED"}:w);
-  localStorage.setItem("withdrawRequests",JSON.stringify(req));
+window.approveWithdraw = async function(id){
+  await updateDoc(doc(db,"withdraws",id),{status:"APPROVED"});
   loadWithdraws();
 };
 
-window.rejectWithdraw=function(id){
-  let req=JSON.parse(localStorage.getItem("withdrawRequests"))||[];
-  req=req.map(w=>w.orderId===id?{...w,status:"REJECTED"}:w);
-  localStorage.setItem("withdrawRequests",JSON.stringify(req));
+window.rejectWithdraw = async function(id){
+  await updateDoc(doc(db,"withdraws",id),{status:"REJECTED"});
   loadWithdraws();
 };
 
-/* ================= USERS ================= */
+/* ================= USERS (UNCHANGED) ================= */
 async function loadUsers(){
   const box=document.getElementById("sec2");
   box.innerHTML="<p>Loading users...</p>";
-
   const snap = await getDocs(collection(db,"users"));
   box.innerHTML="";
-
   snap.forEach(d=>{
     const u=d.data();
     box.innerHTML+=`
       <div class="card">
         <div class="row"><span>Email</span><span>${u.email}</span></div>
         <div class="row"><span>Balance</span><span>₹${u.balance||0}</span></div>
-      </div>
-    `;
+      </div>`;
   });
 }
 
