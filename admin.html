@@ -110,7 +110,7 @@ function rejectDeposit(id){
   loadDeposits();
 }
 
-/* ================= WITHDRAWS (UPI ID FIXED) ================= */
+/* ================= WITHDRAWS ================= */
 function loadWithdraws(){
   const box=document.getElementById("sec1");
   box.innerHTML="";
@@ -174,17 +174,26 @@ function rejectWithdraw(id){
   loadWithdraws();
 }
 
-/* ================= USERS ================= */
+/* ================= USERS (🔥 FINAL FIX) ================= */
 function loadUsers(){
   const box=document.getElementById("sec2");
-  let email=localStorage.getItem("userEmail")||"-";
-  let bal=Number(localStorage.getItem("balance"))||0;
+  box.innerHTML="";
 
-  box.innerHTML=`
-  <div class="card">
-    <div class="row"><span>Email</span><span>${email}</span></div>
-    <div class="row"><span>Balance</span><span>₹${bal}</span></div>
-  </div>`;
+  let users = JSON.parse(localStorage.getItem("users")) || [];
+
+  if(!users.length){
+    box.innerHTML="<p>No users found</p>";
+    return;
+  }
+
+  users.forEach(u=>{
+    box.innerHTML+=`
+      <div class="card">
+        <div class="row"><span>Email</span><span>${u.email}</span></div>
+        <div class="row"><span>Balance</span><span>₹${u.balance || 0}</span></div>
+      </div>
+    `;
+  });
 }
 
 /* ================= GAMES ================= */
