@@ -41,7 +41,7 @@ body{
 }
 .pending{color:#f57c00}
 .approved{color:#2e7d32}
-.rejected{color:#d32f2f}
+.rejected{color:#c62828}
 .empty{
   text-align:center;
   margin-top:60px;
@@ -60,12 +60,18 @@ body{
 <script>
 const list = document.getElementById("list");
 
-let withdraws = JSON.parse(localStorage.getItem("withdrawRequests")) || [];
+/* ✅ READ ONLY FROM withdrawHistory */
+const withdraws =
+  JSON.parse(localStorage.getItem("withdrawHistory")) || [];
 
 if(withdraws.length === 0){
   list.innerHTML = `<div class="empty">No withdraw history found</div>`;
 }else{
-  withdraws.reverse().forEach(w => {
+  withdraws.slice().reverse().forEach(w => {
+    let statusClass =
+      w.status === "APPROVED" ? "approved" :
+      w.status === "REJECTED" ? "rejected" : "pending";
+
     list.innerHTML += `
       <div class="card">
         <div class="row">
@@ -78,18 +84,15 @@ if(withdraws.length === 0){
         </div>
         <div class="row">
           <span>Method</span>
-          <span>${w.method}</span>
+          <span>${w.method || '-'}</span>
         </div>
         <div class="row">
           <span>Time</span>
-          <span>${w.time}</span>
+          <span>${w.time || '-'}</span>
         </div>
         <div class="row">
           <span>Status</span>
-          <span class="status ${
-            w.status === 'APPROVED' ? 'approved' :
-            w.status === 'REJECTED' ? 'rejected' : 'pending'
-          }">
+          <span class="status ${statusClass}">
             ${w.status}
           </span>
         </div>
