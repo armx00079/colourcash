@@ -13,8 +13,6 @@ header{
   font-size:22px;
   font-weight:bold
 }
-
-/* DASHBOARD */
 .dashboard{
   display:grid;
   grid-template-columns:repeat(3,1fr);
@@ -29,8 +27,6 @@ header{
 }
 .d-card h2{margin:0;font-size:22px;color:#ff8e8e}
 .d-card span{font-size:12px;color:#aaa}
-
-/* PROFIT */
 .profit{
   display:grid;
   grid-template-columns:repeat(3,1fr);
@@ -46,19 +42,14 @@ header{
 }
 .p-card h3{margin:0;font-size:18px}
 .p-card span{font-size:12px;color:#aaa}
-
-/* TABS */
 .tabs{display:flex;background:#111}
 .tab{
   flex:1;padding:14px;text-align:center;
   cursor:pointer;color:#aaa;font-weight:bold
 }
 .tab.active{background:#1c1c1c;color:#ff8e8e}
-
 .section{display:none;padding:15px}
 .section.active{display:block}
-
-/* CARD */
 .card{
   background:#1c1c1c;
   border-radius:16px;
@@ -66,8 +57,6 @@ header{
   margin-bottom:14px
 }
 .row{display:flex;justify-content:space-between;font-size:14px;margin:6px 0}
-
-/* BUTTONS */
 .btn{
   padding:6px 10px;
   border:none;
@@ -77,7 +66,6 @@ header{
 }
 .plus{background:#2e7d32;color:#fff}
 .minus{background:#c62828;color:#fff}
-
 @media(max-width:600px){
   .dashboard,.profit{grid-template-columns:1fr}
 }
@@ -145,18 +133,15 @@ async function loadDashboard(){
   netProfit.innerText="₹"+(depSum-wdSum);
 }
 
-/* USERS — ORIGINAL */
 async function loadUsers(){
   const box=sec2;
   const snap=await getDocs(collection(db,"users"));
   box.innerHTML="";
   snap.forEach(d=>{
     const u=d.data();
-    const pass=u.password||"N/A";
     box.innerHTML+=`
       <div class="card">
         <div class="row"><span>${u.email}</span><span>₹${u.balance||0}</span></div>
-        <div class="row"><span>Password</span><span>${pass}</span></div>
         <div class="row">
           <button class="btn plus" onclick="updateBal('${d.id}',100)">+100</button>
           <button class="btn minus" onclick="updateBal('${d.id}',-100)">-100</button>
@@ -175,8 +160,6 @@ window.updateBal=async(id,amt)=>{
     }
   });
 };
-
-/* 🔥 ADDED CODE START — DEPOSITS & WITHDRAWS */
 
 async function loadDeposits(){
   const box=sec0;
@@ -222,9 +205,24 @@ async function loadWithdraws(){
   snap.forEach(d=>{
     const w=d.data();
     if(w.status!=="PENDING")return;
+
+    let details = "";
+    if(w.method==="UPI"){
+      details = `<div class="row"><span>UPI</span><span>${w.upiId}</span></div>`;
+    }else{
+      details = `
+        <div class="row"><span>Holder</span><span>${w.bankDetails.holder}</span></div>
+        <div class="row"><span>Bank</span><span>${w.bankDetails.bank}</span></div>
+        <div class="row"><span>Account</span><span>${w.bankDetails.account}</span></div>
+        <div class="row"><span>IFSC</span><span>${w.bankDetails.ifsc}</span></div>`;
+    }
+
     box.innerHTML+=`
       <div class="card">
         <div class="row"><span>${w.email}</span><span>₹${w.amount}</span></div>
+        <div class="row"><span>Order ID</span><span>${w.orderId||"N/A"}</span></div>
+        <div class="row"><span>Time</span><span>${w.time||"N/A"}</span></div>
+        ${details}
         <div class="row">
           <button class="btn plus" onclick="approveWithdraw('${d.id}')">Approve</button>
           <button class="btn minus" onclick="rejectWithdraw('${d.id}')">Reject</button>
@@ -242,8 +240,6 @@ window.rejectWithdraw=async id=>{
   await updateDoc(doc(db,"withdraws",id),{status:"REJECTED"});
   loadWithdraws();loadDashboard();
 };
-
-/* 🔥 ADDED CODE END */
 
 loadDashboard();
 loadUsers();
