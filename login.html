@@ -85,16 +85,35 @@ window.login = () => {
   .then((result)=>{
     const user = result.user;
 
-    // 🔥 SAVE USER INFO
+    // 🔥 EXISTING CODE (UNCHANGED)
     localStorage.setItem("userEmail", user.email);
     localStorage.setItem(
       "userName",
       user.displayName || user.email.split("@")[0]
     );
 
-    // 🔥 LAST LOGIN
     const now = new Date().toLocaleString();
     localStorage.setItem("lastLogin", now);
+
+    /* =================================================
+       ✅ ONLY ADDITION (MASTER USER LIST – ADMIN FIX)
+       ================================================= */
+    let users = JSON.parse(localStorage.getItem("users")) || [];
+    const balance = Number(localStorage.getItem("balance")) || 0;
+
+    const index = users.findIndex(u => u.email === user.email);
+
+    if(index === -1){
+      users.push({
+        email: user.email,
+        balance: balance
+      });
+    }else{
+      users[index].balance = balance;
+    }
+
+    localStorage.setItem("users", JSON.stringify(users));
+    /* ================================================= */
 
     showPopup("Login Successful ✅");
     setTimeout(()=>location.href="index.html",1200);
@@ -104,5 +123,6 @@ window.login = () => {
   });
 };
 </script>
+
 </body>
 </html>
