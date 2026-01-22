@@ -13,94 +13,117 @@ body{
   color:#fff;
 }
 .header{
-  text-align:center;
-  padding:16px;
+  padding:15px;
   font-size:22px;
   font-weight:bold;
+  text-align:center;
 }
 .card{
   background:#1b1b1b;
   margin:15px;
-  padding:20px;
-  border-radius:18px;
+  border-radius:16px;
+  padding:18px;
 }
+label{font-size:14px;color:#ccc}
 input{
   width:100%;
   padding:14px;
-  margin-top:12px;
-  border-radius:12px;
+  border-radius:10px;
   border:none;
-  font-size:15px;
+  margin-top:8px;
+  font-size:16px;
 }
 .upi-box{
   background:#000;
   padding:14px;
-  margin-top:12px;
   border-radius:12px;
   text-align:center;
   font-size:18px;
+  margin-top:12px;
 }
 .copy-btn{
-  background:#2196f3;
-  color:#fff;
-  padding:14px;
-  margin-top:12px;
-  border:none;
-  border-radius:12px;
-  font-size:16px;
   width:100%;
-}
-.qr{
-  background:#fff;
-  border-radius:16px;
-  padding:12px;
-  margin:15px 0;
+  margin-top:10px;
+  padding:14px;
+  background:#2196f3;
+  border:none;
+  border-radius:10px;
+  color:#fff;
+  font-size:16px;
+  font-weight:bold;
 }
 .note{
-  color:#fbc02d;
+  margin-top:10px;
   font-size:13px;
+  color:#fbc02d;
   text-align:center;
 }
+.submit{
+  width:100%;
+  margin-top:15px;
+  padding:14px;
+  background:#4caf50;
+  border:none;
+  border-radius:10px;
+  color:#fff;
+  font-size:17px;
+  font-weight:bold;
+}
+
+/* QR */
+.qr-box{
+  background:#fff;
+  border-radius:12px;
+  padding:12px;
+  text-align:center;
+  margin-top:12px;
+}
+.qr-box img{width:180px}
+
+/* APPS */
 .apps{
   display:flex;
   gap:10px;
-  margin-top:12px;
+  margin-top:15px;
 }
-.apps button{
+.app-btn{
   flex:1;
   padding:12px;
-  border:none;
-  border-radius:12px;
-  font-size:14px;
+  border-radius:10px;
   font-weight:bold;
-}
-.gpay{background:#fff}
-.phonepe{background:#673ab7;color:#fff}
-.paytm{background:#00bcd4;color:#fff}
-
-.submit{
-  background:#4caf50;
-  padding:16px;
   border:none;
-  border-radius:14px;
-  font-size:18px;
-  color:#fff;
-  margin-top:16px;
-  width:100%;
 }
+.gpay{background:#fff;color:#000}
+.phonepe{background:#6739b7;color:#fff}
+.paytm{background:#00baf2;color:#000}
 
-.popup{
+/* POPUP */
+.popup-bg{
   position:fixed;
   inset:0;
   background:rgba(0,0,0,.6);
   display:none;
   align-items:center;
   justify-content:center;
+  z-index:9999;
 }
-.popup div{
-  background:#1e1e1e;
-  padding:25px;
+.popup{
+  background:#1c1c1c;
+  padding:22px;
   border-radius:16px;
+  width:85%;
+  text-align:center;
+}
+.popup h3{margin:0 0 8px;color:#4caf50}
+.popup p{font-size:14px;color:#ccc}
+.popup button{
+  margin-top:15px;
+  padding:12px;
+  width:100%;
+  background:#4caf50;
+  border:none;
+  border-radius:10px;
+  color:#fff;
   font-size:16px;
 }
 </style>
@@ -112,85 +135,93 @@ input{
 
 <div class="card">
 
-  <input type="number" id="amount" placeholder="Enter Amount (₹) – Minimum ₹100">
+<label>Enter Amount (₹)</label>
+<input type="number" id="amount" placeholder="Minimum ₹100" min="100">
 
-  <div class="upi-box" id="upi">8302299569@axl</div>
+<div class="upi-box" id="upiId">8302299569@axl</div>
+<button class="copy-btn" onclick="copyUPI()">Copy UPI ID</button>
 
-  <button class="copy-btn" onclick="copyUPI()">Copy UPI ID</button>
-
-  <div class="qr">
-    <img src="upi-qr.png" width="100%">
-  </div>
-
-  <div class="note">
-    Pay to above UPI ID or scan QR, then enter UTR number below
-  </div>
-
-  <div class="apps">
-    <button class="gpay" onclick="openUPI('gpay')">GPay</button>
-    <button class="phonepe" onclick="openUPI('phonepe')">PhonePe</button>
-    <button class="paytm" onclick="openUPI('paytm')">Paytm</button>
-  </div>
-
-  <input type="text" id="utr" placeholder="Enter 12 digit UTR number">
-
-  <button class="submit" onclick="submitDeposit()">Submit Deposit</button>
+<div class="qr-box">
+<img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=upi://pay?pa=8302299569@axl&pn=ColourCash">
 </div>
 
-<div class="popup" id="popup">
-  <div id="popupText"></div>
+<div class="note">
+Pay to above UPI ID or scan QR, then enter UTR number below
+</div>
+
+<div class="apps">
+<button class="app-btn gpay" onclick="pay()">GPay</button>
+<button class="app-btn phonepe" onclick="pay()">PhonePe</button>
+<button class="app-btn paytm" onclick="pay()">Paytm</button>
+</div>
+
+<label style="margin-top:14px;display:block">Enter UTR Number</label>
+<input type="number" id="utr" placeholder="12 digit UTR number">
+
+<button class="submit" onclick="submitDeposit()">Submit Deposit</button>
+
+</div>
+
+<!-- POPUP -->
+<div class="popup-bg" id="popupBg">
+  <div class="popup">
+    <h3 id="popupTitle"></h3>
+    <p id="popupMsg"></p>
+    <button onclick="closePopup()">OK</button>
+  </div>
 </div>
 
 <script>
-const popup = document.getElementById("popup");
-const popupText = document.getElementById("popupText");
-const upiId = "8302299569@axl";
+const UPI = "8302299569@axl";
 
-function showPopup(msg){
-  popupText.innerText = msg;
-  popup.style.display = "flex";
-  setTimeout(()=>popup.style.display="none",1500);
+function showPopup(title,msg){
+  popupTitle.innerText = title;
+  popupMsg.innerText = msg;
+  popupBg.style.display = "flex";
+}
+function closePopup(){
+  popupBg.style.display = "none";
 }
 
 function copyUPI(){
-  navigator.clipboard.writeText(upiId);
-  showPopup("UPI ID Copied ✅");
+  navigator.clipboard.writeText(UPI);
+  showPopup("Copied","UPI ID copied successfully");
 }
 
-function openUPI(app){
-  const amount = document.getElementById("amount").value || "";
-  let url = `upi://pay?pa=${upiId}&am=${amount}`;
+function pay(){
+  const amt = Number(amount.value);
+  if(amt < 100){
+    showPopup("Error","Minimum deposit ₹100");
+    return;
+  }
+  const url = `upi://pay?pa=${UPI}&pn=ColourCash&am=${amt}&cu=INR`;
   window.location.href = url;
 }
 
 function submitDeposit(){
-  const amount = Number(document.getElementById("amount").value);
-  const utr = document.getElementById("utr").value.trim();
+  const amt = Number(amount.value);
+  const utr = utrInput.value = document.getElementById("utr").value;
 
-  if(amount < ){
-    showPopup("Minimum deposit ₹100");
-    return;
-  }
-  if(utr.length < 10){
-    showPopup("Enter valid UTR");
+  if(amt < 100 || utr.length < 10){
+    showPopup("Error","Enter valid amount & UTR");
     return;
   }
 
   let pending = JSON.parse(localStorage.getItem("pendingDeposits")) || [];
 
   pending.push({
-    amount,
-    utr,
-    status:"PENDING",
-    time:new Date().toLocaleString()
+    amount: amt,
+    utr: utr,
+    status: "PENDING",
+    time: new Date().toLocaleString()
   });
 
   localStorage.setItem("pendingDeposits", JSON.stringify(pending));
 
-  showPopup("Deposit submitted. Waiting for approval ⏳");
+  showPopup("Success","Deposit submitted. Waiting for admin approval ⏳");
 
-  document.getElementById("amount").value="";
-  document.getElementById("utr").value="";
+  amount.value = "";
+  document.getElementById("utr").value = "";
 }
 </script>
 
