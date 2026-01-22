@@ -14,6 +14,8 @@ header{
   font-size:22px;
   font-weight:bold
 }
+
+/* DASHBOARD */
 .dashboard{
   display:grid;
   grid-template-columns:repeat(3,1fr);
@@ -29,6 +31,24 @@ header{
 .d-card h2{margin:0;font-size:22px;color:#ff8e8e}
 .d-card span{font-size:12px;color:#aaa}
 
+/* PROFIT */
+.profit{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+  padding:0 15px 15px
+}
+.p-card{
+  background:#121212;
+  border-radius:14px;
+  padding:14px;
+  text-align:center;
+  border:1px solid #222
+}
+.p-card h3{margin:0;font-size:18px}
+.p-card span{font-size:12px;color:#aaa}
+
+/* TABS */
 .tabs{display:flex;background:#111}
 .tab{
   flex:1;padding:14px;text-align:center;
@@ -39,11 +59,7 @@ header{
 .section{display:none;padding:15px}
 .section.active{display:block}
 
-.tools{display:flex;gap:10px;margin-bottom:12px}
-.tools input,.tools select{
-  flex:1;padding:10px;border-radius:10px;border:none
-}
-
+/* CARD */
 .card{
   background:#1c1c1c;
   border-radius:16px;
@@ -52,6 +68,7 @@ header{
 }
 .row{display:flex;justify-content:space-between;font-size:14px;margin:6px 0}
 
+/* BUTTONS */
 .btn{
   padding:10px 14px;
   border:none;
@@ -64,6 +81,7 @@ header{
 .reject{background:#c62828;color:#fff}
 .view{background:#2196f3;color:#fff}
 
+/* MODAL */
 .modal{
   position:fixed;
   inset:0;
@@ -83,7 +101,7 @@ header{
 .modal-box button{width:100%}
 
 @media(max-width:600px){
-  .dashboard{grid-template-columns:1fr}
+  .dashboard,.profit{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -92,12 +110,30 @@ header{
 
 <header>🛠️ Colour Cash – Admin Panel</header>
 
+<!-- MAIN DASHBOARD -->
 <div class="dashboard">
   <div class="d-card"><h2 id="totalUsers">0</h2><span>Total Users</span></div>
   <div class="d-card"><h2 id="pendingDeposits">0</h2><span>Pending Deposits</span></div>
   <div class="d-card"><h2 id="pendingWithdraws">0</h2><span>Pending Withdraws</span></div>
 </div>
 
+<!-- PROFIT ANALYTICS -->
+<div class="profit">
+  <div class="p-card">
+    <h3 id="totalDepositAmt">₹0</h3>
+    <span>Total Deposit</span>
+  </div>
+  <div class="p-card">
+    <h3 id="totalWithdrawAmt">₹0</h3>
+    <span>Total Withdraw</span>
+  </div>
+  <div class="p-card">
+    <h3 id="netProfit">₹0</h3>
+    <span>Net Profit</span>
+  </div>
+</div>
+
+<!-- TABS -->
 <div class="tabs">
   <div class="tab active" onclick="openTab(0)">Deposits</div>
   <div class="tab" onclick="openTab(1)">Withdraws</div>
@@ -108,15 +144,15 @@ header{
 <div class="section" id="sec1"></div>
 <div class="section" id="sec2"></div>
 
+<!-- MODAL -->
 <div class="modal" id="modal">
   <div class="modal-box" id="modalBox"></div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import {
-  getFirestore, collection, getDocs, updateDoc, doc
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, getDocs, updateDoc, doc } from
+"https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
@@ -125,11 +161,13 @@ const app = initializeApp({
 });
 const db = getFirestore(app);
 
+/* TAB */
 window.openTab=i=>{
   document.querySelectorAll(".tab").forEach((t,n)=>t.classList.toggle("active",n===i));
   document.querySelectorAll(".section").forEach((s,n)=>s.classList.toggle("active",n===i));
 };
 
+/* DASHBOARD + PROFIT */
 async function loadDashboard(){
   const users=await getDocs(collection(db,"users"));
   const dep=await getDocs(collection(db,"deposits"));
@@ -138,9 +176,17 @@ async function loadDashboard(){
   totalUsers.innerText=users.size;
   pendingDeposits.innerText=dep.docs.filter(d=>d.data().status==="PENDING").length;
   pendingWithdraws.innerText=wd.docs.filter(d=>d.data().status==="PENDING").length;
+
+  let depSum=0, wdSum=0;
+  dep.docs.forEach(d=>{ if(d.data().status==="APPROVED") depSum+=d.data().amount });
+  wd.docs.forEach(d=>{ if(d.data().status==="APPROVED") wdSum+=d.data().amount });
+
+  totalDepositAmt.innerText="₹"+depSum;
+  totalWithdrawAmt.innerText="₹"+wdSum;
+  netProfit.innerText="₹"+(depSum-wdSum);
 }
 
-/* ===== DEPOSITS ===== */
+/* DEPOSITS */
 async function loadDeposits(){
   const box=sec0;
   const snap=await getDocs(collection(db,"deposits"));
@@ -170,13 +216,12 @@ window.approveDeposit=async(id,email,amt)=>{
   });
   loadDeposits();loadDashboard();
 };
-
 window.rejectDeposit=async id=>{
   await updateDoc(doc(db,"deposits",id),{status:"REJECTED"});
   loadDeposits();loadDashboard();
 };
 
-/* ===== WITHDRAWS ===== */
+/* WITHDRAWS */
 async function loadWithdraws(){
   const box=sec1;
   const snap=await getDocs(collection(db,"withdraws"));
@@ -205,7 +250,6 @@ window.viewWithdraw=(id,w)=>{
     <button class="btn view" onclick="closeModal()">Close</button>`;
   modal.style.display="flex";
 };
-
 window.approveWithdraw=async id=>{
   await updateDoc(doc(db,"withdraws",id),{status:"APPROVED"});
   closeModal();loadWithdraws();loadDashboard();
@@ -216,7 +260,7 @@ window.rejectWithdraw=async id=>{
 };
 window.closeModal=()=>modal.style.display="none";
 
-/* ===== USERS ===== */
+/* USERS */
 async function loadUsers(){
   const box=sec2;
   const snap=await getDocs(collection(db,"users"));
@@ -230,6 +274,7 @@ async function loadUsers(){
   });
 }
 
+/* INIT */
 loadDashboard();
 loadDeposits();
 loadWithdraws();
