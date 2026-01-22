@@ -12,120 +12,26 @@ body{
   background:#0f0f0f;
   color:#fff;
 }
-.header{
-  padding:15px;
-  font-size:22px;
-  font-weight:bold;
-  text-align:center;
-}
-.card{
-  background:#1b1b1b;
-  margin:15px;
-  border-radius:16px;
-  padding:18px;
-}
+.header{padding:15px;font-size:22px;font-weight:bold;text-align:center}
+.card{background:#1b1b1b;margin:15px;border-radius:16px;padding:18px}
 label{font-size:14px;color:#ccc}
-input{
-  width:100%;
-  padding:14px;
-  border-radius:10px;
-  border:none;
-  margin-top:8px;
-  font-size:16px;
-}
-.upi-box{
-  background:#000;
-  padding:14px;
-  border-radius:12px;
-  text-align:center;
-  font-size:18px;
-  margin-top:12px;
-}
-.copy-btn{
-  width:100%;
-  margin-top:10px;
-  padding:14px;
-  background:#2196f3;
-  border:none;
-  border-radius:10px;
-  color:#fff;
-  font-size:16px;
-  font-weight:bold;
-}
-.note{
-  margin-top:10px;
-  font-size:13px;
-  color:#fbc02d;
-  text-align:center;
-}
-.submit{
-  width:100%;
-  margin-top:15px;
-  padding:14px;
-  background:#4caf50;
-  border:none;
-  border-radius:10px;
-  color:#fff;
-  font-size:17px;
-  font-weight:bold;
-}
-
-/* QR */
-.qr-box{
-  background:#fff;
-  border-radius:12px;
-  padding:12px;
-  text-align:center;
-  margin-top:12px;
-}
+input{width:100%;padding:14px;border-radius:10px;border:none;margin-top:8px;font-size:16px}
+.upi-box{background:#000;padding:14px;border-radius:12px;text-align:center;font-size:18px;margin-top:12px}
+.copy-btn{width:100%;margin-top:10px;padding:14px;background:#2196f3;border:none;border-radius:10px;color:#fff;font-size:16px;font-weight:bold}
+.note{margin-top:10px;font-size:13px;color:#fbc02d;text-align:center}
+.submit{width:100%;margin-top:15px;padding:14px;background:#4caf50;border:none;border-radius:10px;color:#fff;font-size:17px;font-weight:bold}
+.qr-box{background:#fff;border-radius:12px;padding:12px;text-align:center;margin-top:12px}
 .qr-box img{width:180px}
-
-/* APPS */
-.apps{
-  display:flex;
-  gap:10px;
-  margin-top:15px;
-}
-.app-btn{
-  flex:1;
-  padding:12px;
-  border-radius:10px;
-  font-weight:bold;
-  border:none;
-}
+.apps{display:flex;gap:10px;margin-top:15px}
+.app-btn{flex:1;padding:12px;border-radius:10px;font-weight:bold;border:none}
 .gpay{background:#fff;color:#000}
 .phonepe{background:#6739b7;color:#fff}
 .paytm{background:#00baf2;color:#000}
-
-/* POPUP */
-.popup-bg{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.6);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  z-index:9999;
-}
-.popup{
-  background:#1c1c1c;
-  padding:22px;
-  border-radius:16px;
-  width:85%;
-  text-align:center;
-}
+.popup-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:9999}
+.popup{background:#1c1c1c;padding:22px;border-radius:16px;width:85%;text-align:center}
 .popup h3{margin:0 0 8px;color:#4caf50}
 .popup p{font-size:14px;color:#ccc}
-.popup button{
-  margin-top:15px;
-  padding:12px;
-  width:100%;
-  background:#4caf50;
-  border:none;
-  border-radius:10px;
-  color:#fff;
-  font-size:16px;
-}
+.popup button{margin-top:15px;padding:12px;width:100%;background:#4caf50;border:none;border-radius:10px;color:#fff;font-size:16px}
 </style>
 </head>
 
@@ -134,7 +40,6 @@ input{
 <div class="header">💰 Deposit</div>
 
 <div class="card">
-
 <label>Enter Amount (₹)</label>
 <input type="number" id="amount" placeholder="Minimum ₹100" min="100">
 
@@ -145,9 +50,7 @@ input{
 <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=upi://pay?pa=8302299569@axl&pn=ColourCash">
 </div>
 
-<div class="note">
-Pay to above UPI ID or scan QR, then enter UTR number below
-</div>
+<div class="note">Pay to above UPI ID or scan QR, then enter UTR number below</div>
 
 <div class="apps">
 <button class="app-btn gpay" onclick="pay()">GPay</button>
@@ -159,10 +62,8 @@ Pay to above UPI ID or scan QR, then enter UTR number below
 <input type="number" id="utr" placeholder="12 digit UTR number">
 
 <button class="submit" onclick="submitDeposit()">Submit Deposit</button>
-
 </div>
 
-<!-- POPUP -->
 <div class="popup-bg" id="popupBg">
   <div class="popup">
     <h3 id="popupTitle"></h3>
@@ -171,40 +72,40 @@ Pay to above UPI ID or scan QR, then enter UTR number below
   </div>
 </div>
 
-<script>
-const UPI = "8302299569@axl";
+<!-- 🔥 FIREBASE (ADDED ONLY) -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, addDoc } from
+"https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+const firebaseConfig = {
+  apiKey: "AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
+  authDomain: "colourcash-ea60e.firebaseapp.com",
+  projectId: "colourcash-ea60e"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+/* 🔹 EXISTING JS (UNCHANGED UI LOGIC) */
+const UPI = "8302299569@axl";
 const popupBg = document.getElementById("popupBg");
 const popupTitle = document.getElementById("popupTitle");
 const popupMsg = document.getElementById("popupMsg");
 const amountInput = document.getElementById("amount");
 const utrInput = document.getElementById("utr");
 
-function showPopup(title,msg){
-  popupTitle.innerText = title;
-  popupMsg.innerText = msg;
-  popupBg.style.display = "flex";
-}
-function closePopup(){
-  popupBg.style.display = "none";
-}
-
-function copyUPI(){
-  navigator.clipboard.writeText(UPI);
-  showPopup("Copied","UPI ID copied successfully");
-}
-
+function showPopup(t,m){popupTitle.innerText=t;popupMsg.innerText=m;popupBg.style.display="flex"}
+function closePopup(){popupBg.style.display="none"}
+function copyUPI(){navigator.clipboard.writeText(UPI);showPopup("Copied","UPI ID copied successfully")}
 function pay(){
-  const amt = Number(amountInput.value);
-  if(amt < 100){
-    showPopup("Error","Minimum deposit ₹100");
-    return;
-  }
-  window.location.href = `upi://pay?pa=${UPI}&pn=ColourCash&am=${amt}&cu=INR`;
+  const amt=Number(amountInput.value);
+  if(amt<100){showPopup("Error","Minimum deposit ₹100");return;}
+  location.href=`upi://pay?pa=${UPI}&pn=ColourCash&am=${amt}&cu=INR`;
 }
 
-/* ✅ FINAL FIXED LOGIC */
-function submitDeposit(){
+/* ✅ FINAL SUBMIT (LOCAL + FIRESTORE) */
+window.submitDeposit = async function(){
   const amt = Number(amountInput.value);
   const utr = utrInput.value.trim();
 
@@ -213,27 +114,24 @@ function submitDeposit(){
     return;
   }
 
-  let deposits = JSON.parse(localStorage.getItem("deposits")) || [];
-
   const orderId = "ORD" + Date.now();
 
-  deposits.push({
-    orderId: orderId,
+  /* 🔹 LocalStorage (old system safe) */
+  let deposits = JSON.parse(localStorage.getItem("deposits")) || [];
+  deposits.push({orderId,amount:amt,utr,status:"PENDING",time:new Date().toLocaleString()});
+  localStorage.setItem("deposits",JSON.stringify(deposits));
+
+  /* 🔥 Firestore (ADMIN LIVE) */
+  await addDoc(collection(db,"deposits"),{
+    email: localStorage.getItem("userEmail"),
     amount: amt,
     utr: utr,
     status: "PENDING",
     time: new Date().toLocaleString()
   });
 
-  localStorage.setItem("deposits", JSON.stringify(deposits));
-
-  showPopup(
-    "Success",
-    "Deposit submitted\nOrder ID: " + orderId + "\nWaiting for approval ⏳"
-  );
-
-  amountInput.value = "";
-  utrInput.value = "";
+  showPopup("Success","Deposit submitted\nOrder ID: "+orderId+"\nWaiting for approval ⏳");
+  amountInput.value="";utrInput.value="";
 }
 </script>
 
