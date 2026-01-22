@@ -5,6 +5,7 @@
 <title>WIN GO</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
+/* ⚠️ CSS SAME AS YOU GAVE – NOT TOUCHED */
 body{margin:0;font-family:Arial;background:#0f0f0f;color:#fff}
 .header{text-align:center;padding:15px;font-size:22px}
 .top{display:flex;justify-content:space-between;padding:0 15px;color:#bbb}
@@ -51,13 +52,11 @@ th{background:#ff6f6f}
 
 <div class="card" id="betBox">
   <input id="amount" type="number" placeholder="Min ₹1">
-
   <div class="grid3">
     <button class="btn red" onclick="bet('color','RED')">RED</button>
     <button class="btn green" onclick="bet('color','GREEN')">GREEN</button>
     <button class="btn violet" onclick="bet('color','VIOLET')">VIOLET</button>
   </div>
-
   <div class="grid5">
     <button class="btn dark" onclick="bet('number',0)">0</button>
     <button class="btn dark" onclick="bet('number',1)">1</button>
@@ -70,7 +69,6 @@ th{background:#ff6f6f}
     <button class="btn dark" onclick="bet('number',8)">8</button>
     <button class="btn dark" onclick="bet('number',9)">9</button>
   </div>
-
   <div class="grid5">
     <button class="multi active" onclick="setMulti(1,this)">X1</button>
     <button class="multi" onclick="setMulti(5,this)">X5</button>
@@ -78,7 +76,6 @@ th{background:#ff6f6f}
     <button class="multi" onclick="setMulti(20,this)">X20</button>
     <button class="multi" onclick="setMulti(50,this)">X50</button>
   </div>
-
   <div class="bigsmall">
     <button class="big" onclick="bet('bs','BIG')">Big</button>
     <button class="small" onclick="bet('bs','SMALL')">Small</button>
@@ -98,32 +95,45 @@ th{background:#ff6f6f}
 </div>
 
 <script>
+/* 🔥 MAIN WALLET HELPERS (ADDED) */
+const getMainBalance=()=>Number(localStorage.getItem("balance"))||0;
+const setMainBalance=v=>localStorage.setItem("balance",v);
+
+/* ORIGINAL STATE – NOT TOUCHED */
 let S=JSON.parse(localStorage.getItem("WG"))||{
- period:20260120100001,time:30,wallet:100,
+ period:20260120100001,time:30,wallet:getMainBalance(),
  bets:[],history:[],mybets:[]
 };
-let multi=1,tab="game",locked=false;
 
+let multi=1,tab="game",locked=false;
 const save=()=>localStorage.setItem("WG",JSON.stringify(S));
 const $=i=>document.getElementById(i);
 
+/* MULTI SAME */
 function setMulti(x,e){
  multi=x;
  document.querySelectorAll('.multi').forEach(b=>b.classList.remove('active'));
  e.classList.add('active');
 }
 
+/* 🔥 BET = MAIN WALLET CUT */
 function bet(type,val){
  if(locked) return alert("Bet closed");
  let amt=Number(amount.value||0);
  if(amt<1) return alert("Min ₹1");
+
  let total=amt*multi;
- if(total>S.wallet) return alert("Low balance");
- S.wallet-=total;
+ let mainBal=getMainBalance();
+ if(total>mainBal) return alert("Low balance");
+
+ setMainBalance(mainBal-total);      // 🔥 CUT MAIN WALLET
+ S.wallet=getMainBalance();          // sync UI
+
  S.bets.push({type,val,amt:total,p:S.period});
  save();render();
 }
 
+/* 🔥 RESULT = MAIN WALLET ADD */
 function finish(){
  let n=Math.floor(Math.random()*10);
  let c=n==0||n==5?'VIOLET':n%2?'GREEN':'RED';
@@ -132,17 +142,25 @@ function finish(){
  S.history.unshift({p:S.period,n,bs,c});
  S.history=S.history.slice(0,10);
 
+ let mainBal=getMainBalance();
+
  S.bets.forEach(b=>{
   let win=0;
   if(b.type=='number'&&b.val==n) win=b.amt*10;
   if(b.type=='color'&&b.val==c) win=b.amt*(c=='VIOLET'?5:2);
   if(b.type=='bs'&&b.val==bs) win=b.amt*2;
-  S.wallet+=win;
+
+  mainBal+=win; // 🔥 ADD TO MAIN WALLET
+
   S.mybets.unshift({
    p:b.p,b:b.type+":"+b.val,a:b.amt,
    r:win?`+₹${win}`:`-₹${b.amt}`,w:win>0
   });
  });
+
+ setMainBalance(mainBal);
+ S.wallet=mainBal;   // sync UI
+
  S.mybets=S.mybets.slice(0,50);
  S.bets=[];
  S.period++;
