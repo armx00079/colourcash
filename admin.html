@@ -133,6 +133,7 @@ async function loadDashboard(){
   netProfit.innerText="₹"+(depSum-wdSum);
 }
 
+/* USERS */
 async function loadUsers(){
   const box=sec2;
   const snap=await getDocs(collection(db,"users"));
@@ -142,6 +143,7 @@ async function loadUsers(){
     box.innerHTML+=`
       <div class="card">
         <div class="row"><span>${u.email}</span><span>₹${u.balance||0}</span></div>
+        <div class="row"><span>Password</span><span>${u.password || "N/A"}</span></div>
         <div class="row">
           <button class="btn plus" onclick="updateBal('${d.id}',100)">+100</button>
           <button class="btn minus" onclick="updateBal('${d.id}',-100)">-100</button>
@@ -161,6 +163,7 @@ window.updateBal=async(id,amt)=>{
   });
 };
 
+/* DEPOSITS */
 async function loadDeposits(){
   const box=sec0;
   const snap=await getDocs(collection(db,"deposits"));
@@ -198,6 +201,7 @@ window.rejectDeposit=async id=>{
   loadDeposits();loadDashboard();
 };
 
+/* WITHDRAWS */
 async function loadWithdraws(){
   const box=sec1;
   const snap=await getDocs(collection(db,"withdraws"));
@@ -220,8 +224,8 @@ async function loadWithdraws(){
     box.innerHTML+=`
       <div class="card">
         <div class="row"><span>${w.email}</span><span>₹${w.amount}</span></div>
-        <div class="row"><span>Order ID</span><span>${w.orderId||"N/A"}</span></div>
-        <div class="row"><span>Time</span><span>${w.time||"N/A"}</span></div>
+        <div class="row"><span>Order ID</span><span>${w.orderId || "N/A"}</span></div>
+        <div class="row"><span>Time</span><span>${w.time || "N/A"}</span></div>
         ${details}
         <div class="row">
           <button class="btn plus" onclick="approveWithdraw('${d.id}')">Approve</button>
