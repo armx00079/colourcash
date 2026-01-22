@@ -91,6 +91,7 @@ window.register = () => {
   .then((result)=>{
     const user = result.user;
 
+    /* 🔹 EXISTING CODE (UNCHANGED) */
     localStorage.setItem("userEmail", user.email);
     localStorage.setItem(
       "userName",
@@ -99,6 +100,21 @@ window.register = () => {
 
     const now = new Date().toLocaleString();
     localStorage.setItem("lastLogin", now);
+
+    /* =================================================
+       ✅ ONLY ADDITION (ADMIN USERS LIST FIX)
+       ================================================= */
+    let users = JSON.parse(localStorage.getItem("users")) || [];
+
+    if(!users.find(u => u.email === user.email)){
+      users.push({
+        email: user.email,
+        balance: 0
+      });
+    }
+
+    localStorage.setItem("users", JSON.stringify(users));
+    /* ================================================= */
 
     showPopup("Registration Successful 🎉");
     setTimeout(()=>location.href="index.html",1500);
