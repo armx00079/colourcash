@@ -46,7 +46,7 @@ input{width:100%;padding:12px;margin:8px 0 14px;border-radius:10px;border:none;f
     <div class="tab" onclick="openTab('bank',this)">Bank</div>
   </div>
 
-  <!-- 🔹 UPI -->
+  <!-- UPI -->
   <div class="form active" id="upi">
     <label>Withdraw Amount (₹)</label>
     <input type="number" id="upiAmount" placeholder="Minimum ₹100">
@@ -65,7 +65,7 @@ input{width:100%;padding:12px;margin:8px 0 14px;border-radius:10px;border:none;f
     </div>
   </div>
 
-  <!-- 🔹 BANK -->
+  <!-- BANK -->
   <div class="form" id="bank">
     <label>Withdraw Amount (₹)</label>
     <input type="number" id="bankAmount" placeholder="Minimum ₹100">
@@ -95,11 +95,19 @@ input{width:100%;padding:12px;margin:8px 0 14px;border-radius:10px;border:none;f
   </div>
 </div>
 
-<!-- 🔥 FIREBASE BALANCE SYNC (FINAL FIX) -->
+<!-- 🔥 FIRESTORE LOGIC -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, getDocs } from
-"https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  where,
+  updateDoc,
+  doc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
@@ -110,27 +118,35 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const userEmail = localStorage.getItem("userEmail");
+const popup = document.getElementById("popup");
+const popupBox = document.getElementById("popupBox");
+const popupTitle = document.getElementById("popupTitle");
+const popupMsg = document.getElementById("popupMsg");
 
-async function syncBalance(){
-  if(!userEmail) return;
-  const snap = await getDocs(collection(db,"users"));
-  snap.forEach(d=>{
-    const u = d.data();
-    if(u.email === userEmail){
-      localStorage.setItem("balance", u.balance || 0);
-      document.getElementById("balance").innerText =
-        Number(u.balance || 0).toFixed(2);
-    }
-  });
+function showPopup(type,title,msg){
+  popupBox.className="popup-box "+type;
+  popupTitle.innerText=title;
+  popupMsg.innerText=msg;
+  popup.style.display="flex";
 }
-syncBalance();
-</script>
+function closePopup(){popup.style.display="none";}
 
-<script>
-/* ===== BALANCE (LOCAL CACHE) ===== */
-let balance = Number(localStorage.getItem("balance")) || 0;
-document.getElementById("balance").innerText = balance.toFixed(2);
+/* ===== LOAD BALANCE (FIRESTORE ONLY) ===== */
+const userEmail = localStorage.getItem("userEmail");
+let userDocId = "";
+let balance = 0;
+
+async function loadBalance(){
+  const snap = await getDocs(
+    query(collection(db,"users"), where("email","==",userEmail))
+  );
+  snap.forEach(d=>{
+    userDocId = d.id;
+    balance = d.data().balance || 0;
+  });
+  document.getElementById("balance").innerText = balance.toFixed(2);
+}
+loadBalance();
 
 /* ===== DAILY LIMIT RESET ===== */
 const today = new Date().toDateString();
@@ -141,37 +157,29 @@ if(localStorage.getItem("withdrawDate") !== today){
 let withdrawCount = Number(localStorage.getItem("withdrawCount")) || 0;
 
 /* ===== UI ===== */
-function openTab(id,el){
+window.openTab = function(id,el){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.form').forEach(f=>f.classList.remove('active'));
   el.classList.add('active');
   document.getElementById(id).classList.add('active');
-}
+};
 
-function showPopup(type,title,msg){
-  popupBox.className="popup-box "+type;
-  popupTitle.innerText=title;
-  popupMsg.innerText=msg;
-  popup.style.display="flex";
-}
-function closePopup(){popup.style.display="none";}
-
-/* ===== SUBMIT WITHDRAW ===== */
-function submitWithdraw(){
+/* ===== SUBMIT WITHDRAW (🔥 FINAL LOGIC) ===== */
+window.submitWithdraw = async function(){
   const isUpi = document.getElementById("upi").classList.contains("active");
-  const amt = Number(isUpi
-    ? upiAmount.value
-    : bankAmount.value
-  );
+  const amt = Number(isUpi ? upiAmount.value : bankAmount.value);
 
   if(amt < 100) return showPopup("error","Minimum Withdraw","Minimum ₹100");
   if(amt > balance) return showPopup("error","Insufficient Balance","Not enough balance");
-  if(withdrawCount >= 3) return showPopup("error","Limit Reached","Daily limit exceeded");
+  if(withdrawCount >= 3) return showPopup("error","Limit Reached","Daily 3 withdraw limit exceeded");
 
-  const orderId = "WD" + Date.now();
+  // 🔥 BALANCE CUT IMMEDIATELY
+  await updateDoc(doc(db,"users",userDocId),{
+    balance: balance - amt
+  });
 
-  const record = {
-    orderId,
+  await addDoc(collection(db,"withdraws"),{
+    email: userEmail,
     amount: amt,
     method: isUpi ? "UPI" : "BANK",
     upiId: isUpi ? upiId.value.trim() : "",
@@ -183,25 +191,14 @@ function submitWithdraw(){
     } : null,
     status: "PENDING",
     time: new Date().toLocaleString()
-  };
+  });
 
-  let req = JSON.parse(localStorage.getItem("withdrawRequests")) || [];
-  let hist = JSON.parse(localStorage.getItem("withdrawHistory")) || [];
-
-  req.push(record);
-  hist.push(record);
-
-  balance -= amt;
   withdrawCount++;
-
-  localStorage.setItem("withdrawRequests",JSON.stringify(req));
-  localStorage.setItem("withdrawHistory",JSON.stringify(hist));
-  localStorage.setItem("balance",balance);
   localStorage.setItem("withdrawCount",withdrawCount);
 
-  document.getElementById("balance").innerText = balance.toFixed(2);
-  showPopup("success","Withdraw Submitted","Order ID: "+orderId);
-}
+  showPopup("success","Withdraw Submitted","Amount deducted successfully");
+  loadBalance();
+};
 </script>
 
 </body>
