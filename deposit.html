@@ -67,12 +67,14 @@ input{width:100%;padding:14px;border-radius:10px;border:none;margin-top:8px;font
   </div>
 </div>
 
-<!-- ================= UI SCRIPT ================= -->
+<!-- UI SCRIPT -->
 <script>
 const UPI="8302299569@axl";
 const popupBg=document.getElementById("popupBg");
 const popupTitle=document.getElementById("popupTitle");
 const popupMsg=document.getElementById("popupMsg");
+const amount=document.getElementById("amount");
+const utr=document.getElementById("utr");
 
 function showPopup(t,m){popupTitle.innerText=t;popupMsg.innerText=m;popupBg.style.display="flex"}
 function closePopup(){popupBg.style.display="none"}
@@ -82,10 +84,9 @@ function pay(){
   if(amt<100){showPopup("Error","Minimum deposit ₹100");return;}
   location.href=`upi://pay?pa=${UPI}&pn=ColourCash&am=${amt}&cu=INR`;
 }
-function submitDeposit(){window.submitDepositFirebase();}
 </script>
 
-<!-- ================= FIREBASE SCRIPT ================= -->
+<!-- FIREBASE SCRIPT -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -97,27 +98,39 @@ const app=initializeApp({
 });
 const db=getFirestore(app);
 
-window.submitDepositFirebase=async function(){
+/* 🔥 MAIN FIX HERE */
+window.submitDeposit = async function(){
   const amt=Number(amount.value);
-  const utr=utrInput=utr.value.trim();
-  if(amt<100||utr.length<10){alert("Enter valid amount & UTR");return;}
+  const utrVal=utr.value.trim();
+
+  if(amt<100||utrVal.length<10){
+    showPopup("Error","Enter valid amount & UTR");
+    return;
+  }
 
   const orderId="ORD"+Date.now();
 
   let deposits=JSON.parse(localStorage.getItem("deposits"))||[];
-  deposits.push({orderId,amount:amt,utr,status:"PENDING",time:new Date().toLocaleString()});
+  deposits.push({
+    orderId,
+    amount:amt,
+    utr:utrVal,
+    status:"PENDING",
+    time:new Date().toLocaleString()
+  });
   localStorage.setItem("deposits",JSON.stringify(deposits));
 
   await addDoc(collection(db,"deposits"),{
     email:localStorage.getItem("userEmail"),
     amount:amt,
-    utr:utr,
+    utr:utrVal,
     status:"PENDING",
     time:new Date().toLocaleString()
   });
 
-  alert("Deposit submitted\nOrder ID: "+orderId);
-  amount.value="";utr.value="";
+  showPopup("Success","Deposit submitted\nOrder ID: "+orderId);
+  amount.value="";
+  utr.value="";
 };
 </script>
 
