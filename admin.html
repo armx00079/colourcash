@@ -78,24 +78,6 @@ header{
 .plus{background:#2e7d32;color:#fff}
 .minus{background:#c62828;color:#fff}
 
-/* MODAL */
-.modal{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.7);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  z-index:9999
-}
-.modal-box{
-  background:#1c1c1c;
-  width:90%;
-  max-width:420px;
-  border-radius:16px;
-  padding:18px
-}
-
 @media(max-width:600px){
   .dashboard,.profit{grid-template-columns:1fr}
 }
@@ -163,7 +145,7 @@ async function loadDashboard(){
   netProfit.innerText="₹"+(depSum-wdSum);
 }
 
-/* USERS — 🔥 ONLY ADDITION HERE */
+/* USERS — ORIGINAL */
 async function loadUsers(){
   const box=sec2;
   const snap=await getDocs(collection(db,"users"));
@@ -192,10 +174,81 @@ window.updateBal=async(id,amt)=>{
       loadUsers();loadDashboard();
     }
   });
+};
+
+/* 🔥 ADDED CODE START — DEPOSITS & WITHDRAWS */
+
+async function loadDeposits(){
+  const box=sec0;
+  const snap=await getDocs(collection(db,"deposits"));
+  box.innerHTML="";
+  snap.forEach(d=>{
+    const x=d.data();
+    if(x.status!=="PENDING")return;
+    box.innerHTML+=`
+      <div class="card">
+        <div class="row"><span>${x.email}</span><span>₹${x.amount}</span></div>
+        <div class="row"><span>UTR</span><span>${x.utr}</span></div>
+        <div class="row">
+          <button class="btn plus" onclick="approveDeposit('${d.id}','${x.email}',${x.amount})">Approve</button>
+          <button class="btn minus" onclick="rejectDeposit('${d.id}')">Reject</button>
+        </div>
+      </div>`;
+  });
 }
+
+window.approveDeposit=async(id,email,amt)=>{
+  await updateDoc(doc(db,"deposits",id),{status:"APPROVED"});
+  const users=await getDocs(collection(db,"users"));
+  users.forEach(async u=>{
+    if(u.data().email===email){
+      await updateDoc(doc(db,"users",u.id),{
+        balance:(u.data().balance||0)+amt
+      });
+    }
+  });
+  loadDeposits();loadDashboard();
+};
+
+window.rejectDeposit=async id=>{
+  await updateDoc(doc(db,"deposits",id),{status:"REJECTED"});
+  loadDeposits();loadDashboard();
+};
+
+async function loadWithdraws(){
+  const box=sec1;
+  const snap=await getDocs(collection(db,"withdraws"));
+  box.innerHTML="";
+  snap.forEach(d=>{
+    const w=d.data();
+    if(w.status!=="PENDING")return;
+    box.innerHTML+=`
+      <div class="card">
+        <div class="row"><span>${w.email}</span><span>₹${w.amount}</span></div>
+        <div class="row">
+          <button class="btn plus" onclick="approveWithdraw('${d.id}')">Approve</button>
+          <button class="btn minus" onclick="rejectWithdraw('${d.id}')">Reject</button>
+        </div>
+      </div>`;
+  });
+}
+
+window.approveWithdraw=async id=>{
+  await updateDoc(doc(db,"withdraws",id),{status:"APPROVED"});
+  loadWithdraws();loadDashboard();
+};
+
+window.rejectWithdraw=async id=>{
+  await updateDoc(doc(db,"withdraws",id),{status:"REJECTED"});
+  loadWithdraws();loadDashboard();
+};
+
+/* 🔥 ADDED CODE END */
 
 loadDashboard();
 loadUsers();
+loadDeposits();
+loadWithdraws();
 </script>
 
 </body>
