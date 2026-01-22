@@ -130,7 +130,8 @@ input{
     <input type="number" id="upiAmount" placeholder="Minimum ₹100">
 
     <label>UPI ID</label>
-    <input type="text" placeholder="example@upi">
+    <!-- ✅ ONLY id ADDED -->
+    <input type="text" id="upiId" placeholder="example@upi">
 
     <button class="btn" onclick="submitWithdraw()">Submit Withdraw</button>
 
@@ -211,14 +212,17 @@ function submitWithdraw(){
   const orderId = "WD" + Date.now();
   const method = document.getElementById("upi").classList.contains("active") ? "UPI" : "BANK";
 
-  /* ✅ SAVE REQUEST FOR ADMIN */
   let requests = JSON.parse(localStorage.getItem("withdrawRequests")) || [];
   let history  = JSON.parse(localStorage.getItem("withdrawHistory")) || [];
 
+  /* ✅ ONLY FIELD ADDED: upiId */
   const record = {
     orderId: orderId,
     amount: amt,
     method: method,
+    upiId: document.getElementById("upi").classList.contains("active")
+            ? document.getElementById("upiId").value.trim()
+            : "",
     status: "PENDING",
     time: new Date().toLocaleString()
   };
