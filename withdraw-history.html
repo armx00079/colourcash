@@ -36,9 +36,7 @@ body{
   margin-bottom:6px;
   font-size:14px;
 }
-.status{
-  font-weight:bold;
-}
+.status{font-weight:bold}
 .pending{color:#f57c00}
 .approved{color:#2e7d32}
 .rejected{color:#c62828}
@@ -54,59 +52,67 @@ body{
 <body>
 
 <div class="header">📤 Withdraw History</div>
-
 <div class="list" id="list"></div>
 
-<script>
+<!-- 🔥 ONLY SCRIPT FIXED (FIRESTORE) -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  query,
+  where
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
+  authDomain: "colourcash-ea60e.firebaseapp.com",
+  projectId: "colourcash-ea60e"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
 const list = document.getElementById("list");
+const userEmail = localStorage.getItem("userEmail");
 
-/* ✅ READ ONLY FROM withdrawHistory */
-const raw =
-  JSON.parse(localStorage.getItem("withdrawHistory")) || [];
+async function loadWithdrawHistory(){
+  list.innerHTML = "<div class='empty'>Loading...</div>";
 
-/* ✅ REMOVE DUPLICATE ORDER ID (KEEP FINAL STATUS) */
-const map = {};
-raw.forEach(w => {
-  map[w.orderId] = w; // last one wins
-});
-const withdraws = Object.values(map);
+  const snap = await getDocs(
+    query(collection(db,"withdraws"), where("email","==",userEmail))
+  );
 
-if(withdraws.length === 0){
-  list.innerHTML = `<div class="empty">No withdraw history found</div>`;
-}else{
-  withdraws.slice().reverse().forEach(w => {
-    let statusClass =
+  if(snap.empty){
+    list.innerHTML = `<div class="empty">No withdraw history found</div>`;
+    return;
+  }
+
+  list.innerHTML = "";
+  snap.docs.reverse().forEach(d=>{
+    const w = d.data();
+
+    const statusClass =
       w.status === "APPROVED" ? "approved" :
       w.status === "REJECTED" ? "rejected" : "pending";
 
     list.innerHTML += `
       <div class="card">
-        <div class="row">
-          <span>Amount</span>
-          <span>₹${w.amount}</span>
-        </div>
-        <div class="row">
-          <span>Order ID</span>
-          <span>${w.orderId}</span>
-        </div>
-        <div class="row">
-          <span>Method</span>
-          <span>${w.method || '-'}</span>
-        </div>
-        <div class="row">
-          <span>Time</span>
-          <span>${w.time || '-'}</span>
-        </div>
+        <div class="row"><span>Amount</span><span>₹${w.amount}</span></div>
+        <div class="row"><span>Method</span><span>${w.method}</span></div>
+        <div class="row"><span>Order ID</span><span>${d.id}</span></div>
+        <div class="row"><span>Time</span><span>${w.time}</span></div>
         <div class="row">
           <span>Status</span>
-          <span class="status ${statusClass}">
-            ${w.status}
-          </span>
+          <span class="status ${statusClass}">${w.status}</span>
         </div>
       </div>
     `;
   });
 }
+
+loadWithdrawHistory();
 </script>
 
 </body>
