@@ -6,26 +6,106 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body{margin:0;font-family:Arial, sans-serif;background:#0f0f0f;color:#fff}
-.header{padding:16px;text-align:center;font-size:20px;font-weight:bold}
-.card{background:#1c1c1c;margin:15px;border-radius:16px;padding:20px}
-.balance{text-align:center;margin-bottom:15px}
-.balance span{font-size:22px;font-weight:bold;color:#4caf50}
-.tabs{display:flex;background:#111;border-radius:12px;overflow:hidden;margin-bottom:15px}
-.tab{flex:1;padding:12px;text-align:center;cursor:pointer;color:#aaa}
-.tab.active{background:#4caf50;color:#fff;font-weight:bold}
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:#0f0f0f;
+  color:#fff;
+}
+.header{
+  padding:16px;
+  text-align:center;
+  font-size:20px;
+  font-weight:bold;
+}
+.card{
+  background:#1c1c1c;
+  margin:15px;
+  border-radius:16px;
+  padding:20px;
+}
+.balance{
+  text-align:center;
+  margin-bottom:15px;
+}
+.balance span{
+  font-size:22px;
+  font-weight:bold;
+  color:#4caf50;
+}
+.tabs{
+  display:flex;
+  background:#111;
+  border-radius:12px;
+  overflow:hidden;
+  margin-bottom:15px;
+}
+.tab{
+  flex:1;
+  padding:12px;
+  text-align:center;
+  cursor:pointer;
+  color:#aaa;
+}
+.tab.active{
+  background:#4caf50;
+  color:#fff;
+  font-weight:bold;
+}
 .form{display:none}
 .form.active{display:block}
 label{font-size:13px;opacity:.8}
-input{width:100%;padding:12px;margin:8px 0 14px;border-radius:10px;border:none;font-size:15px}
-.btn{width:100%;padding:14px;border:none;border-radius:12px;font-size:16px;background:#4caf50;color:#fff}
-.rules{margin-top:15px;font-size:13px;color:#ccc}
+input{
+  width:100%;
+  padding:12px;
+  margin:8px 0 14px;
+  border-radius:10px;
+  border:none;
+  font-size:15px;
+}
+.btn{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:12px;
+  font-size:16px;
+  background:#4caf50;
+  color:#fff;
+}
+.rules{
+  margin-top:15px;
+  font-size:13px;
+  color:#ccc;
+}
 .rules div{margin-bottom:8px}
-.popup{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:9999}
-.popup-box{background:#1c1c1c;padding:25px;border-radius:14px;text-align:center;width:80%}
+.popup{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.7);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+}
+.popup-box{
+  background:#1c1c1c;
+  padding:25px;
+  border-radius:14px;
+  text-align:center;
+  width:80%;
+}
+.popup-box h3{margin:0 0 10px}
 .popup-box.success h3{color:#4caf50}
 .popup-box.error h3{color:#ff5252}
-.popup-box button{margin-top:15px;width:100%;padding:12px;border:none;border-radius:10px;background:#4caf50;color:#fff}
+.popup-box button{
+  margin-top:15px;
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  background:#4caf50;
+  color:#fff;
+}
 </style>
 </head>
 
@@ -48,22 +128,37 @@ input{width:100%;padding:12px;margin:8px 0 14px;border-radius:10px;border:none;f
   <div class="form active" id="upi">
     <label>Withdraw Amount (₹)</label>
     <input type="number" id="upiAmount" placeholder="Minimum ₹100">
+
     <label>UPI ID</label>
-    <input type="text" id="upiId" placeholder="example@upi">
+    <input type="text" placeholder="example@upi">
+
     <button class="btn" onclick="submitWithdraw()">Submit Withdraw</button>
+
+    <div class="rules">
+      <div>🔴 Withdraw time: 00:05 - 23:55</div>
+      <div>🔴 Inday Remaining Withdrawal Times: 3</div>
+      <div>🔴 Withdrawal amount range: ₹100 - ₹50,000</div>
+      <div>🔴 Please confirm your account details carefully</div>
+      <div>🔴 If information is incorrect, contact customer service</div>
+    </div>
   </div>
 
   <div class="form" id="bank">
     <label>Withdraw Amount (₹)</label>
     <input type="number" id="bankAmount" placeholder="Minimum ₹100">
+
     <label>Account Holder Name</label>
-    <input type="text" id="accName">
+    <input type="text">
+
     <label>Bank Name</label>
-    <input type="text" id="bankName">
+    <input type="text">
+
     <label>Account Number</label>
-    <input type="number" id="accNo">
+    <input type="number">
+
     <label>IFSC Code</label>
-    <input type="text" id="ifsc">
+    <input type="text">
+
     <button class="btn" onclick="submitWithdraw()">Submit Withdraw</button>
   </div>
 
@@ -78,12 +173,11 @@ input{width:100%;padding:12px;margin:8px 0 14px;border-radius:10px;border:none;f
 </div>
 
 <script>
-/* LOAD */
 let balance = Number(localStorage.getItem("balance")) || 0;
 let withdrawCount = Number(localStorage.getItem("withdrawCount")) || 0;
+
 document.getElementById("balance").innerText = balance.toFixed(2);
 
-/* TAB */
 function openTab(id,el){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.form').forEach(f=>f.classList.remove('active'));
@@ -91,43 +185,57 @@ function openTab(id,el){
   document.getElementById(id).classList.add('active');
 }
 
-/* POPUP */
 function showPopup(type,title,msg){
   let box=document.getElementById("popupBox");
   box.className="popup-box "+type;
-  popupTitle.innerText=title;
-  popupMsg.innerText=msg;
-  popup.style.display="flex";
+  document.getElementById("popupTitle").innerText=title;
+  document.getElementById("popupMsg").innerText=msg;
+  document.getElementById("popup").style.display="flex";
 }
-function closePopup(){ popup.style.display="none"; }
+function closePopup(){
+  document.getElementById("popup").style.display="none";
+}
 
-/* ✅ FIXED SUBMIT */
 function submitWithdraw(){
+  let amt = Number(
+    document.getElementById("upi").classList.contains("active")
+    ? document.getElementById("upiAmount").value
+    : document.getElementById("bankAmount").value
+  );
 
-  let isUPI = document.getElementById("upi").classList.contains("active");
-  let amt = Number(isUPI ? upiAmount.value : bankAmount.value);
+  if(amt < 100) return showPopup("error","Minimum Withdraw","Minimum withdraw ₹100");
+  if(amt > 50000) return showPopup("error","Limit Exceeded","Maximum withdraw ₹50,000");
+  if(amt > balance) return showPopup("error","Insufficient Balance","Not enough balance");
+  if(withdrawCount >= 3) return showPopup("error","Limit Reached","Daily withdraw limit exceeded");
 
-  if(amt < 100) return showPopup("error","Minimum Withdraw","₹100 minimum");
-  if(amt > 50000) return showPopup("error","Limit","Max ₹50,000");
-  if(amt > balance) return showPopup("error","Balance","Insufficient balance");
-  if(withdrawCount >= 3) return showPopup("error","Limit","Daily limit reached");
+  const orderId = "WD" + Date.now();
+  const method = document.getElementById("upi").classList.contains("active") ? "UPI" : "BANK";
 
-  let withdraws = JSON.parse(localStorage.getItem("withdrawRequests")) || [];
+  /* ✅ SAVE REQUEST FOR ADMIN */
+  let requests = JSON.parse(localStorage.getItem("withdrawRequests")) || [];
+  let history  = JSON.parse(localStorage.getItem("withdrawHistory")) || [];
 
-  withdraws.push({
-    orderId: "WDR" + Date.now(),
+  const record = {
+    orderId: orderId,
     amount: amt,
-    method: isUPI ? "UPI" : "BANK",
+    method: method,
     status: "PENDING",
     time: new Date().toLocaleString()
-  });
+  };
 
-  localStorage.setItem("withdrawRequests", JSON.stringify(withdraws));
+  requests.push(record);
+  history.push(record);
 
+  localStorage.setItem("withdrawRequests", JSON.stringify(requests));
+  localStorage.setItem("withdrawHistory", JSON.stringify(history));
+
+  balance -= amt;
   withdrawCount++;
+
+  localStorage.setItem("balance", balance);
   localStorage.setItem("withdrawCount", withdrawCount);
 
-  showPopup("success","Submitted","Withdraw request sent for approval ⏳");
+  showPopup("success","Withdraw Submitted","Order ID: "+orderId+"\nWaiting for approval");
 }
 </script>
 
