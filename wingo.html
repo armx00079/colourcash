@@ -4,8 +4,9 @@
 <meta charset="UTF-8">
 <title>WIN GO</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
+
 <style>
-/* ⚠️ CSS SAME AS YOU GAVE – NOT TOUCHED */
+/* ⚠️ CSS EXACT SAME – NOT TOUCHED */
 body{margin:0;font-family:Arial;background:#0f0f0f;color:#fff}
 .header{text-align:center;padding:15px;font-size:22px}
 .top{display:flex;justify-content:space-between;padding:0 15px;color:#bbb}
@@ -98,32 +99,23 @@ th{background:#ff6f6f}
   </table>
 </div>
 
-<!-- 🔥 FIRESTORE MAIN WALLET -->
+<!-- 🔥 FINAL SCRIPT (FIREBASE + CLICK FIX) -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
-  getFirestore,
-  getDocs,
-  collection,
-  query,
-  where,
-  doc,
-  updateDoc
+  getFirestore,getDocs,collection,query,where,doc,updateDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
-  authDomain: "colourcash-ea60e.firebaseapp.com",
-  projectId: "colourcash-ea60e"
-};
-
-const app = initializeApp(firebaseConfig);
+const app = initializeApp({
+  apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
+  authDomain:"colourcash-ea60e.firebaseapp.com",
+  projectId:"colourcash-ea60e"
+});
 const db = getFirestore(app);
 
 const userEmail = localStorage.getItem("userEmail");
 let userDocId = "";
 
-/* ORIGINAL STATE – NOT TOUCHED */
 let S = JSON.parse(localStorage.getItem("WG")) || {
   period:20260120100001,time:30,wallet:0,
   bets:[],history:[],mybets:[]
@@ -133,26 +125,22 @@ let multi=1,tab="game",locked=false;
 const save=()=>localStorage.setItem("WG",JSON.stringify(S));
 const $=i=>document.getElementById(i);
 
-/* 🔥 LOAD MAIN WALLET */
+/* LOAD WALLET */
 async function loadMainWallet(){
-  const snap = await getDocs(
-    query(collection(db,"users"), where("email","==",userEmail))
-  );
+  const snap = await getDocs(query(collection(db,"users"),where("email","==",userEmail)));
   snap.forEach(d=>{
-    userDocId = d.id;
-    S.wallet = d.data().balance || 0;
+    userDocId=d.id;
+    S.wallet=d.data().balance||0;
   });
-  save(); render();
+  save();render();
 }
 
-/* MULTI SAME */
 function setMulti(x,e){
  multi=x;
  document.querySelectorAll('.multi').forEach(b=>b.classList.remove('active'));
  e.classList.add('active');
 }
 
-/* 🔥 BET = INSTANT CUT */
 async function bet(type,val){
  if(locked) return alert("Bet closed");
  let amt=Number(amount.value||0);
@@ -160,17 +148,12 @@ async function bet(type,val){
  let total=amt*multi;
  if(total>S.wallet) return alert("Low balance");
 
- S.wallet -= total;
-
- await updateDoc(doc(db,"users",userDocId),{
-   balance:S.wallet
- });
-
+ S.wallet-=total;
+ await updateDoc(doc(db,"users",userDocId),{balance:S.wallet});
  S.bets.push({type,val,amt:total,p:S.period});
  save();render();
 }
 
-/* 🔥 RESULT = INSTANT ADD */
 async function finish(){
  let n=Math.floor(Math.random()*10);
  let c=n==0||n==5?'VIOLET':n%2?'GREEN':'RED';
@@ -186,22 +169,15 @@ async function finish(){
   if(b.type=='bs'&&b.val==bs) win=b.amt*2;
 
   S.wallet+=win;
-
   S.mybets.unshift({
    p:b.p,b:b.type+":"+b.val,a:b.amt,
    r:win?`+₹${win}`:`-₹${b.amt}`,w:win>0
   });
  }
 
- await updateDoc(doc(db,"users",userDocId),{
-   balance:S.wallet
- });
+ await updateDoc(doc(db,"users",userDocId),{balance:S.wallet});
 
- S.mybets=S.mybets.slice(0,50);
- S.bets=[];
- S.period++;
- S.time=30;
- locked=false;
+ S.bets=[];S.period++;S.time=30;locked=false;
  save();draw();render();
 }
 
@@ -223,9 +199,8 @@ function draw(){
  }else{
   th.innerHTML="<tr><th>Period</th><th>Bet</th><th>Amount</th><th>Result</th></tr>";
   S.mybets.forEach(b=>{
-   tb.innerHTML+=`<tr>
-    <td>${b.p}</td><td>${b.b}</td><td>₹${b.a}</td>
-    <td class="${b.w?'win':'loss'}">${b.r}</td></tr>`;
+   tb.innerHTML+=`<tr><td>${b.p}</td><td>${b.b}</td><td>₹${b.a}</td>
+   <td class="${b.w?'win':'loss'}">${b.r}</td></tr>`;
   });
  }
 }
@@ -237,6 +212,11 @@ function showTab(t){
  draw();
 }
 
+/* 🔥 CLICK FIX */
+window.bet=bet;
+window.setMulti=setMulti;
+window.showTab=showTab;
+
 setInterval(()=>{
  S.time--;
  if(S.time<=5) locked=true;
@@ -244,8 +224,7 @@ setInterval(()=>{
  save();render();
 },1000);
 
-loadMainWallet();
-render();draw();
+loadMainWallet();render();draw();
 </script>
 
 </body>
