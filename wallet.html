@@ -164,23 +164,28 @@ body{
 </div>
 
 <script>
-/* ✅ ONLY APPROVED DEPOSITS COUNT */
+/* ✅ READ ONLY – NEVER RESET BALANCE */
 
-let approved = JSON.parse(localStorage.getItem("approvedDeposits")) || [];
+const savedBalance = localStorage.getItem("balance");
+const balance = savedBalance !== null ? Number(savedBalance) : 0;
+
+const deposits = JSON.parse(localStorage.getItem("deposits")) || [];
+const approvedDeposits = deposits.filter(d => d.status === "APPROVED");
+
 let totalDeposit = 0;
+approvedDeposits.forEach(d => totalDeposit += Number(d.amount));
 
-approved.forEach(d => {
-  totalDeposit += Number(d.amount);
+const withdraws = JSON.parse(localStorage.getItem("withdrawHistory")) || [];
+let totalWithdraw = 0;
+withdraws.forEach(w => {
+  if(w.status === "APPROVED"){
+    totalWithdraw += Number(w.amount);
+  }
 });
 
-let totalWithdraw = Number(localStorage.getItem("totalWithdraw")) || 0;
-let balance = totalDeposit - totalWithdraw;
-
+document.getElementById("balance").innerText = balance.toFixed(2);
 document.getElementById("depositTotal").innerText = totalDeposit;
 document.getElementById("withdrawTotal").innerText = totalWithdraw;
-document.getElementById("balance").innerText = balance.toFixed(2);
-
-localStorage.setItem("balance", balance);
 </script>
 
 </body>
