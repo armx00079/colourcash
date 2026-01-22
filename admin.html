@@ -56,66 +56,68 @@ function openTab(i){
   document.querySelectorAll(".section").forEach((s,n)=>s.classList.toggle("active",n===i));
 }
 
-/* ================= DEPOSITS (FINAL FIX) ================= */
+/* ================= DEPOSITS (FINAL – SYNCED) ================= */
 function loadDeposits(){
-  const box=document.getElementById("sec0");
-  box.innerHTML="";
-  let deposits=JSON.parse(localStorage.getItem("deposits"))||[];
+  const box = document.getElementById("sec0");
+  box.innerHTML = "";
 
-  let pending = deposits.filter(d=>d.status==="PENDING");
+  let deposits = JSON.parse(localStorage.getItem("deposits")) || [];
+  let pending = deposits.filter(d => d.status === "PENDING");
+
   if(!pending.length){
-    box.innerHTML="<p>No pending deposits</p>";
+    box.innerHTML = "<p>No pending deposits</p>";
     return;
   }
 
   pending.forEach(d=>{
-    box.innerHTML+=`
-    <div class="card">
-      <div class="row"><span>Amount</span><span>₹${d.amount}</span></div>
-      <div class="row"><span>UTR</span><span>${d.utr}</span></div>
-      <div class="row"><span>Order ID</span><span>${d.orderId}</span></div>
-      <div class="row"><span>Time</span><span>${d.time}</span></div>
-      <button class="btn approve" onclick="approveDeposit('${d.orderId}')">Approve</button>
-      <button class="btn reject" onclick="rejectDeposit('${d.orderId}')">Reject</button>
-    </div>`;
+    box.innerHTML += `
+      <div class="card">
+        <div class="row"><span>Amount</span><span>₹${d.amount}</span></div>
+        <div class="row"><span>UTR</span><span>${d.utr}</span></div>
+        <div class="row"><span>Order ID</span><span>${d.orderId}</span></div>
+        <div class="row"><span>Time</span><span>${d.time}</span></div>
+        <button class="btn approve" onclick="approveDeposit('${d.orderId}')">Approve</button>
+        <button class="btn reject" onclick="rejectDeposit('${d.orderId}')">Reject</button>
+      </div>
+    `;
   });
 }
 
 function approveDeposit(id){
-  let deposits=JSON.parse(localStorage.getItem("deposits"))||[];
-  let balance=Number(localStorage.getItem("balance"))||0;
+  let deposits = JSON.parse(localStorage.getItem("deposits")) || [];
+  let balance = Number(localStorage.getItem("balance")) || 0;
 
   deposits = deposits.map(d=>{
-    if(d.orderId===id && d.status==="PENDING"){
-      balance += d.amount;
-      return {...d,status:"APPROVED"};
+    if(d.orderId === id && d.status === "PENDING"){
+      balance += Number(d.amount);
+      return {...d, status:"APPROVED"};
     }
     return d;
   });
 
-  localStorage.setItem("deposits",JSON.stringify(deposits));
-  localStorage.setItem("balance",balance);
+  localStorage.setItem("deposits", JSON.stringify(deposits));
+  localStorage.setItem("balance", balance);
 
   loadDeposits();
 }
 
 function rejectDeposit(id){
-  let deposits=JSON.parse(localStorage.getItem("deposits"))||[];
+  let deposits = JSON.parse(localStorage.getItem("deposits")) || [];
 
   deposits = deposits.map(d=>{
-    if(d.orderId===id && d.status==="PENDING"){
-      return {...d,status:"REJECTED"};
+    if(d.orderId === id && d.status === "PENDING"){
+      return {...d, status:"REJECTED"};
     }
     return d;
   });
 
-  localStorage.setItem("deposits",JSON.stringify(deposits));
+  localStorage.setItem("deposits", JSON.stringify(deposits));
   loadDeposits();
 }
 
 /* ================= WITHDRAWS ================= */
 function loadWithdraws(){
-  document.getElementById("sec1").innerHTML="Withdraw panel ready";
+  document.getElementById("sec1").innerHTML = "Withdraw panel ready";
 }
 
 /* ================= USERS ================= */
@@ -125,10 +127,11 @@ function loadUsers(){
   let bal=Number(localStorage.getItem("balance"))||0;
 
   box.innerHTML=`
-  <div class="card">
-    <div class="row"><span>Email</span><span>${email}</span></div>
-    <div class="row"><span>Balance</span><span>₹${bal}</span></div>
-  </div>`;
+    <div class="card">
+      <div class="row"><span>Email</span><span>${email}</span></div>
+      <div class="row"><span>Balance</span><span>₹${bal}</span></div>
+    </div>
+  `;
 }
 
 /* ================= GAMES ================= */
