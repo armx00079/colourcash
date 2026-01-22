@@ -97,12 +97,31 @@ body{margin:0;font-family:Arial;background:#f2f2f2;padding-bottom:90px}
   </div>
 </div>
 
-<script>
-// USER NAME
+<!-- 🔥 ONLY SCRIPT FIXED -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  query,
+  where
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
+  authDomain: "colourcash-ea60e.firebaseapp.com",
+  projectId: "colourcash-ea60e"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+/* USER NAME */
 const name = localStorage.getItem("userName") || "USER";
 document.getElementById("userName").innerText = name.toUpperCase();
 
-// UID
+/* UID */
 let uid = localStorage.getItem("uid");
 if(!uid){
   uid = Math.floor(1000000 + Math.random()*9000000);
@@ -110,15 +129,29 @@ if(!uid){
 }
 document.getElementById("uid").innerText = uid;
 
-// LAST LOGIN
+/* LAST LOGIN */
 document.getElementById("lastLogin").innerText =
   localStorage.getItem("lastLogin") || "-";
 
-/* ✅ FIXED BALANCE (READ ONLY – NEVER RESET) */
-const savedBalance = localStorage.getItem("balance");
-const balance = savedBalance !== null ? Number(savedBalance) : 0;
-document.getElementById("accBalance").innerText =
-  "₹" + balance.toFixed(2);
+/* 🔥 LIVE BALANCE FROM FIRESTORE */
+const userEmail = localStorage.getItem("userEmail");
+
+async function loadBalance(){
+  let balance = 0;
+
+  const snap = await getDocs(
+    query(collection(db,"users"), where("email","==",userEmail))
+  );
+
+  snap.forEach(d=>{
+    balance = d.data().balance || 0;
+  });
+
+  document.getElementById("accBalance").innerText =
+    "₹" + balance.toFixed(2);
+}
+
+loadBalance();
 
 function logout(){
   localStorage.clear();
