@@ -56,14 +56,17 @@ function openTab(i){
   document.querySelectorAll(".section").forEach((s,n)=>s.classList.toggle("active",n===i));
 }
 
-/* ================= DEPOSITS (FIXED) ================= */
+/* ================= DEPOSITS (FINAL FIX) ================= */
 function loadDeposits(){
   const box=document.getElementById("sec0");
   box.innerHTML="";
   let deposits=JSON.parse(localStorage.getItem("deposits"))||[];
 
   let pending = deposits.filter(d=>d.status==="PENDING");
-  if(!pending.length){box.innerHTML="No pending deposits";return;}
+  if(!pending.length){
+    box.innerHTML="<p>No pending deposits</p>";
+    return;
+  }
 
   pending.forEach(d=>{
     box.innerHTML+=`
@@ -82,9 +85,9 @@ function approveDeposit(id){
   let deposits=JSON.parse(localStorage.getItem("deposits"))||[];
   let balance=Number(localStorage.getItem("balance"))||0;
 
-  deposits=deposits.map(d=>{
+  deposits = deposits.map(d=>{
     if(d.orderId===id && d.status==="PENDING"){
-      balance+=d.amount;
+      balance += d.amount;
       return {...d,status:"APPROVED"};
     }
     return d;
@@ -92,47 +95,52 @@ function approveDeposit(id){
 
   localStorage.setItem("deposits",JSON.stringify(deposits));
   localStorage.setItem("balance",balance);
+
   loadDeposits();
 }
 
 function rejectDeposit(id){
   let deposits=JSON.parse(localStorage.getItem("deposits"))||[];
-  deposits=deposits.map(d=>{
+
+  deposits = deposits.map(d=>{
     if(d.orderId===id && d.status==="PENDING"){
       return {...d,status:"REJECTED"};
     }
     return d;
   });
+
   localStorage.setItem("deposits",JSON.stringify(deposits));
   loadDeposits();
 }
 
 /* ================= WITHDRAWS ================= */
 function loadWithdraws(){
-  const box=document.getElementById("sec1");
-  box.innerHTML="Withdraw panel (already working)";
+  document.getElementById("sec1").innerHTML="Withdraw panel ready";
 }
 
 /* ================= USERS ================= */
 function loadUsers(){
   const box=document.getElementById("sec2");
-  let email=localStorage.getItem("userEmail");
+  let email=localStorage.getItem("userEmail")||"-";
   let bal=Number(localStorage.getItem("balance"))||0;
+
   box.innerHTML=`
   <div class="card">
-    <div class="row"><span>Email</span><span>${email||'-'}</span></div>
+    <div class="row"><span>Email</span><span>${email}</span></div>
     <div class="row"><span>Balance</span><span>₹${bal}</span></div>
   </div>`;
 }
 
 /* ================= GAMES ================= */
 function loadGames(){
-  const box=document.getElementById("sec3");
-  box.innerHTML="Game controls panel";
+  document.getElementById("sec3").innerHTML="Game control coming soon";
 }
 
 /* INIT */
-loadDeposits();loadWithdraws();loadUsers();loadGames();
+loadDeposits();
+loadWithdraws();
+loadUsers();
+loadGames();
 </script>
 
 </body>
