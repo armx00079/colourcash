@@ -61,8 +61,15 @@ body{
 const list = document.getElementById("list");
 
 /* ✅ READ ONLY FROM withdrawHistory */
-const withdraws =
+const raw =
   JSON.parse(localStorage.getItem("withdrawHistory")) || [];
+
+/* ✅ REMOVE DUPLICATE ORDER ID (KEEP FINAL STATUS) */
+const map = {};
+raw.forEach(w => {
+  map[w.orderId] = w; // last one wins
+});
+const withdraws = Object.values(map);
 
 if(withdraws.length === 0){
   list.innerHTML = `<div class="empty">No withdraw history found</div>`;
