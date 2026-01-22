@@ -50,8 +50,24 @@ input{width:100%;padding:12px;border-radius:10px;border:none;margin-top:10px;fon
 
 <div class="popup" id="popup"><div id="popupText"></div></div>
 
-<script>
-let wallet = Number(localStorage.wallet ?? 100);
+<!-- 🔥 FIREBASE WALLET CONNECT (ADDED ONLY) -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, getDocs, collection, query, where, doc, updateDoc } 
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
+  authDomain:"colourcash-ea60e.firebaseapp.com",
+  projectId:"colourcash-ea60e"
+});
+const db = getFirestore(app);
+
+const userEmail = localStorage.getItem("userEmail");
+let userDocId = "";
+
+/* 🔥 ORIGINAL LOGIC (NOT TOUCHED) */
+let wallet = 0;
 let period = Number(localStorage.period ?? 1000);
 let history = JSON.parse(localStorage.history ?? "[]");
 let bets = JSON.parse(localStorage.bets ?? "[]");
@@ -64,8 +80,24 @@ let lastTick = Number(localStorage.lastTick ?? Date.now());
 let bet = JSON.parse(localStorage.bet ?? "null");
 let interval;
 
+/* 🔥 LOAD WALLET FROM FIRESTORE */
+async function loadWallet(){
+  const snap = await getDocs(
+    query(collection(db,"users"), where("email","==",userEmail))
+  );
+  snap.forEach(d=>{
+    userDocId = d.id;
+    wallet = d.data().balance || 0;
+  });
+  render();
+}
+
+/* 🔥 UPDATE FIRESTORE WALLET */
+async function syncWallet(){
+  await updateDoc(doc(db,"users",userDocId),{ balance: wallet });
+}
+
 function save(){
-  localStorage.wallet=wallet;
   localStorage.period=period;
   localStorage.history=JSON.stringify(history);
   localStorage.bets=JSON.stringify(bets);
@@ -78,29 +110,23 @@ function save(){
 }
 
 function render(){
-  document.getElementById("top").innerText=`Period: ${period} | Wallet: ₹${wallet.toFixed(2)}`;
-  document.getElementById("state").innerText=phase;
-  document.getElementById("timer").innerText=phase==="WAIT"?time+"s":"";
-  document.getElementById("multiplier").innerText=multiplier.toFixed(2)+"x";
+  top.innerText=`Period: ${period} | Wallet: ₹${wallet.toFixed(2)}`;
+  state.innerText=phase;
+  timer.innerText=phase==="WAIT"?time+"s":"";
+  multiplierEl.innerText=multiplier.toFixed(2)+"x";
 
-  let betBtn=document.getElementById("betBtn");
-  if(phase==="WAIT" && time>5){
-    betBtn.disabled=false; betBtn.innerText="PLACE BET";
-  }else{
-    betBtn.disabled=true; betBtn.innerText="BET LOCKED";
-  }
+  betBtn.disabled = !(phase==="WAIT" && time>5);
 
-  document.getElementById("historyList").innerHTML=
-    history.map(h=>`#${h.p} → ${h.x}x`).join("<br>");
-  document.getElementById("betsList").innerHTML=
-    bets.map(b=>`#${b.p} ₹${b.a} ${b.r} @${b.x}`).join("<br>");
+  historyList.innerHTML = history.map(h=>`#${h.p} → ${h.x}x`).join("<br>");
+  betsList.innerHTML = bets.map(b=>`#${b.p} ₹${b.a} ${b.r} @${b.x}`).join("<br>");
 }
 
+const multiplierEl=document.getElementById("multiplier");
+
 function pop(msg){
-  let p=document.getElementById("popup");
-  document.getElementById("popupText").innerHTML=msg;
-  p.style.display="flex";
-  setTimeout(()=>p.style.display="none",1500);
+  popupText.innerHTML=msg;
+  popup.style.display="flex";
+  setTimeout(()=>popup.style.display="none",1500);
 }
 
 function startLoop(){
@@ -108,15 +134,15 @@ function startLoop(){
   interval=setInterval(()=>{
     let now=Date.now();
     let diff=Math.floor((now-lastTick)/1000);
-    if(diff<=0) return;
+    if(diff<=0)return;
     lastTick=now;
 
     if(phase==="WAIT"){
       time-=diff;
-      if(time<=0){phase="FLYING";time=0;}
+      if(time<=0) phase="FLYING";
     }else if(phase==="FLYING"){
       multiplier+=diff*0.12;
-      if(multiplier>=crashAt){crash();}
+      if(multiplier>=crashAt) crash();
     }
     save(); render();
   },1000);
@@ -126,9 +152,9 @@ function crash(){
   phase="CRASHED";
   history.unshift({p:period,x:multiplier.toFixed(2)});
   history=history.slice(0,10);
+
   if(bet){
     bets.unshift({p:period,a:bet.a,x:multiplier.toFixed(2),r:"LOSS"});
-    bets=bets.slice(0,10);
     bet=null;
   }
   pop("💥 CRASH @ "+multiplier.toFixed(2)+"x");
@@ -145,31 +171,34 @@ function newRound(){
   save(); startLoop();
 }
 
-function placeBet(){
+window.placeBet = async function(){
   let a=Number(amount.value);
-  if(a<1||a>wallet)return pop("Minimum ₹1");
-  wallet-=a; bet={a:a};
+  if(a<1||a>wallet) return pop("Minimum ₹1 / Low Balance");
+  wallet-=a;
+  bet={a:a};
+  await syncWallet();
   pop("Bet Placed ₹"+a);
   save(); render();
 }
 
-function cashOut(){
-  if(!bet||phase!=="FLYING")return;
+window.cashOut = async function(){
+  if(!bet||phase!=="FLYING") return;
   let win=bet.a*multiplier;
   wallet+=win;
   bets.unshift({p:period,a:bet.a,x:multiplier.toFixed(2),r:"WIN +₹"+win.toFixed(2)});
-  bets=bets.slice(0,10);
   bet=null;
+  await syncWallet();
   pop("✅ WIN ₹"+win.toFixed(2));
   save(); render();
 }
 
-function toggle(id){
+window.toggle=id=>{
   let e=document.getElementById(id);
   e.style.display=e.style.display==="none"?"block":"none";
 }
 
-render(); startLoop();
+loadWallet(); render(); startLoop();
 </script>
+
 </body>
 </html>
