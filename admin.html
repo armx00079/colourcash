@@ -6,30 +6,101 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
+/* ===== BASE ===== */
 body{margin:0;font-family:Arial;background:#0f0f0f;color:#fff}
 header{
   background:linear-gradient(135deg,#ff6a6a,#ff8e8e);
-  padding:16px;text-align:center;font-size:20px;font-weight:bold
+  padding:18px;
+  text-align:center;
+  font-size:22px;
+  font-weight:bold
 }
+
+/* ===== DASHBOARD ===== */
+.dashboard{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+  padding:15px
+}
+.d-card{
+  background:#1c1c1c;
+  border-radius:14px;
+  padding:14px;
+  text-align:center
+}
+.d-card h2{margin:0;font-size:22px;color:#ff8e8e}
+.d-card span{font-size:12px;color:#aaa}
+
+/* ===== TABS ===== */
 .tabs{display:flex;background:#111}
 .tab{
-  flex:1;padding:12px;text-align:center;
-  border-right:1px solid #222;cursor:pointer;color:#aaa
+  flex:1;padding:14px;text-align:center;
+  cursor:pointer;color:#aaa;font-weight:bold
 }
-.tab.active{color:#fff;background:#222}
+.tab.active{background:#1c1c1c;color:#ff8e8e}
+
 .section{display:none;padding:15px}
 .section.active{display:block}
-.card{
-  background:#1b1b1b;border-radius:14px;
-  padding:14px;margin-bottom:12px
+
+/* ===== FILTER + SEARCH ===== */
+.tools{
+  display:flex;
+  gap:10px;
+  margin-bottom:12px
 }
-.row{display:flex;justify-content:space-between;margin:6px 0;font-size:14px}
+.tools input,.tools select{
+  flex:1;
+  padding:10px;
+  border-radius:10px;
+  border:none;
+  font-size:14px
+}
+
+/* ===== CARD ===== */
+.card{
+  background:#1c1c1c;
+  border-radius:16px;
+  padding:16px;
+  margin-bottom:14px
+}
+.row{display:flex;justify-content:space-between;font-size:14px;margin:6px 0}
 .btn{
-  padding:8px 12px;border:none;border-radius:8px;
-  cursor:pointer;font-weight:bold;margin-right:6px
+  padding:10px 14px;
+  border:none;
+  border-radius:10px;
+  font-weight:bold;
+  margin-top:10px;
+  cursor:pointer
 }
 .approve{background:#2e7d32;color:#fff}
 .reject{background:#c62828;color:#fff}
+.view{background:#2196f3;color:#fff}
+
+/* ===== MODAL ===== */
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.7);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:9999
+}
+.modal-box{
+  background:#1c1c1c;
+  width:90%;
+  max-width:420px;
+  border-radius:16px;
+  padding:18px
+}
+.modal-box h3{text-align:center;margin-top:0}
+.modal-box button{width:100%;margin-top:14px}
+
+/* ===== MOBILE ===== */
+@media(max-width:600px){
+  .dashboard{grid-template-columns:1fr}
+}
 </style>
 </head>
 
@@ -37,163 +108,136 @@ header{
 
 <header>🛠️ Colour Cash – Admin Panel</header>
 
+<!-- 📊 DASHBOARD -->
+<div class="dashboard">
+  <div class="d-card">
+    <h2 id="totalUsers">0</h2>
+    <span>Total Users</span>
+  </div>
+  <div class="d-card">
+    <h2 id="pendingDeposits">0</h2>
+    <span>Pending Deposits</span>
+  </div>
+  <div class="d-card">
+    <h2 id="pendingWithdraws">0</h2>
+    <span>Pending Withdraws</span>
+  </div>
+</div>
+
+<!-- TABS -->
 <div class="tabs">
   <div class="tab active" onclick="openTab(0)">Deposits</div>
   <div class="tab" onclick="openTab(1)">Withdraws</div>
   <div class="tab" onclick="openTab(2)">Users</div>
-  <div class="tab" onclick="openTab(3)">Games</div>
 </div>
 
 <div class="section active" id="sec0"></div>
 <div class="section" id="sec1"></div>
 <div class="section" id="sec2"></div>
-<div class="section" id="sec3"></div>
+
+<!-- 🧾 WITHDRAW MODAL -->
+<div class="modal" id="modal">
+  <div class="modal-box" id="modalBox"></div>
+</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import {
-  getFirestore,
-  collection,
-  getDocs,
-  updateDoc,
-  doc
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, getDocs, updateDoc, doc } from
+"https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
-  authDomain: "colourcash-ea60e.firebaseapp.com",
-  projectId: "colourcash-ea60e"
-};
-
-const app = initializeApp(firebaseConfig);
+const app = initializeApp({
+  apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
+  authDomain:"colourcash-ea60e.firebaseapp.com",
+  projectId:"colourcash-ea60e"
+});
 const db = getFirestore(app);
 
-window.openTab = function(i){
+window.openTab = i=>{
   document.querySelectorAll(".tab").forEach((t,n)=>t.classList.toggle("active",n===i));
   document.querySelectorAll(".section").forEach((s,n)=>s.classList.toggle("active",n===i));
 };
 
-/* ================= DEPOSITS (UNCHANGED) ================= */
-async function loadDeposits(){
-  const box = document.getElementById("sec0");
-  box.innerHTML = "<p>Loading deposits...</p>";
+/* ===== DASHBOARD COUNTS ===== */
+async function loadDashboard(){
+  const users = await getDocs(collection(db,"users"));
+  const dep = await getDocs(collection(db,"deposits"));
+  const wd = await getDocs(collection(db,"withdraws"));
 
-  const snap = await getDocs(collection(db,"deposits"));
-  box.innerHTML = "";
-
-  snap.forEach(d=>{
-    const x = d.data();
-    if(x.status !== "PENDING") return;
-
-    box.innerHTML += `
-      <div class="card">
-        <div class="row"><span>Email</span><span>${x.email}</span></div>
-        <div class="row"><span>Amount</span><span>₹${x.amount}</span></div>
-        <div class="row"><span>UTR</span><span>${x.utr}</span></div>
-        <div class="row"><span>Time</span><span>${x.time}</span></div>
-        <button class="btn approve" onclick="approveDeposit('${d.id}','${x.email}',${x.amount})">Approve</button>
-        <button class="btn reject" onclick="rejectDeposit('${d.id}')">Reject</button>
-      </div>
-    `;
-  });
+  document.getElementById("totalUsers").innerText = users.size;
+  document.getElementById("pendingDeposits").innerText =
+    dep.docs.filter(d=>d.data().status==="PENDING").length;
+  document.getElementById("pendingWithdraws").innerText =
+    wd.docs.filter(d=>d.data().status==="PENDING").length;
 }
 
-window.approveDeposit = async function(id,email,amount){
-  await updateDoc(doc(db,"deposits",id),{status:"APPROVED"});
-  const snap = await getDocs(collection(db,"users"));
-  snap.forEach(async u=>{
-    if(u.data().email===email){
-      await updateDoc(doc(db,"users",u.id),{
-        balance:(u.data().balance||0)+amount
-      });
-    }
-  });
-  loadDeposits(); loadUsers();
-};
-
-window.rejectDeposit = async function(id){
-  await updateDoc(doc(db,"deposits",id),{status:"REJECTED"});
-  loadDeposits();
-};
-
-/* ================= 🔥 WITHDRAWS (FINAL FIRESTORE FIX) ================= */
-async function loadWithdraws(){
-  const box = document.getElementById("sec1");
-  box.innerHTML = "<p>Loading withdraws...</p>";
-
-  const snap = await getDocs(collection(db,"withdraws"));
-  box.innerHTML = "";
-
-  if(snap.empty){
-    box.innerHTML="<p>No pending withdraw requests</p>";
-    return;
-  }
-
-  snap.forEach(d=>{
-    const w = d.data();
-    if(w.status!=="PENDING") return;
-
-    box.innerHTML += `
-      <div class="card">
-        <div class="row"><span>Email</span><span>${w.email}</span></div>
-        <div class="row"><span>Amount</span><span>₹${w.amount}</span></div>
-        <div class="row"><span>Method</span><span>${w.method}</span></div>
-
-        ${
-          w.method==="UPI"
-          ? `<div class="row"><span>UPI ID</span><span>${w.upiId}</span></div>`
-          : `
-            <div class="row"><span>Holder</span><span>${w.bankDetails.holder}</span></div>
-            <div class="row"><span>Bank</span><span>${w.bankDetails.bank}</span></div>
-            <div class="row"><span>Account</span><span>${w.bankDetails.account}</span></div>
-            <div class="row"><span>IFSC</span><span>${w.bankDetails.ifsc}</span></div>
-          `
-        }
-
-        <div class="row"><span>Time</span><span>${w.time}</span></div>
-
-        <button class="btn approve" onclick="approveWithdraw('${d.id}')">Approve</button>
-        <button class="btn reject" onclick="rejectWithdraw('${d.id}')">Reject</button>
-      </div>
-    `;
-  });
-}
-
-window.approveWithdraw = async function(id){
-  await updateDoc(doc(db,"withdraws",id),{status:"APPROVED"});
-  loadWithdraws();
-};
-
-window.rejectWithdraw = async function(id){
-  await updateDoc(doc(db,"withdraws",id),{status:"REJECTED"});
-  loadWithdraws();
-};
-
-/* ================= USERS (UNCHANGED) ================= */
+/* ===== USERS + SEARCH ===== */
 async function loadUsers(){
   const box=document.getElementById("sec2");
-  box.innerHTML="<p>Loading users...</p>";
-  const snap = await getDocs(collection(db,"users"));
-  box.innerHTML="";
+  const snap=await getDocs(collection(db,"users"));
+
+  box.innerHTML=`
+    <div class="tools">
+      <input placeholder="Search email..." oninput="filterUsers(this.value)">
+    </div>
+    <div id="userList"></div>
+  `;
+
+  const list=document.getElementById("userList");
   snap.forEach(d=>{
     const u=d.data();
+    list.innerHTML+=`
+      <div class="card user">
+        <div class="row"><span>${u.email}</span><span>₹${u.balance||0}</span></div>
+      </div>`;
+  });
+}
+window.filterUsers=q=>{
+  document.querySelectorAll(".user").forEach(u=>{
+    u.style.display=u.innerText.toLowerCase().includes(q.toLowerCase())?"block":"none";
+  });
+};
+
+/* ===== WITHDRAW LIST + MODAL ===== */
+async function loadWithdraws(){
+  const box=document.getElementById("sec1");
+  const snap=await getDocs(collection(db,"withdraws"));
+  box.innerHTML=`<div class="tools">
+    <select onchange="filterTime(this.value)">
+      <option value="all">All</option>
+      <option value="today">Today</option>
+      <option value="yesterday">Yesterday</option>
+    </select>
+  </div>`;
+
+  snap.forEach(d=>{
+    const w=d.data();
+    if(w.status!=="PENDING")return;
     box.innerHTML+=`
       <div class="card">
-        <div class="row"><span>Email</span><span>${u.email}</span></div>
-        <div class="row"><span>Balance</span><span>₹${u.balance||0}</span></div>
+        <div class="row"><span>${w.email}</span><span>₹${w.amount}</span></div>
+        <button class="btn view" onclick='viewWithdraw(${JSON.stringify(w)})'>View</button>
       </div>`;
   });
 }
 
-function loadGames(){
-  document.getElementById("sec3").innerHTML="Game control coming soon";
-}
+window.viewWithdraw=w=>{
+  modalBox.innerHTML=`
+    <h3>Withdraw Detail</h3>
+    <p>Email: ${w.email}</p>
+    <p>Amount: ₹${w.amount}</p>
+    <p>Method: ${w.method}</p>
+    ${w.method==="UPI"
+      ? `<p>UPI: ${w.upiId}</p>`
+      : `<p>${w.bankDetails.holder}<br>${w.bankDetails.bank}<br>${w.bankDetails.account}<br>${w.bankDetails.ifsc}</p>`}
+    <button class="btn approve" onclick="closeModal()">Close</button>`;
+  modal.style.display="flex";
+};
+window.closeModal=()=>modal.style.display="none";
 
 /* INIT */
-loadDeposits();
-loadWithdraws();
+loadDashboard();
 loadUsers();
-loadGames();
+loadWithdraws();
 </script>
 
 </body>
