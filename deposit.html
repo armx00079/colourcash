@@ -6,12 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body{
-  margin:0;
-  font-family:Arial, sans-serif;
-  background:#0f0f0f;
-  color:#fff;
-}
+body{margin:0;font-family:Arial,sans-serif;background:#0f0f0f;color:#fff}
 .header{padding:15px;font-size:22px;font-weight:bold;text-align:center}
 .card{background:#1b1b1b;margin:15px;border-radius:16px;padding:18px}
 label{font-size:14px;color:#ccc}
@@ -72,67 +67,58 @@ input{width:100%;padding:14px;border-radius:10px;border:none;margin-top:8px;font
   </div>
 </div>
 
-<!-- 🔥 FIREBASE (ADDED ONLY) -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, addDoc } from
-"https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
-  authDomain: "colourcash-ea60e.firebaseapp.com",
-  projectId: "colourcash-ea60e"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-/* 🔹 EXISTING JS (UNCHANGED UI LOGIC) */
-const UPI = "8302299569@axl";
-const popupBg = document.getElementById("popupBg");
-const popupTitle = document.getElementById("popupTitle");
-const popupMsg = document.getElementById("popupMsg");
-const amountInput = document.getElementById("amount");
-const utrInput = document.getElementById("utr");
+<!-- ================= UI SCRIPT ================= -->
+<script>
+const UPI="8302299569@axl";
+const popupBg=document.getElementById("popupBg");
+const popupTitle=document.getElementById("popupTitle");
+const popupMsg=document.getElementById("popupMsg");
 
 function showPopup(t,m){popupTitle.innerText=t;popupMsg.innerText=m;popupBg.style.display="flex"}
 function closePopup(){popupBg.style.display="none"}
-function copyUPI(){navigator.clipboard.writeText(UPI);showPopup("Copied","UPI ID copied successfully")}
+function copyUPI(){navigator.clipboard.writeText(UPI);showPopup("Copied","UPI ID copied")}
 function pay(){
-  const amt=Number(amountInput.value);
+  const amt=Number(amount.value);
   if(amt<100){showPopup("Error","Minimum deposit ₹100");return;}
   location.href=`upi://pay?pa=${UPI}&pn=ColourCash&am=${amt}&cu=INR`;
 }
+function submitDeposit(){window.submitDepositFirebase();}
+</script>
 
-/* ✅ FINAL SUBMIT (LOCAL + FIRESTORE) */
-window.submitDeposit = async function(){
-  const amt = Number(amountInput.value);
-  const utr = utrInput.value.trim();
+<!-- ================= FIREBASE SCRIPT ================= -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-  if(amt < 100 || utr.length < 10){
-    showPopup("Error","Enter valid amount & UTR");
-    return;
-  }
+const app=initializeApp({
+  apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
+  authDomain:"colourcash-ea60e.firebaseapp.com",
+  projectId:"colourcash-ea60e"
+});
+const db=getFirestore(app);
 
-  const orderId = "ORD" + Date.now();
+window.submitDepositFirebase=async function(){
+  const amt=Number(amount.value);
+  const utr=utrInput=utr.value.trim();
+  if(amt<100||utr.length<10){alert("Enter valid amount & UTR");return;}
 
-  /* 🔹 LocalStorage (old system safe) */
-  let deposits = JSON.parse(localStorage.getItem("deposits")) || [];
+  const orderId="ORD"+Date.now();
+
+  let deposits=JSON.parse(localStorage.getItem("deposits"))||[];
   deposits.push({orderId,amount:amt,utr,status:"PENDING",time:new Date().toLocaleString()});
   localStorage.setItem("deposits",JSON.stringify(deposits));
 
-  /* 🔥 Firestore (ADMIN LIVE) */
   await addDoc(collection(db,"deposits"),{
-    email: localStorage.getItem("userEmail"),
-    amount: amt,
-    utr: utr,
-    status: "PENDING",
-    time: new Date().toLocaleString()
+    email:localStorage.getItem("userEmail"),
+    amount:amt,
+    utr:utr,
+    status:"PENDING",
+    time:new Date().toLocaleString()
   });
 
-  showPopup("Success","Deposit submitted\nOrder ID: "+orderId+"\nWaiting for approval ⏳");
-  amountInput.value="";utrInput.value="";
-}
+  alert("Deposit submitted\nOrder ID: "+orderId);
+  amount.value="";utr.value="";
+};
 </script>
 
 </body>
