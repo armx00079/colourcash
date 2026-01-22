@@ -97,7 +97,6 @@ body{margin:0;font-family:Arial;background:#f2f2f2;padding-bottom:90px}
   </div>
 </div>
 
-<!-- 🔥 ONLY SCRIPT FIXED -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
@@ -133,30 +132,27 @@ document.getElementById("uid").innerText = uid;
 document.getElementById("lastLogin").innerText =
   localStorage.getItem("lastLogin") || "-";
 
-/* 🔥 LIVE BALANCE FROM FIRESTORE */
+/* LIVE BALANCE */
 const userEmail = localStorage.getItem("userEmail");
 
 async function loadBalance(){
   let balance = 0;
-
   const snap = await getDocs(
     query(collection(db,"users"), where("email","==",userEmail))
   );
-
   snap.forEach(d=>{
     balance = d.data().balance || 0;
   });
-
   document.getElementById("accBalance").innerText =
     "₹" + balance.toFixed(2);
 }
-
 loadBalance();
 
-function logout(){
+/* 🔥 ONLY FIX — LOGOUT */
+window.logout = function(){
   localStorage.clear();
-  location.href="login.html";
-}
+  location.href = "login.html";
+};
 </script>
 
 </body>
