@@ -47,7 +47,7 @@ input{width:100%;padding:12px;border-radius:10px;border:none;font-size:16px;marg
 <div class="header">🐔 CHICKEN ROAD</div>
 
 <div class="card center">
-  <div style="font-size:26px">Balance: ₹<span id="bal">100.00</span></div>
+  <div style="font-size:26px">Balance: ₹<span id="bal">0.00</span></div>
   <div style="margin-top:6px">Current X: <b id="curX">1.00x</b></div>
   <div class="chicken" id="chicken">🐔</div>
 </div>
@@ -80,6 +80,32 @@ input{width:100%;padding:12px;border-radius:10px;border:none;font-size:16px;marg
 
 <div class="popup" id="popup"><div id="popupText"></div></div>
 
+<!-- 🔥🔥🔥 FIRESTORE WALLET ADD (ONLY ADDITION) 🔥🔥🔥 -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getFirestore,
+  getDocs,
+  collection,
+  query,
+  where,
+  doc,
+  updateDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
+  authDomain: "colourcash-ea60e.firebaseapp.com",
+  projectId: "colourcash-ea60e"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const userEmail = localStorage.getItem("userEmail");
+let userDocId = "";
+</script>
+
 <script>
 const MODES={
 easy:[1.02,1.08,1.14,1.21,1.29,1.37,1.46,1.56,1.67,1.80,1.94,2.09,2.27,2.47,2.79,2.95,3.24,3.58,3.98,4.45,5.01,5.68,6.49,7.49,8.74,10.33,12.39,15.15,18.94,24.35],
@@ -88,7 +114,7 @@ hard:[1.19,1.47,1.84,2.32,2.97,3.84,5.05,6.73,9.13,12.65,17.92,26.07,39.11,60.84
 veryhard:[1.45,2.22,3.47,5.56,9.13,15.46,27.06,49.21,93.5,187.01,397.39,908.33,2270.83,6358.35,20664.63,82658.55,456622.02,4546220.25]
 };
 
-let balance=100,mode="easy",steps=MODES.easy;
+let balance=0,mode="easy",steps=MODES.easy;
 let index=-1,bet=0,alive=false;
 let bets=[];
 
@@ -100,6 +126,16 @@ function popupMsg(msg,cls=""){
   popup.style.display="flex";
   setTimeout(()=>popup.style.display="none",1600);
 }
+
+/* 🔥 LOAD BALANCE FROM FIRESTORE */
+(async()=>{
+  const snap = await getDocs(query(collection(db,"users"),where("email","==",userEmail)));
+  snap.forEach(d=>{
+    userDocId = d.id;
+    balance = d.data().balance || 0;
+  });
+  bal.innerText = balance.toFixed(2);
+})();
 
 function setMode(m,el){
   mode=m;steps=MODES[m];index=-1;alive=false;
@@ -118,10 +154,14 @@ function renderTrack(){
   });
 }
 
-function startGame(){
+async function startGame(){
   const a=+amt.value;
   if(a<1||a>balance)return;
-  bet=a;balance-=bet;
+  bet=a;
+  balance-=bet;
+
+  await updateDoc(doc(db,"users",userDocId),{balance});
+
   bal.innerText=balance.toFixed(2);
   index=-1;alive=true;
   curX.innerText="1.00x";
@@ -145,10 +185,13 @@ function nextStep(){
   renderTrack();
 }
 
-function cashOut(){
+async function cashOut(){
   if(!alive||index<0)return;
   const win=bet*steps[index];
   balance+=win;
+
+  await updateDoc(doc(db,"users",userDocId),{balance});
+
   bal.innerText=balance.toFixed(2);
   alive=false;
   popupMsg("🎉 WIN ₹"+win.toFixed(2),"win");
