@@ -7,12 +7,15 @@
 
 <style>
 body{margin:0;font-family:Arial;background:#f2f2f2;padding-bottom:90px}
+
 .header{
   background:linear-gradient(135deg,#ff6a6a,#ff8e8e);
   padding:18px;color:#fff;display:flex;gap:12px
 }
 .header img{width:52px;height:52px;border-radius:50%}
+
 .card{background:#fff;margin:15px;border-radius:16px;padding:18px}
+
 .history{
   display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:15px
 }
@@ -20,10 +23,33 @@ body{margin:0;font-family:Arial;background:#f2f2f2;padding-bottom:90px}
   background:linear-gradient(135deg,#ff9a9e,#fad0c4);
   padding:16px;border-radius:14px;font-weight:bold;text-align:center
 }
+
 .logout{
   background:#e53935;color:#fff;border:none;width:calc(100% - 30px);
   margin:15px;padding:14px;border-radius:14px;font-size:16px
 }
+
+/* ✅ BOTTOM NAV (ADDED ONLY) */
+.bottom-nav{
+  position:fixed;
+  bottom:0;left:0;right:0;
+  background:#111;
+  display:flex;
+  border-top:1px solid #222;
+  z-index:99999;
+}
+.nav-btn{
+  flex:1;
+  text-align:center;
+  padding:10px 0;
+  font-size:12px;
+  color:#aaa;
+}
+.nav-btn.active{
+  color:#ff6a6a;
+  font-weight:bold;
+}
+.nav-btn div{font-size:20px}
 </style>
 </head>
 
@@ -55,6 +81,22 @@ body{margin:0;font-family:Arial;background:#f2f2f2;padding-bottom:90px}
 </div>
 
 <button class="logout" onclick="logout()">Logout</button>
+
+<!-- ✅ BOTTOM NAV HTML (ADDED ONLY) -->
+<div class="bottom-nav">
+  <div class="nav-btn" onclick="location.href='index.html'">
+    <div>🏠</div>Home
+  </div>
+  <div class="nav-btn" onclick="location.href='wallet.html'">
+    <div>💰</div>Wallet
+  </div>
+  <div class="nav-btn" onclick="location.href='promotion.html'">
+    <div>🎁</div>Promotion
+  </div>
+  <div class="nav-btn active">
+    <div>👤</div>Account
+  </div>
+</div>
 
 <script>
 // USER NAME
