@@ -35,6 +35,7 @@ input{width:100%;padding:12px;margin:8px 0 14px;border-radius:10px;border:none;f
 <div class="header">🏦 Withdraw</div>
 
 <div class="card">
+
   <div class="balance">
     Available Balance<br>
     ₹ <span id="balance">0.00</span>
@@ -45,6 +46,7 @@ input{width:100%;padding:12px;margin:8px 0 14px;border-radius:10px;border:none;f
     <div class="tab" onclick="openTab('bank',this)">Bank</div>
   </div>
 
+  <!-- 🔹 UPI -->
   <div class="form active" id="upi">
     <label>Withdraw Amount (₹)</label>
     <input type="number" id="upiAmount" placeholder="Minimum ₹100">
@@ -53,8 +55,18 @@ input{width:100%;padding:12px;margin:8px 0 14px;border-radius:10px;border:none;f
     <input type="text" id="upiId" placeholder="example@upi">
 
     <button class="btn" onclick="submitWithdraw()">Submit Withdraw</button>
+
+    <!-- ✅ RULES (WAPAS ADD – SAME AS PEHLE) -->
+    <div class="rules">
+      <div>🔴 Withdraw time: <b>00:05 - 23:55</b></div>
+      <div>🔴 Inday Remaining Withdrawal Times: <b>3</b></div>
+      <div>🔴 Withdrawal amount range: <b>₹100 - ₹50,000</b></div>
+      <div>🔴 Please confirm your beneficiary details carefully</div>
+      <div>🔴 Wrong details may cause permanent loss</div>
+    </div>
   </div>
 
+  <!-- 🔹 BANK -->
   <div class="form" id="bank">
     <label>Withdraw Amount (₹)</label>
     <input type="number" id="bankAmount" placeholder="Minimum ₹100">
@@ -72,7 +84,17 @@ input{width:100%;padding:12px;margin:8px 0 14px;border-radius:10px;border:none;f
     <input type="text" id="bankIfsc">
 
     <button class="btn" onclick="submitWithdraw()">Submit Withdraw</button>
+
+    <!-- ✅ BANK RULES BHI SAME -->
+    <div class="rules">
+      <div>🔴 Withdraw time: <b>00:05 - 23:55</b></div>
+      <div>🔴 Inday Remaining Withdrawal Times: <b>3</b></div>
+      <div>🔴 Withdrawal amount range: <b>₹100 - ₹50,000</b></div>
+      <div>🔴 Please confirm your beneficiary details carefully</div>
+      <div>🔴 Wrong details may cause permanent loss</div>
+    </div>
   </div>
+
 </div>
 
 <div class="popup" id="popup">
@@ -83,37 +105,23 @@ input{width:100%;padding:12px;margin:8px 0 14px;border-radius:10px;border:none;f
   </div>
 </div>
 
-<!-- 🔥 FIRESTORE BALANCE FETCH (ONLY ADDITION) -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
-  authDomain: "colourcash-ea60e.firebaseapp.com",
-  projectId: "colourcash-ea60e"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-let balance = 0;
-const email = localStorage.getItem("userEmail");
-
-const snap = await getDocs(collection(db,"users"));
-snap.forEach(d=>{
-  const u=d.data();
-  if(u.email===email){
-    balance = Number(u.balance||0);
-    document.getElementById("balance").innerText = balance.toFixed(2);
-  }
-});
-</script>
-
-<!-- 🔒 ORIGINAL SCRIPT (UNCHANGED) -->
 <script>
-let withdrawCount = Number(localStorage.getItem("withdrawCount"))||0;
+/* ===== BALANCE ===== */
+let balance = Number(localStorage.getItem("balance")) || 0;
+document.getElementById("balance").innerText = balance.toFixed(2);
 
+/* ===== DAILY LIMIT RESET ===== */
+const today = new Date().toDateString();
+const savedDate = localStorage.getItem("withdrawDate");
+
+if(savedDate !== today){
+  localStorage.setItem("withdrawDate", today);
+  localStorage.setItem("withdrawCount", "0");
+}
+
+let withdrawCount = Number(localStorage.getItem("withdrawCount")) || 0;
+
+/* ===== UI ===== */
 function openTab(id,el){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.form').forEach(f=>f.classList.remove('active'));
@@ -129,14 +137,54 @@ function showPopup(type,title,msg){
 }
 function closePopup(){popup.style.display="none";}
 
+/* ===== SUBMIT WITHDRAW ===== */
 function submitWithdraw(){
-  const isUpi=document.getElementById("upi").classList.contains("active");
-  const amt=Number(isUpi?upiAmount.value:bankAmount.value);
+  const isUpi = document.getElementById("upi").classList.contains("active");
 
-  if(amt<100)return showPopup("error","Minimum","₹100 minimum");
-  if(amt>balance)return showPopup("error","Insufficient","Not enough balance");
+  const amt = Number(isUpi
+    ? document.getElementById("upiAmount").value
+    : document.getElementById("bankAmount").value
+  );
 
-  showPopup("success","Submitted","Withdraw request sent");
+  if(amt < 100) return showPopup("error","Minimum Withdraw","Minimum ₹100");
+  if(amt > balance) return showPopup("error","Insufficient Balance","Not enough balance");
+  if(withdrawCount >= 3) return showPopup("error","Limit Reached","Daily 3 withdraw limit exceeded");
+
+  const orderId = "WD" + Date.now();
+
+  const record = {
+    orderId,
+    amount: amt,
+    method: isUpi ? "UPI" : "BANK",
+    upiId: isUpi ? document.getElementById("upiId").value.trim() : "",
+    bankDetails: !isUpi ? {
+      holder: bankHolder.value,
+      bank: bankName.value,
+      account: bankAccount.value,
+      ifsc: bankIfsc.value
+    } : null,
+    status: "PENDING",
+    time: new Date().toLocaleString()
+  };
+
+  let req = JSON.parse(localStorage.getItem("withdrawRequests")) || [];
+  let hist = JSON.parse(localStorage.getItem("withdrawHistory")) || [];
+
+  req.push(record);
+  hist.push(record);
+
+  localStorage.setItem("withdrawRequests",JSON.stringify(req));
+  localStorage.setItem("withdrawHistory",JSON.stringify(hist));
+
+  withdrawCount++;
+  balance -= amt;
+
+  localStorage.setItem("withdrawCount",withdrawCount);
+  localStorage.setItem("balance",balance);
+
+  document.getElementById("balance").innerText = balance.toFixed(2);
+
+  showPopup("success","Withdraw Submitted","Order ID: "+orderId);
 }
 </script>
 
