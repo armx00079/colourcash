@@ -108,7 +108,7 @@ button{
 </div>
 
 <div class="controls">
-  <button id="actionBtn" class="bet" onclick="startRound()">BET</button>
+  <button id="actionBtn" class="bet">BET</button>
 </div>
 
 <div class="info" id="info">Next round starting...</div>
@@ -137,9 +137,10 @@ function getCrash(){
   return +(5+Math.random()*15).toFixed(2);
 }
 
-/* START ROUND */
+/* AUTO START ROUND */
 function startRound(){
-  if(state!=="WAIT")return;
+  if(state!=="WAIT") return;
+
   state="FLY";
   cashedOut=false;
   multi=1.00;
@@ -148,10 +149,13 @@ function startRound(){
   planeY=0;
   crashPoint=getCrash();
 
+  plane.style.display="block";
+  plane.style.transform="translate(-80px,0)";
+  mEl.classList.remove("crash");
+
   btn.innerText="CASH OUT";
   btn.className="cashout";
   info.innerText="Flying...";
-  mEl.classList.remove("crash");
 
   interval=setInterval(fly,60);
 }
@@ -166,7 +170,6 @@ function fly(){
   planeY+=speed*0.15;
 
   plane.style.transform=`translate(${planeX}px,-${planeY}px)`;
-
   mEl.innerText=multi+"x";
 
   if(multi>=crashPoint){
@@ -174,7 +177,7 @@ function fly(){
   }
 }
 
-/* CASHOUT */
+/* CASH OUT */
 btn.onclick=()=>{
   if(state==="FLY" && !cashedOut){
     cashedOut=true;
@@ -198,19 +201,24 @@ function crash(){
   reset();
 }
 
-/* RESET */
+/* RESET + NEXT ROUND */
 function reset(){
   btn.innerText="BET";
   btn.className="bet";
+
   setTimeout(()=>{
     state="WAIT";
-    plane.style.display="block";
-    plane.style.transform="translate(-80px,0)";
     mEl.innerText="WAITING...";
     info.innerText="Next round starting...";
     game.classList.remove("shake");
-  },3000);
+
+    // 🔁 AUTO NEXT ROUND
+    setTimeout(startRound,3000);
+  },2000);
 }
+
+/* FIRST AUTO START */
+setTimeout(startRound,3000);
 </script>
 
 </body>
