@@ -13,7 +13,7 @@ body{margin:0;font-family:Arial;background:#0e3b2f;color:#fff}
 .timer{font-size:22px;color:#ffd54f}
 .lock{color:#ffcc00;margin-top:6px}
 
-/* ===== WHEEL ===== */
+/* WHEEL */
 .wheel-wrap{display:flex;justify-content:center;margin:20px 0}
 .wheel{
   width:300px;height:300px;border-radius:50%;
@@ -29,10 +29,9 @@ body{margin:0;font-family:Arial;background:#0e3b2f;color:#fff}
   transform-origin:0 0;
   font-size:13px;
   font-weight:bold;
-  pointer-events:none;
 }
 
-/* ===== GRID ===== */
+/* GRID */
 .grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
 .num{padding:12px 0;border-radius:8px;font-weight:bold;text-align:center;cursor:pointer}
 .red{background:#c62828}
@@ -40,7 +39,7 @@ body{margin:0;font-family:Arial;background:#0e3b2f;color:#fff}
 .green{background:#2e7d32}
 .num.active{outline:3px solid #00e5ff}
 
-/* ===== CONTROLS ===== */
+/* CONTROLS */
 .controls{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
 .ctrl{background:#333;padding:12px;border-radius:10px;text-align:center;font-weight:bold;cursor:pointer}
 .ctrl.active{outline:3px solid #00e5ff;background:#555}
@@ -104,19 +103,68 @@ button:disabled{opacity:.5}
 
 <div class="popup" id="popup"><div id="popupText"></div></div>
 
-<script>
-/* ===== STATE ===== */
-let state=JSON.parse(localStorage.getItem("roulette_state"))||{
-  wallet:500,phase:"BET",time:25,selected:null,bets:[],last:[]
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  query,
+  where,
+  getDocs,
+  doc,
+  updateDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+/* 🔥 FIREBASE CONFIG */
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID"
 };
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const userEmail = localStorage.getItem("userEmail");
+let userDocId = "";
+
+/* ===== STATE ===== */
+let state = JSON.parse(localStorage.getItem("roulette_state")) || {
+  wallet:0,
+  phase:"BET",
+  time:25,
+  selected:null,
+  bets:[],
+  last:[]
+};
+
 const save=()=>localStorage.setItem("roulette_state",JSON.stringify(state));
 
+/* ===== LOAD WALLET ===== */
+async function loadWallet(){
+  if(!userEmail) return;
+  const q=query(collection(db,"users"),where("email","==",userEmail));
+  const snap=await getDocs(q);
+  snap.forEach(d=>{
+    userDocId=d.id;
+    state.wallet=d.data().balance||0;
+  });
+  render();
+}
+
+/* ===== SYNC WALLET ===== */
+async function syncWallet(){
+  if(!userDocId) return;
+  await updateDoc(doc(db,"users",userDocId),{balance:state.wallet});
+}
+
+/* ===== DATA ===== */
 const red=[1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
 const black=[2,4,6,8,10,11,13,15,17,20,22,24,26,28,29,31,33,35];
 
 const wheel=document.getElementById("wheel");
 
-/* ===== BUILD WHEEL ===== */
+/* BUILD WHEEL */
 for(let i=0;i<37;i++){
   let s=document.createElement("span");
   let ang=(360/37)*i;
@@ -126,7 +174,7 @@ for(let i=0;i<37;i++){
   wheel.appendChild(s);
 }
 
-/* ===== GRID ===== */
+/* GRID */
 const grid=document.getElementById("numbers");
 for(let i=0;i<=36;i++){
   let d=document.createElement("div");
@@ -141,7 +189,6 @@ function clearSel(){
   document.querySelectorAll(".ctrl").forEach(x=>x.classList.remove("active"));
 }
 
-/* ===== SELECT ===== */
 function selectNumber(n,el){
   if(state.phase!=="BET")return;
   clearSel();el.classList.add("active");
@@ -153,7 +200,7 @@ function selectGroup(g,el){
   state.selected={type:g};
 }
 
-/* ===== POPUP ===== */
+/* POPUP */
 function popupMsg(msg,cls){
   popupText.className=cls||"";
   popupText.innerText=msg;
@@ -161,7 +208,7 @@ function popupMsg(msg,cls){
   setTimeout(()=>popup.style.display="none",1800);
 }
 
-/* ===== BET ===== */
+/* BET */
 function placeBet(){
   let amt=+amount.value;
   if(amt>state.wallet){
@@ -169,24 +216,24 @@ function placeBet(){
     return;
   }
   if(!state.selected||amt<1)return;
-
   state.wallet-=amt;
+  syncWallet();
   state.bets.unshift({type:state.selected.type,value:state.selected.value,amt,res:"PENDING"});
   popupMsg("BET PLACED");
   save();render();
 }
 
-/* ===== FIXED SPIN (CLOCKWISE ONLY) ===== */
+/* SPIN */
 function spin(){
   let result=Math.floor(Math.random()*37);
   let angle=(360/37)*result;
 
   wheel.style.transition="none";
   wheel.style.transform="rotate(0deg)";
-  void wheel.offsetWidth; // force reflow
+  void wheel.offsetWidth;
 
   wheel.style.transition="transform 4.5s cubic-bezier(.22,.61,.36,1)";
-  wheel.style.transform=`rotate(${360*6+angle}deg)`; // 🔒 FIXED
+  wheel.style.transform=`rotate(${360*6+angle}deg)`;
 
   setTimeout(()=>{
     state.last.unshift(result);
@@ -206,6 +253,7 @@ function spin(){
       if(win){
         let w=b.amt*2;
         state.wallet+=w;
+        syncWallet();
         b.res="WIN ₹"+w;
         popupMsg(`🎉 ${result} → WIN ₹${w}`,"win");
       }else{
@@ -217,7 +265,7 @@ function spin(){
   },4600);
 }
 
-/* ===== LOOP ===== */
+/* LOOP */
 setInterval(()=>{
   state.time--;
 
@@ -245,13 +293,15 @@ setInterval(()=>{
   save();render();
 },1000);
 
-/* ===== RENDER ===== */
+/* RENDER */
 function render(){
   wallet.innerText=`Wallet: ₹${state.wallet}`;
   timer.innerText=state.time+"s";
   last.innerHTML=state.last.join(", ");
   bets.innerHTML=state.bets.map(b=>`${b.type} ₹${b.amt} → ${b.res}`).join("<br>");
 }
+
+loadWallet();
 render();
 </script>
 
