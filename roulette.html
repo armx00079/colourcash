@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>🎡 Roulette</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{
+  margin:0;
+  background:#0b3b2e;
+  color:#fff;
+  font-family:Arial
+}
+.header{
+  text-align:center;
+  padding:14px;
+  font-size:26px;
+  font-weight:bold
+}
+.board{
+  background:#0f5a3f;
+  margin:10px;
+  padding:12px;
+  border-radius:14px
+}
+.timer{
+  text-align:center;
+  font-size:22px;
+  color:#ffd54f;
+  margin-bottom:10px
+}
+.wallet{
+  text-align:center;
+  margin-bottom:10px
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:60px repeat(12,1fr);
+  gap:6px
+}
+.num{
+  padding:10px;
+  text-align:center;
+  border-radius:8px;
+  font-weight:bold;
+  cursor:pointer
+}
+.red{background:#c62828}
+.black{background:#1b1b1b}
+.green{background:#2e7d32}
+.num.active{
+  outline:3px solid #ffd54f
+}
+
+.controls{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin-top:10px
+}
+.ctrl{
+  background:#333;
+  padding:12px;
+  text-align:center;
+  border-radius:10px;
+  font-weight:bold;
+  cursor:pointer
+}
+.ctrl.active{
+  outline:3px solid #00e5ff
+}
+
+input{
+  width:100%;
+  padding:12px;
+  border-radius:10px;
+  border:none;
+  margin-top:10px
+}
+button{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:12px;
+  font-size:16px;
+  font-weight:bold;
+  background:#2196f3;
+  color:#fff;
+  margin-top:10px
+}
+button:disabled{opacity:.5}
+
+.history{
+  background:#083d2b;
+  margin:10px;
+  padding:10px;
+  border-radius:12px;
+  font-size:14px
+}
+
+.popup{
+  position:fixed;
+  inset:0;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.6)
+}
+.popup div{
+  background:#1e1e1e;
+  padding:25px;
+  border-radius:14px;
+  font-size:20px;
+  text-align:center
+}
+.win{color:#4caf50}
+.lose{color:#ff5252}
+</style>
+</head>
+
+<body>
+
+<div class="header">🎡 ROULETTE</div>
+
+<div class="wallet" id="wallet">Wallet: ₹1000</div>
+<div class="timer" id="timer">25s</div>
+
+<div class="board">
+  <div class="grid" id="grid"></div>
+
+  <div class="controls">
+    <div class="ctrl" onclick="selectSide('RED')">RED</div>
+    <div class="ctrl" onclick="selectSide('BLACK')">BLACK</div>
+    <div class="ctrl" onclick="selectSide('EVEN')">EVEN</div>
+    <div class="ctrl" onclick="selectSide('ODD')">ODD</div>
+    <div class="ctrl" onclick="selectSide('LOW')">1–18</div>
+    <div class="ctrl" onclick="selectSide('HIGH')">19–36</div>
+  </div>
+
+  <input id="amount" type="number" min="1" placeholder="Min ₹1">
+  <button id="betBtn" onclick="placeBet()">PLACE BET</button>
+</div>
+
+<div class="history">
+<b>Last Results</b>
+<div id="last"></div>
+</div>
+
+<div class="history">
+<b>My Bets</b>
+<div id="mybets"></div>
+</div>
+
+<div class="popup" id="popup"><div id="popupText"></div></div>
+
+<script>
+/* ---------- STATE ---------- */
+let wallet = Number(localStorage.getItem("roulette_wallet")) || 1000;
+let time = 25;
+let phase = "BET";
+let selected = null;
+let bet = null;
+let last = JSON.parse(localStorage.getItem("roulette_last")) || [];
+let mybets = [];
+
+const reds=[1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
+
+/* ---------- INIT GRID ---------- */
+const grid=document.getElementById("grid");
+const nums=[0,3,6,9,12,15,18,21,24,27,30,33,36,
+2,5,8,11,14,17,20,23,26,29,32,35,
+1,4,7,10,13,16,19,22,25,28,31,34];
+
+nums.forEach(n=>{
+  const d=document.createElement("div");
+  d.className="num "+(n===0?"green":reds.includes(n)?"red":"black");
+  d.innerText=n;
+  d.onclick=()=>selectNumber(n,d);
+  grid.appendChild(d);
+});
+
+/* ---------- UI ---------- */
+function render(){
+  walletEl.innerText="Wallet: ₹"+wallet;
+  timerEl.innerText=time+"s";
+  betBtn.disabled=phase!=="BET";
+  lastEl.innerHTML=last.join(" , ");
+  mybetsEl.innerHTML=mybets.join("<br>");
+}
+
+const walletEl=document.getElementById("wallet");
+const timerEl=document.getElementById("timer");
+const lastEl=document.getElementById("last");
+const mybetsEl=document.getElementById("mybets");
+
+function popup(msg,cls){
+  popupText.className=cls;
+  popupText.innerText=msg;
+  popupEl.style.display="flex";
+  setTimeout(()=>popupEl.style.display="none",1500);
+}
+const popupEl=document.getElementById("popup");
+const popupText=document.getElementById("popupText");
+
+/* ---------- BET SELECTION ---------- */
+function selectNumber(n,el){
+  if(phase!=="BET")return;
+  clearActive();
+  el.classList.add("active");
+  selected={type:"NUMBER",value:n};
+}
+function selectSide(s){
+  if(phase!=="BET")return;
+  clearActive();
+  event.target.classList.add("active");
+  selected={type:"SIDE",value:s};
+}
+function clearActive(){
+  document.querySelectorAll(".active").forEach(e=>e.classList.remove("active"));
+}
+
+/* ---------- PLACE BET ---------- */
+function placeBet(){
+  const amt=+amount.value;
+  if(!selected||amt<1||amt>wallet)return;
+  wallet-=amt;
+  bet={...selected,amt};
+  mybets.unshift(`Bet: ${JSON.stringify(selected)} ₹${amt}`);
+  popup("BET PLACED");
+  save();
+  render();
+}
+
+/* ---------- GAME LOOP ---------- */
+setInterval(()=>{
+  if(time>0) time--;
+  else{
+    if(phase==="BET"){phase="LOCK";time=5}
+    else if(phase==="LOCK"){result();phase="RESULT";time=5}
+    else{
+      phase="BET";time=25;selected=null;bet=null;
+      clearActive();
+    }
+  }
+  render();
+},1000);
+
+/* ---------- RESULT ---------- */
+function result(){
+  const num=Math.floor(Math.random()*37);
+  last.unshift(num);
+  last=last.slice(0,10);
+
+  let win=false;
+  if(bet){
+    if(bet.type==="NUMBER" && bet.value===num){
+      wallet+=bet.amt*36;
+      win=true;
+    }
+    if(bet.type==="SIDE"){
+      if(bet.value==="RED" && reds.includes(num)) win=true;
+      if(bet.value==="BLACK" && num!==0 && !reds.includes(num)) win=true;
+      if(bet.value==="EVEN" && num%2===0 && num!==0) win=true;
+      if(bet.value==="ODD" && num%2===1) win=true;
+      if(bet.value==="LOW" && num>=1 && num<=18) win=true;
+      if(bet.value==="HIGH" && num>=19) win=true;
+      if(win) wallet+=bet.amt*2;
+    }
+    popup(win?"YOU WIN":"YOU LOST",win?"win":"lose");
+  }
+  save();
+}
+
+/* ---------- SAVE ---------- */
+function save(){
+  localStorage.setItem("roulette_wallet",wallet);
+  localStorage.setItem("roulette_last",JSON.stringify(last));
+}
+
+render();
+</script>
+
+</body>
+</html>
