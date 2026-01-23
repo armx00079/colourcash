@@ -48,7 +48,7 @@ button{flex:1;padding:10px;border:none;border-radius:8px;font-weight:bold;font-s
   <div class="multiplier" id="multi">WAITING</div>
 </div>
 
-<div class="status" id="status">Place your bets (25s)</div>
+<div class="status" id="status"></div>
 
 <div class="controls">
   <div class="betbox" id="box1">
@@ -87,11 +87,22 @@ button{flex:1;padding:10px;border:none;border-radius:8px;font-weight:bold;font-s
 </div>
 
 <script>
-let wallet=3000,state="BET",timer=25,multi=1,crash=0,flyInt=null;
-let active=[false,false],betAmt=[0,0],history=[];
-const wEl=document.getElementById("wallet"),mEl=document.getElementById("multi");
-const sEl=document.getElementById("status"),hEl=document.getElementById("history");
-const popupBg=document.getElementById("popupBg"),popup=document.getElementById("popup");
+let wallet=3000;
+let state="BET";
+let timer=25;
+let multi=1;
+let crash=0;
+let active=[false,false];
+let betAmt=[0,0];
+let history=[];
+let lastTick=Date.now();
+
+const wEl=document.getElementById("wallet");
+const mEl=document.getElementById("multi");
+const sEl=document.getElementById("status");
+const hEl=document.getElementById("history");
+const popupBg=document.getElementById("popupBg");
+const popup=document.getElementById("popup");
 
 function showPopup(msg,type){
   popup.className="popup "+type;
@@ -117,93 +128,98 @@ function renderHistory(){
   });
 }
 
-function saveState(){
-  localStorage.setItem("aviator_state",JSON.stringify({wallet,state,timer,multi,crash,active,betAmt,history}));
+function save(){
+  localStorage.setItem("aviator",JSON.stringify({
+    wallet,state,timer,multi,crash,active,betAmt,history
+  }));
 }
 
-function loadState(){
-  let d=localStorage.getItem("aviator_state");
-  if(!d) return false;
+function load(){
+  let d=localStorage.getItem("aviator");
+  if(!d) return;
   d=JSON.parse(d);
-  wallet=d.wallet;state=d.state;timer=d.timer;multi=d.multi;crash=d.crash;
-  active=d.active;betAmt=d.betAmt;history=d.history;
-  wEl.innerText=wallet;renderHistory();
-  return true;
+  Object.assign(window,d);
+  wEl.innerText=wallet;
+  renderHistory();
 }
 
-function startRound(){
-  state="BET";timer=25;
-  sEl.innerText=`Place your bets (${timer}s)`;
-  mEl.innerText="WAITING";
-  document.getElementById("box1").classList.remove("locked");
-  document.getElementById("box2").classList.remove("locked");
-  let t=setInterval(()=>{
-    timer--;sEl.innerText=`Place your bets (${timer}s)`;
-    if(timer<=0){clearInterval(t);lockBets();}
-  },1000);
-}
+function gameLoop(){
+  let now=Date.now();
+  if(now-lastTick<1000) return;
+  lastTick=now;
 
-function lockBets(){
-  state="LOCK";timer=5;
-  sEl.innerText=`Bet locked (${timer}s)`;
-  document.getElementById("box1").classList.add("locked");
-  document.getElementById("box2").classList.add("locked");
-  let t=setInterval(()=>{
-    timer--;sEl.innerText=`Bet locked (${timer}s)`;
-    if(timer<=0){clearInterval(t);startFly();}
-  },1000);
-}
-
-function startFly(){
-  state="FLY";multi=1;crash=randCrash();
-  mEl.classList.remove("crashed");sEl.innerText="Flying…";
-  flyInt=setInterval(()=>{
-    multi+=0.02+multi*0.004;multi=+multi.toFixed(2);
+  if(state==="BET"){
+    sEl.innerText=`Place your bets (${timer}s)`;
+    timer--;
+    if(timer<=0){state="LOCK";timer=5;}
+  }
+  else if(state==="LOCK"){
+    sEl.innerText=`Bet locked (${timer}s)`;
+    document.getElementById("box1").classList.add("locked");
+    document.getElementById("box2").classList.add("locked");
+    timer--;
+    if(timer<=0){
+      state="FLY";
+      multi=1;
+      crash=randCrash();
+      document.getElementById("box1").classList.remove("locked");
+      document.getElementById("box2").classList.remove("locked");
+    }
+  }
+  else if(state==="FLY"){
+    sEl.innerText="Flying…";
+    multi+=0.02+multi*0.004;
+    multi=+multi.toFixed(2);
     mEl.innerText=multi+"x";
-    if(multi>=crash) endRound();
-  },50);
-}
+    if(multi>=crash){
+      state="CRASH";
+      mEl.innerText="CRASHED @ "+crash+"x";
+      mEl.classList.add("crashed");
+      history.unshift(crash);
+      history=history.slice(0,10);
+      renderHistory();
+      setTimeout(()=>{
+        state="BET";
+        timer=25;
+        mEl.classList.remove("crashed");
+        mEl.innerText="WAITING";
+      },2000);
+    }
+  }
 
-function endRound(){
-  clearInterval(flyInt);
-  state="CRASH";
-  mEl.innerText="CRASHED @ "+crash+"x";
-  mEl.classList.add("crashed");
-  history.unshift(crash);history=history.slice(0,10);renderHistory();
-  active=[false,false];
-  document.getElementById("btn1").innerText="BET";
-  document.getElementById("btn2").innerText="BET";
-  setTimeout(startRound,2000);
+  save();
 }
 
 function bet(n){
-  let i=n-1,amt=+document.getElementById("amt"+n).value;
+  let i=n-1;
+  let amt=+document.getElementById("amt"+n).value;
   if(state==="BET"){
     if(wallet<amt) return showPopup("Low Balance","loss");
-    wallet-=amt;wEl.innerText=wallet;
-    active[i]=true;betAmt[i]=amt;
+    wallet-=amt;
+    active[i]=true;
+    betAmt[i]=amt;
+    wEl.innerText=wallet;
     document.getElementById("btn"+n).innerText="CASH OUT";
     showPopup("Bet Placed","betp");
-  }else if(state==="FLY" && active[i]){
+  }
+  else if(state==="FLY" && active[i]){
     active[i]=false;
     let win=Math.floor(amt*multi);
-    wallet+=win;wEl.innerText=wallet;
+    wallet+=win;
+    wEl.innerText=wallet;
     document.getElementById("btn"+n).innerText="BET";
     showPopup("Cashed Out @ "+multi+"x","win");
   }
 }
 
-function chg(n,v){let i=document.getElementById("amt"+n);i.value=Math.max(1,+i.value+v);}
+function chg(n,v){
+  let i=document.getElementById("amt"+n);
+  i.value=Math.max(1,+i.value+v);
+}
 function setAmt(n,v){document.getElementById("amt"+n).value=v;}
 
-setInterval(saveState,500);
-
-if(loadState()){
-  if(state==="BET") startRound();
-  else if(state==="LOCK") lockBets();
-  else if(state==="FLY") startFly();
-  else startRound();
-}else startRound();
+load();
+setInterval(gameLoop,100);
 </script>
 
 </body>
