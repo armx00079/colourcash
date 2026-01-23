@@ -8,112 +8,113 @@
 <style>
 body{
   margin:0;
-  background:#0b3b2e;
+  font-family:Arial, sans-serif;
+  background:#0e3b2f;
   color:#fff;
-  font-family:Arial
 }
+
 .header{
   text-align:center;
   padding:14px;
-  font-size:26px;
-  font-weight:bold
-}
-.board{
-  background:#0f5a3f;
-  margin:10px;
-  padding:12px;
-  border-radius:14px
-}
-.timer{
-  text-align:center;
   font-size:22px;
-  color:#ffd54f;
-  margin-bottom:10px
-}
-.wallet{
-  text-align:center;
-  margin-bottom:10px
+  font-weight:bold;
 }
 
+.card{
+  background:#0f5132;
+  margin:10px;
+  padding:12px;
+  border-radius:14px;
+}
+
+.center{text-align:center}
+
+.timer{
+  font-size:20px;
+  margin-top:6px;
+  color:#ffd54f;
+}
+
+/* GRID FIXED FOR MOBILE */
 .grid{
   display:grid;
-  grid-template-columns:60px repeat(12,1fr);
-  gap:6px
+  grid-template-columns:repeat(6,1fr);
+  gap:6px;
 }
+
 .num{
-  padding:10px;
-  text-align:center;
+  padding:10px 0;
   border-radius:8px;
+  font-size:14px;
   font-weight:bold;
-  cursor:pointer
+  text-align:center;
+  cursor:pointer;
 }
 .red{background:#c62828}
-.black{background:#1b1b1b}
+.black{background:#111}
 .green{background:#2e7d32}
+
 .num.active{
-  outline:3px solid #ffd54f
+  outline:3px solid #00e5ff;
 }
 
 .controls{
   display:grid;
   grid-template-columns:repeat(3,1fr);
   gap:8px;
-  margin-top:10px
+  margin-top:10px;
 }
+
 .ctrl{
   background:#333;
-  padding:12px;
-  text-align:center;
+  padding:10px;
   border-radius:10px;
+  text-align:center;
   font-weight:bold;
-  cursor:pointer
-}
-.ctrl.active{
-  outline:3px solid #00e5ff
 }
 
 input{
   width:100%;
+  margin-top:10px;
   padding:12px;
-  border-radius:10px;
   border:none;
-  margin-top:10px
+  border-radius:10px;
 }
+
 button{
   width:100%;
   padding:14px;
+  margin-top:10px;
   border:none;
   border-radius:12px;
-  font-size:16px;
-  font-weight:bold;
   background:#2196f3;
   color:#fff;
-  margin-top:10px
+  font-size:16px;
+  font-weight:bold;
 }
+
 button:disabled{opacity:.5}
 
 .history{
-  background:#083d2b;
-  margin:10px;
-  padding:10px;
-  border-radius:12px;
-  font-size:14px
+  font-size:14px;
+  line-height:1.6;
+  margin-top:6px;
 }
 
 .popup{
   position:fixed;
   inset:0;
+  background:rgba(0,0,0,.6);
   display:none;
   align-items:center;
   justify-content:center;
-  background:rgba(0,0,0,.6)
+  z-index:10;
 }
 .popup div{
-  background:#1e1e1e;
-  padding:25px;
+  background:#1b1b1b;
+  padding:22px;
   border-radius:14px;
-  font-size:20px;
-  text-align:center
+  font-size:18px;
 }
 .win{color:#4caf50}
 .lose{color:#ff5252}
@@ -124,162 +125,159 @@ button:disabled{opacity:.5}
 
 <div class="header">🎡 ROULETTE</div>
 
-<div class="wallet" id="wallet">Wallet: ₹1000</div>
-<div class="timer" id="timer">25s</div>
+<div class="card center">
+  <div id="wallet">Wallet: ₹0</div>
+  <div class="timer" id="timer">25s</div>
+</div>
 
-<div class="board">
-  <div class="grid" id="grid"></div>
+<div class="card">
+  <div class="grid" id="numbers"></div>
 
   <div class="controls">
-    <div class="ctrl" onclick="selectSide('RED')">RED</div>
-    <div class="ctrl" onclick="selectSide('BLACK')">BLACK</div>
-    <div class="ctrl" onclick="selectSide('EVEN')">EVEN</div>
-    <div class="ctrl" onclick="selectSide('ODD')">ODD</div>
-    <div class="ctrl" onclick="selectSide('LOW')">1–18</div>
-    <div class="ctrl" onclick="selectSide('HIGH')">19–36</div>
+    <div class="ctrl" onclick="selectGroup('RED')">RED</div>
+    <div class="ctrl" onclick="selectGroup('BLACK')">BLACK</div>
+    <div class="ctrl" onclick="selectGroup('EVEN')">EVEN</div>
+    <div class="ctrl" onclick="selectGroup('ODD')">ODD</div>
+    <div class="ctrl" onclick="selectGroup('LOW')">1–18</div>
+    <div class="ctrl" onclick="selectGroup('HIGH')">19–36</div>
   </div>
 
-  <input id="amount" type="number" min="1" placeholder="Min ₹1">
+  <input id="amount" type="number" placeholder="Min ₹1">
   <button id="betBtn" onclick="placeBet()">PLACE BET</button>
 </div>
 
-<div class="history">
-<b>Last Results</b>
-<div id="last"></div>
+<div class="card">
+  <b>Last Results</b>
+  <div class="history" id="last"></div>
 </div>
 
-<div class="history">
-<b>My Bets</b>
-<div id="mybets"></div>
+<div class="card">
+  <b>My Bets</b>
+  <div class="history" id="bets"></div>
 </div>
 
 <div class="popup" id="popup"><div id="popupText"></div></div>
 
 <script>
-/* ---------- STATE ---------- */
-let wallet = Number(localStorage.getItem("roulette_wallet")) || 1000;
-let time = 25;
-let phase = "BET";
-let selected = null;
-let bet = null;
-let last = JSON.parse(localStorage.getItem("roulette_last")) || [];
-let mybets = [];
+/* ---------- PERSISTENT STATE ---------- */
+let state = JSON.parse(localStorage.getItem("roulette_state")) || {
+  wallet:600,
+  time:25,
+  phase:"BET",
+  selected:null,
+  bets:[],
+  last:[]
+};
 
-const reds=[1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
-
-/* ---------- INIT GRID ---------- */
-const grid=document.getElementById("grid");
-const nums=[0,3,6,9,12,15,18,21,24,27,30,33,36,
-2,5,8,11,14,17,20,23,26,29,32,35,
-1,4,7,10,13,16,19,22,25,28,31,34];
-
-nums.forEach(n=>{
-  const d=document.createElement("div");
-  d.className="num "+(n===0?"green":reds.includes(n)?"red":"black");
-  d.innerText=n;
-  d.onclick=()=>selectNumber(n,d);
-  grid.appendChild(d);
-});
+function save(){localStorage.setItem("roulette_state",JSON.stringify(state))}
 
 /* ---------- UI ---------- */
-function render(){
-  walletEl.innerText="Wallet: ₹"+wallet;
-  timerEl.innerText=time+"s";
-  betBtn.disabled=phase!=="BET";
-  lastEl.innerHTML=last.join(" , ");
-  mybetsEl.innerHTML=mybets.join("<br>");
-}
-
 const walletEl=document.getElementById("wallet");
 const timerEl=document.getElementById("timer");
 const lastEl=document.getElementById("last");
-const mybetsEl=document.getElementById("mybets");
-
-function popup(msg,cls){
-  popupText.className=cls;
-  popupText.innerText=msg;
-  popupEl.style.display="flex";
-  setTimeout(()=>popupEl.style.display="none",1500);
-}
-const popupEl=document.getElementById("popup");
+const betsEl=document.getElementById("bets");
+const popup=document.getElementById("popup");
 const popupText=document.getElementById("popupText");
 
-/* ---------- BET SELECTION ---------- */
-function selectNumber(n,el){
-  if(phase!=="BET")return;
-  clearActive();
-  el.classList.add("active");
-  selected={type:"NUMBER",value:n};
+function render(){
+  walletEl.innerText=`Wallet: ₹${state.wallet}`;
+  timerEl.innerText=state.time+"s";
+  lastEl.innerHTML=state.last.join(", ");
+  betsEl.innerHTML=state.bets.map(b=>`${b.type} ₹${b.amt} → ${b.res}`).join("<br>");
 }
-function selectSide(s){
-  if(phase!=="BET")return;
-  clearActive();
-  event.target.classList.add("active");
-  selected={type:"SIDE",value:s};
-}
-function clearActive(){
-  document.querySelectorAll(".active").forEach(e=>e.classList.remove("active"));
+render();
+
+/* ---------- NUMBERS ---------- */
+const red=[1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
+const black=[2,4,6,8,10,11,13,15,17,20,22,24,26,28,29,31,33,35];
+
+const grid=document.getElementById("numbers");
+for(let i=0;i<=36;i++){
+  let d=document.createElement("div");
+  d.className="num "+(i==0?"green":red.includes(i)?"red":"black");
+  d.innerText=i;
+  d.onclick=()=>selectNumber(i,d);
+  grid.appendChild(d);
 }
 
-/* ---------- PLACE BET ---------- */
+function selectNumber(n,el){
+  if(state.phase!=="BET")return;
+  state.selected={type:"NUMBER",value:n};
+  document.querySelectorAll(".num").forEach(x=>x.classList.remove("active"));
+  el.classList.add("active");
+}
+
+/* ---------- GROUP BET ---------- */
+function selectGroup(g){
+  if(state.phase!=="BET")return;
+  state.selected={type:g};
+  document.querySelectorAll(".num").forEach(x=>x.classList.remove("active"));
+}
+
+/* ---------- BET ---------- */
 function placeBet(){
-  const amt=+amount.value;
-  if(!selected||amt<1||amt>wallet)return;
-  wallet-=amt;
-  bet={...selected,amt};
-  mybets.unshift(`Bet: ${JSON.stringify(selected)} ₹${amt}`);
-  popup("BET PLACED");
-  save();
-  render();
+  let amt=+amount.value;
+  if(!state.selected||amt<1||amt>state.wallet)return;
+  state.wallet-=amt;
+  state.bets.unshift({type:state.selected.type,amt,res:"PENDING"});
+  popupMsg("BET PLACED");
+  save();render();
+}
+
+/* ---------- POPUP ---------- */
+function popupMsg(t,c=""){
+  popupText.className=c;
+  popupText.innerText=t;
+  popup.style.display="flex";
+  setTimeout(()=>popup.style.display="none",1500);
 }
 
 /* ---------- GAME LOOP ---------- */
 setInterval(()=>{
-  if(time>0) time--;
+  if(state.time>0) state.time--;
   else{
-    if(phase==="BET"){phase="LOCK";time=5}
-    else if(phase==="LOCK"){result();phase="RESULT";time=5}
-    else{
-      phase="BET";time=25;selected=null;bet=null;
-      clearActive();
+    if(state.phase==="BET"){
+      state.phase="LOCK";state.time=5;
+    }else if(state.phase==="LOCK"){
+      spin();
+      state.phase="RESULT";state.time=5;
+    }else{
+      state.phase="BET";state.time=25;
+      state.selected=null;
     }
   }
-  render();
+  save();render();
 },1000);
 
 /* ---------- RESULT ---------- */
-function result(){
-  const num=Math.floor(Math.random()*37);
-  last.unshift(num);
-  last=last.slice(0,10);
+function spin(){
+  let result=Math.floor(Math.random()*37);
+  state.last.unshift(result);
+  state.last=state.last.slice(0,10);
 
-  let win=false;
-  if(bet){
-    if(bet.type==="NUMBER" && bet.value===num){
-      wallet+=bet.amt*36;
-      win=true;
+  state.bets.forEach(b=>{
+    if(b.res==="PENDING"){
+      let win=false;
+      if(b.type==="NUMBER" && state.selected?.value===result) win=true;
+      if(b.type==="RED" && red.includes(result)) win=true;
+      if(b.type==="BLACK" && black.includes(result)) win=true;
+      if(b.type==="EVEN" && result%2===0 && result!==0) win=true;
+      if(b.type==="ODD" && result%2===1) win=true;
+      if(b.type==="LOW" && result>=1 && result<=18) win=true;
+      if(b.type==="HIGH" && result>=19) win=true;
+
+      if(win){
+        let w=b.amt*2;
+        state.wallet+=w;
+        b.res="WIN ₹"+w;
+        popupMsg("WIN ₹"+w,"win");
+      }else{
+        b.res="LOSS";
+        popupMsg("LOSS","lose");
+      }
     }
-    if(bet.type==="SIDE"){
-      if(bet.value==="RED" && reds.includes(num)) win=true;
-      if(bet.value==="BLACK" && num!==0 && !reds.includes(num)) win=true;
-      if(bet.value==="EVEN" && num%2===0 && num!==0) win=true;
-      if(bet.value==="ODD" && num%2===1) win=true;
-      if(bet.value==="LOW" && num>=1 && num<=18) win=true;
-      if(bet.value==="HIGH" && num>=19) win=true;
-      if(win) wallet+=bet.amt*2;
-    }
-    popup(win?"YOU WIN":"YOU LOST",win?"win":"lose");
-  }
-  save();
+  });
 }
-
-/* ---------- SAVE ---------- */
-function save(){
-  localStorage.setItem("roulette_wallet",wallet);
-  localStorage.setItem("roulette_last",JSON.stringify(last));
-}
-
-render();
 </script>
 
 </body>
