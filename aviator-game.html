@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>AVIATOR DEMO</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{
+  margin:0;
+  background:#0b0b0b;
+  color:#fff;
+  font-family:Arial;
+  overflow:hidden;
+}
+
+/* HEADER */
+.header{
+  text-align:center;
+  padding:14px;
+  font-size:22px;
+  font-weight:bold;
+}
+
+/* GAME AREA */
+.game{
+  position:relative;
+  height:70vh;
+  background:linear-gradient(#111,#000);
+  overflow:hidden;
+}
+
+/* MULTIPLIER */
+.multiplier{
+  position:absolute;
+  top:30px;
+  width:100%;
+  text-align:center;
+  font-size:48px;
+  font-weight:bold;
+  color:#00ffcc;
+}
+
+/* PLANE */
+.plane{
+  position:absolute;
+  left:-80px;
+  bottom:40px;
+  font-size:48px;
+  transition:transform .1s linear;
+}
+
+/* CRASH TEXT */
+.crash{
+  position:absolute;
+  inset:0;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  font-size:42px;
+  font-weight:bold;
+  color:#ff4d4d;
+}
+
+/* BOTTOM */
+.bottom{
+  text-align:center;
+  padding:20px;
+}
+
+.btn{
+  background:#00c853;
+  border:none;
+  padding:14px 28px;
+  font-size:18px;
+  border-radius:10px;
+  color:#fff;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">✈️ AVIATOR</div>
+
+<div class="game">
+  <div class="multiplier" id="multi">1.00x</div>
+  <div class="plane" id="plane">✈️</div>
+  <div class="crash" id="crash">💥 CRASH</div>
+</div>
+
+<div class="bottom">
+  <button class="btn" onclick="startGame()">START ROUND</button>
+</div>
+
+<script>
+let running=false;
+let m=1;
+let crashAt=0;
+let planeX=-80;
+let planeY=40;
+let timer;
+
+function startGame(){
+ if(running) return;
+ running=true;
+
+ m=1;
+ planeX=-80;
+ planeY=40;
+ crashAt=(Math.random()*13+2).toFixed(2); // 2x–15x
+ document.getElementById("crash").style.display="none";
+ document.getElementById("multi").innerText="1.00x";
+
+ const plane=document.getElementById("plane");
+ const multi=document.getElementById("multi");
+
+ timer=setInterval(()=>{
+   m+=0.01;
+   planeX+=2;
+   planeY+=0.3;
+
+   multi.innerText=m.toFixed(2)+"x";
+   plane.style.transform=`translate(${planeX}px,-${planeY}px)`;
+
+   if(m>=crashAt){
+     crash();
+   }
+ },30);
+}
+
+function crash(){
+ clearInterval(timer);
+ running=false;
+ document.getElementById("crash").style.display="flex";
+ document.getElementById("multi").innerText=crashAt+"x";
+}
+</script>
+
+</body>
+</html>
