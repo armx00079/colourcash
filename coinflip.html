@@ -178,7 +178,16 @@ function play(choice){
 
   setTimeout(()=>{
     coin.classList.remove("flip");
-    let result = Math.random() < 0.5 ? "HEAD" : "TAIL";
+    let r = Math.random();
+let result;
+
+if(r < 0.3){
+  // 30% chance → player wins
+  result = choice;
+}else{
+  // 70% chance → player loses
+  result = choice === "HEAD" ? "TAIL" : "HEAD";
+  }
     coin.innerText = result==="HEAD" ? "🙂" : "🪙";
 
     history.unshift(result);
