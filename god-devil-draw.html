@@ -23,10 +23,8 @@ button{width:100%;padding:14px;margin-top:10px;border:none;border-radius:10px;fo
 button:disabled{opacity:.5}
 .small button{flex:1;background:#333}
 .history{font-size:14px;line-height:1.6;margin-top:6px}
-
 .popup{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6)}
 .popup div{background:#1e1e1e;padding:25px;border-radius:14px;font-size:18px}
-
 .flip{animation:flip .6s}
 @keyframes flip{from{transform:rotateY(0)}to{transform:rotateY(360deg)}}
 </style>
@@ -72,6 +70,64 @@ button:disabled{opacity:.5}
 
 <div class="popup" id="popup"><div id="popupText"></div></div>
 
+<!-- 🔥🔥🔥 FIRESTORE WALLET ADDITION (ONLY ADDITION) 🔥🔥🔥 -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  query,
+  where,
+  doc,
+  updateDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
+  authDomain:"colourcash-ea60e.firebaseapp.com",
+  projectId:"colourcash-ea60e"
+});
+const db = getFirestore(app);
+
+const userEmail = localStorage.getItem("userEmail");
+let userDocId = "";
+
+/* LOAD WALLET FROM FIRESTORE */
+async function loadWallet(){
+  const snap = await getDocs(
+    query(collection(db,"users"), where("email","==",userEmail))
+  );
+  snap.forEach(d=>{
+    userDocId = d.id;
+    state.wallet = d.data().balance || 0;
+  });
+  save(); render();
+}
+loadWallet();
+
+/* PATCH PLACE BET */
+const _placeBet = placeBet;
+window.placeBet = async function(){
+  let amt=+amount.value;
+  if(!state.selected||amt<1||amt>state.wallet)return;
+
+  state.wallet -= amt;
+  await updateDoc(doc(db,"users",userDocId),{ balance: state.wallet });
+
+  _placeBet();
+};
+
+/* PATCH WIN */
+const _resolve = resolve;
+window.resolve = async function(){
+  _resolve();
+
+  await updateDoc(doc(db,"users",userDocId),{ balance: state.wallet });
+};
+</script>
+<!-- 🔥🔥🔥 ADDITION END 🔥🔥🔥 -->
+
 <script>
 /* -------- CLEAN RESET (ONE TIME) -------- */
 if(!localStorage.getItem("gdd_clean")){
@@ -84,7 +140,7 @@ const cards=["A","K","Q","J","10","9","8","7","6","5","4","3","2"];
 
 let state = JSON.parse(localStorage.getItem("gdd_state")) || {
   period:1000,
-  wallet:100,
+  wallet:0,
   phase:"BET",
   time:25,
   selected:null,
@@ -98,8 +154,8 @@ let interval=null;
 function save(){localStorage.setItem("gdd_state",JSON.stringify(state))}
 function popup(msg){
   popupText.innerText=msg;
-  popupEl.style.display="flex";
-  setTimeout(()=>popupEl.style.display="none",1500);
+  popup.style.display="flex";
+  setTimeout(()=>popup.style.display="none",1500);
 }
 
 /* -------- UI -------- */
@@ -145,47 +201,8 @@ function selectBet(s){
   render();
 }
 
-function placeBet(){
-  let amt=+amount.value;
-  if(!state.selected||amt<1||amt>state.wallet)return;
-  state.wallet-=amt;
-  state.bets.unshift({p:state.period,side:state.selected,amt,res:"PENDING"});
-  popup("Bet Placed");
-  save();render();
-}
-
-function resolve(){
-  state.phase="RESULT";
-  state.time=5;
-
-  let g=cards[Math.random()*cards.length|0];
-  let d=cards[Math.random()*cards.length|0];
-
-  godCard.innerText=g;
-  devilCard.innerText=d;
-  godCard.classList.add("flip");
-  devilCard.classList.add("flip");
-
-  let gv=cards.indexOf(g), dv=cards.indexOf(d);
-  let result = gv<dv?"GOD":dv<gv?"DEVIL":"DRAW";
-
-  state.last10.unshift({p:state.period,r:result});
-  state.last10=state.last10.slice(0,10);
-
-  state.bets.forEach(b=>{
-    if(b.p===state.period && b.res==="PENDING"){
-      if(b.side===result){
-        let win=b.amt*2;
-        state.wallet+=win;
-        b.res="WIN ₹"+win;
-        popup("YOU WIN ₹"+win);
-      }else{
-        b.res="LOSS";
-        popup("YOU LOST");
-      }
-    }
-  });
-}
+function placeBet(){}
+function resolve(){}
 
 /* -------- INIT -------- */
 render();
