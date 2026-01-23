@@ -8,25 +8,18 @@
 <style>
 body{margin:0;font-family:Arial;background:#0e3b2f;color:#fff}
 .header{text-align:center;padding:14px;font-size:22px;font-weight:bold}
-
 .card{background:#0f5132;margin:10px;padding:12px;border-radius:14px}
 .center{text-align:center}
 .timer{font-size:22px;color:#ffd54f}
 .lock{color:#ffcc00;margin-top:6px}
 
-/* ===== WHEEL LOOK (PREMIUM) ===== */
+/* ===== WHEEL ===== */
 .wheel-wrap{display:flex;justify-content:center;margin:20px 0}
 .wheel{
   width:300px;height:300px;border-radius:50%;
   border:14px solid #111;
-  background:
-    repeating-conic-gradient(
-      #c62828 0deg 10deg,
-      #111 10deg 20deg
-    );
-  box-shadow:
-    inset 0 0 25px rgba(0,0,0,.9),
-    0 0 30px rgba(0,0,0,.6);
+  background:repeating-conic-gradient(#c62828 0deg 10deg,#111 10deg 20deg);
+  box-shadow:inset 0 0 25px rgba(0,0,0,.9);
   transition:transform 4.5s cubic-bezier(.22,.61,.36,1);
   position:relative;
 }
@@ -53,21 +46,17 @@ body{margin:0;font-family:Arial;background:#0e3b2f;color:#fff}
 .ctrl.active{outline:3px solid #00e5ff;background:#555}
 
 input{width:100%;padding:12px;margin-top:10px;border:none;border-radius:10px}
-button{
-  width:100%;padding:14px;margin-top:10px;border:none;
-  border-radius:12px;background:#2196f3;color:#fff;
-  font-size:16px;font-weight:bold
-}
+button{width:100%;padding:14px;margin-top:10px;border:none;border-radius:12px;background:#2196f3;color:#fff;font-size:16px;font-weight:bold}
 button:disabled{opacity:.5}
 
 .history{font-size:14px;line-height:1.6;margin-top:6px}
 
 /* POPUP */
-.popup{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;
-align-items:center;justify-content:center;z-index:20}
+.popup{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:50}
 .popup div{background:#1b1b1b;padding:22px;border-radius:14px;font-size:18px}
 .win{color:#4caf50}
 .lose{color:#ff5252}
+.warn{color:#ff5252}
 
 .blur{filter:blur(3px);pointer-events:none}
 </style>
@@ -100,7 +89,7 @@ align-items:center;justify-content:center;z-index:20}
   </div>
 
   <input id="amount" type="number" placeholder="Min ₹1">
-  <button id="betBtn" onclick="placeBet()">PLACE BET</button>
+  <button onclick="placeBet()">PLACE BET</button>
 </div>
 
 <div class="card">
@@ -116,23 +105,18 @@ align-items:center;justify-content:center;z-index:20}
 <div class="popup" id="popup"><div id="popupText"></div></div>
 
 <script>
-/* ================= STATE ================= */
+/* ===== STATE ===== */
 let state=JSON.parse(localStorage.getItem("roulette_state"))||{
   wallet:500,phase:"BET",time:25,selected:null,bets:[],last:[]
 };
 const save=()=>localStorage.setItem("roulette_state",JSON.stringify(state));
 
-/* ================= ELEMENTS ================= */
-const wheel=document.getElementById("wheel");
-const popup=document.getElementById("popup");
-const popupText=document.getElementById("popupText");
-const game=document.getElementById("game");
-
-/* ================= COLORS ================= */
 const red=[1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
 const black=[2,4,6,8,10,11,13,15,17,20,22,24,26,28,29,31,33,35];
 
-/* ================= BUILD WHEEL NUMBERS ================= */
+const wheel=document.getElementById("wheel");
+
+/* ===== BUILD WHEEL ===== */
 for(let i=0;i<37;i++){
   let s=document.createElement("span");
   let ang=(360/37)*i;
@@ -142,7 +126,7 @@ for(let i=0;i<37;i++){
   wheel.appendChild(s);
 }
 
-/* ================= GRID ================= */
+/* ===== GRID ===== */
 const grid=document.getElementById("numbers");
 for(let i=0;i<=36;i++){
   let d=document.createElement("div");
@@ -157,7 +141,7 @@ function clearSel(){
   document.querySelectorAll(".ctrl").forEach(x=>x.classList.remove("active"));
 }
 
-/* ================= SELECT ================= */
+/* ===== SELECT ===== */
 function selectNumber(n,el){
   if(state.phase!=="BET")return;
   clearSel();el.classList.add("active");
@@ -169,49 +153,40 @@ function selectGroup(g,el){
   state.selected={type:g};
 }
 
-/* ================= BET ================= */
+/* ===== POPUP ===== */
+function popupMsg(msg,cls){
+  popupText.className=cls||"";
+  popupText.innerText=msg;
+  popup.style.display="flex";
+  setTimeout(()=>popup.style.display="none",1800);
+}
+
+/* ===== BET ===== */
 function placeBet(){
   let amt=+amount.value;
-  if(state.phase!=="BET"||!state.selected||amt<1||amt>state.wallet)return;
+  if(amt>state.wallet){
+    popupMsg("INSUFFICIENT BALANCE","warn");
+    return;
+  }
+  if(!state.selected||amt<1)return;
+
   state.wallet-=amt;
   state.bets.unshift({type:state.selected.type,value:state.selected.value,amt,res:"PENDING"});
   popupMsg("BET PLACED");
   save();render();
 }
 
-/* ================= POPUP ================= */
-function popupMsg(t,c=""){
-  popupText.className=c;
-  popupText.innerText=t;
-  popup.style.display="flex";
-  setTimeout(()=>popup.style.display="none",1800);
-}
-
-/* ================= HOUSE EDGE 30% ================= */
-function pickResultWithHouseEdge(){
-  let r;
-  do{
-    r=Math.floor(Math.random()*37);
-  }while(
-    Math.random()<0.30 && // 🔥 30% HOUSE EDGE
-    state.bets.some(b=>{
-      if(b.type==="NUMBER") return b.value===r;
-      if(b.type==="RED") return red.includes(r);
-      if(b.type==="BLACK") return black.includes(r);
-      if(b.type==="EVEN") return r!==0 && r%2===0;
-      if(b.type==="ODD") return r%2===1;
-      if(b.type==="LOW") return r>=1 && r<=18;
-      if(b.type==="HIGH") return r>=19;
-    })
-  );
-  return r;
-}
-
-/* ================= SPIN (FIXED SPEED & DIRECTION) ================= */
+/* ===== FIXED SPIN (CLOCKWISE ONLY) ===== */
 function spin(){
-  let result=pickResultWithHouseEdge();
-  let deg=(360/37)*result;
-  wheel.style.transform=`rotate(${2160+deg}deg)`; // 🔒 SAME SPEED, SAME CLOCKWISE
+  let result=Math.floor(Math.random()*37);
+  let angle=(360/37)*result;
+
+  wheel.style.transition="none";
+  wheel.style.transform="rotate(0deg)";
+  void wheel.offsetWidth; // force reflow
+
+  wheel.style.transition="transform 4.5s cubic-bezier(.22,.61,.36,1)";
+  wheel.style.transform=`rotate(${360*6+angle}deg)`; // 🔒 FIXED
 
   setTimeout(()=>{
     state.last.unshift(result);
@@ -239,10 +214,10 @@ function spin(){
       }
     });
     save();render();
-  },4300);
+  },4600);
 }
 
-/* ================= LOOP ================= */
+/* ===== LOOP ===== */
 setInterval(()=>{
   state.time--;
 
@@ -266,10 +241,11 @@ setInterval(()=>{
     lockText.innerText="";
     game.classList.remove("blur");
   }
+
   save();render();
 },1000);
 
-/* ================= RENDER ================= */
+/* ===== RENDER ===== */
 function render(){
   wallet.innerText=`Wallet: ₹${state.wallet}`;
   timer.innerText=state.time+"s";
