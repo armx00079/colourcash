@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Coin Flip</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<style>
+body{margin:0;font-family:Arial;background:#081c2f;color:#fff}
+.header{display:flex;justify-content:space-between;align-items:center;padding:14px;background:#041425}
+.balance{font-size:18px;color:#00e676;font-weight:bold}
+.title{font-size:20px}
+
+.history{
+  display:flex;gap:8px;padding:10px;
+  overflow-x:auto;background:#061a2f
+}
+.history span{
+  padding:6px 10px;
+  border-radius:20px;
+  font-size:14px;
+  background:#0e2a44
+}
+
+.game{
+  height:45vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+}
+
+.coin{
+  width:140px;height:140px;
+  border-radius:50%;
+  background:radial-gradient(circle,#ffd54f,#f9a825);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:30px;
+  font-weight:bold;
+  color:#000;
+  transition:transform 1s;
+}
+
+.flip{
+  animation:spin 1s linear;
+}
+
+@keyframes spin{
+  from{transform:rotateY(0deg)}
+  to{transform:rotateY(720deg)}
+}
+
+.controls{
+  padding:15px;
+  background:#041425;
+}
+
+.betrow{
+  display:flex;gap:10px;align-items:center;
+  margin-bottom:12px;
+}
+
+.betrow button{
+  width:40px;height:40px;
+  border:none;border-radius:10px;
+  background:#123a5c;color:#fff;
+  font-size:18px;
+}
+
+.betrow input{
+  flex:1;padding:10px;
+  border:none;border-radius:10px;
+  font-size:18px;text-align:center;
+}
+
+.action{
+  display:flex;gap:12px;
+}
+
+.action button{
+  flex:1;
+  padding:14px;
+  border:none;
+  border-radius:12px;
+  font-size:18px;
+  font-weight:bold;
+  color:#fff;
+}
+
+.head{background:#2ecc71}
+.tail{background:#3498db}
+
+.popup-bg{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.6);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:99;
+}
+
+.popup{
+  background:#0b2a45;
+  padding:20px 26px;
+  border-radius:14px;
+  font-size:20px;
+  font-weight:bold;
+}
+
+.win{color:#2ecc71}
+.loss{color:#ff5252}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <div class="title">Coin Flip</div>
+  <div class="balance">₹ <span id="wallet">1000</span></div>
+</div>
+
+<div class="history" id="history"></div>
+
+<div class="game">
+  <div class="coin" id="coin">🪙</div>
+</div>
+
+<div class="controls">
+
+  <div class="betrow">
+    <button onclick="chg(-1)">−</button>
+    <input id="amt" value="10">
+    <button onclick="chg(1)">+</button>
+  </div>
+
+  <div class="action">
+    <button class="head" onclick="play('HEAD')">BET HEAD</button>
+    <button class="tail" onclick="play('TAIL')">BET TAIL</button>
+  </div>
+
+</div>
+
+<div class="popup-bg" id="popupBg">
+  <div class="popup" id="popup"></div>
+</div>
+
+<script>
+let wallet = +localStorage.getItem("coin_wallet") || 1000;
+let history = JSON.parse(localStorage.getItem("coin_history")||"[]");
+
+const walletEl = document.getElementById("wallet");
+const coin = document.getElementById("coin");
+const histEl = document.getElementById("history");
+const popupBg = document.getElementById("popupBg");
+const popup = document.getElementById("popup");
+
+walletEl.innerText = wallet;
+renderHistory();
+
+function chg(v){
+  let a = document.getElementById("amt");
+  a.value = Math.max(1, +a.value + v);
+}
+
+function play(choice){
+  let amt = +document.getElementById("amt").value;
+  if(wallet < amt){
+    return showPopup("Low Balance","loss");
+  }
+
+  wallet -= amt;
+  walletEl.innerText = wallet;
+  saveWallet();
+
+  coin.classList.add("flip");
+
+  setTimeout(()=>{
+    coin.classList.remove("flip");
+    let result = Math.random() < 0.5 ? "HEAD" : "TAIL";
+    coin.innerText = result==="HEAD" ? "🙂" : "🪙";
+
+    history.unshift(result);
+    history = history.slice(0,10);
+    renderHistory();
+    saveHistory();
+
+    if(result === choice){
+      let win = amt * 2;
+      wallet += win;
+      walletEl.innerText = wallet;
+      saveWallet();
+      showPopup("You Win ₹"+win,"win");
+    }else{
+      showPopup("You Lose","loss");
+    }
+  },1000);
+}
+
+function renderHistory(){
+  histEl.innerHTML="";
+  history.forEach(h=>{
+    let s=document.createElement("span");
+    s.innerText = h==="HEAD" ? "🙂 HEAD" : "🪙 TAIL";
+    histEl.appendChild(s);
+  });
+}
+
+function showPopup(msg,type){
+  popup.className="popup "+type;
+  popup.innerText=msg;
+  popupBg.style.display="flex";
+  setTimeout(()=>popupBg.style.display="none",1500);
+}
+
+function saveWallet(){
+  localStorage.setItem("coin_wallet",wallet);
+}
+function saveHistory(){
+  localStorage.setItem("coin_history",JSON.stringify(history));
+}
+</script>
+
+</body>
+</html>
