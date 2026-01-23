@@ -88,43 +88,165 @@ button{flex:1;padding:10px;border:none;border-radius:8px;font-weight:bold;font-s
   <div class="popup" id="popup"></div>
 </div>
 
-<!-- 🔥 FIREBASE WALLET CONNECT (NO GAME CODE TOUCHED) -->
+<!-- ===== TERI ORIGINAL SCRIPT (AS IS) ===== -->
+<script>
+/* ===== ORIGINAL GAME SCRIPT (UNCHANGED) ===== */
+let wallet=3000;
+let state="BET";
+let multi=1;
+let crash=0;
+let active=[false,false];
+let betAmt=[0,0];
+let history=[];
+
+const BET_TIME=25;
+const LOCK_TIME=5;
+
+let roundStart = Date.now();
+
+const wEl=document.getElementById("wallet");
+const mEl=document.getElementById("multi");
+const sEl=document.getElementById("status");
+const hEl=document.getElementById("history");
+const popupBg=document.getElementById("popupBg");
+const popup=document.getElementById("popup");
+
+function showPopup(txt,cls){
+  popup.className="popup "+cls;
+  popup.innerText=txt;
+  popupBg.style.display="flex";
+  setTimeout(()=>popupBg.style.display="none",1500);
+}
+
+function randCrash(){
+  let r=Math.random();
+  if(r<0.6) return +(1+Math.random()*1.5).toFixed(2);
+  if(r<0.85) return +(2+Math.random()*3).toFixed(2);
+  return +(5+Math.random()*15).toFixed(2);
+}
+
+function renderHistory(){
+  hEl.innerHTML="";
+  history.forEach(x=>{
+    let s=document.createElement("span");
+    s.textContent=x+"x";
+    s.className=x<2?"low":x<10?"mid":"high";
+    hEl.appendChild(s);
+  });
+}
+
+function loop(){
+  let elapsed=Math.floor((Date.now()-roundStart)/1000);
+
+  if(elapsed < BET_TIME){
+    state="BET";
+    sEl.innerText=`Place your bets (${BET_TIME-elapsed}s)`;
+    mEl.innerText="WAITING";
+  }
+  else if(elapsed < BET_TIME+LOCK_TIME){
+    state="LOCK";
+    sEl.innerText=`Bet locked (${BET_TIME+LOCK_TIME-elapsed}s)`;
+  }
+  else{
+    if(state!=="FLY"){
+      state="FLY";
+      multi=1;
+      crash=randCrash();
+      sEl.innerText="Flying…";
+    }
+    if(active[0]) document.getElementById("btn1").innerText="CASH OUT";
+    if(active[1]) document.getElementById("btn2").innerText="CASH OUT";
+    multi += 0.02 + multi*0.004;
+    multi=+multi.toFixed(2);
+    mEl.innerText=multi+"x";
+
+    if(multi>=crash){
+      state="CRASH";
+      mEl.innerText="CRASHED @ "+crash+"x";
+      history.unshift(crash);
+      history=history.slice(0,10);
+      renderHistory();
+      active=[false,false];
+      document.getElementById("btn1").innerText="BET";
+      document.getElementById("btn2").innerText="BET";
+      roundStart=Date.now()+2000;
+    }
+  }
+}
+
+setInterval(loop,100);
+
+function bet(n){
+  let i=n-1;
+  let amt=+document.getElementById("amt"+n).value;
+  if(state==="BET"){
+    if(wallet<amt) return showPopup("Low Balance","loss");
+    wallet-=amt;
+    wEl.innerText=wallet;
+    active[i]=true;
+    betAmt[i]=amt;
+    document.getElementById("btn"+n).innerText="CASH OUT";
+    showPopup("Bet Placed ₹"+amt,"betp");
+  }
+  else if(state==="FLY" && active[i]){
+    active[i]=false;
+    let win=Math.floor(amt*multi);
+    wallet+=win;
+    wEl.innerText=wallet;
+    document.getElementById("btn"+n).innerText="BET";
+    showPopup("Cashed Out @ "+multi+"x","win");
+  }
+}
+
+function chg(n,v){
+  let i=document.getElementById("amt"+n);
+  i.value=Math.max(1,+i.value+v);
+}
+function setAmt(n,v){
+  document.getElementById("amt"+n).value=v;
+}
+
+renderHistory();
+</script>
+
+<!-- ================= FIREBASE WALLET SYNC (ONLY ADDITION) ================= -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, query, where, getDocs, doc, updateDoc }
+import { getFirestore, collection, query, where, getDocs, doc, updateDoc } 
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const app = initializeApp({
-  apiKey: "AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
-  authDomain: "colourcash-ea60e.firebaseapp.com",
-  projectId: "colourcash-ea60e"
+  apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
+  authDomain:"colourcash-ea60e.firebaseapp.com",
+  projectId:"colourcash-ea60e"
 });
-
 const db = getFirestore(app);
+
 const email = localStorage.getItem("userEmail");
 let uid="";
+let lastWallet = wallet;
 
-/* LOAD WALLET */
-(async()=>{
+/* LOAD WALLET FROM FIREBASE */
+async function loadWallet(){
   if(!email) return;
   const q=query(collection(db,"users"),where("email","==",email));
-  const s=await getDocs(q);
-  s.forEach(d=>{
+  const snap=await getDocs(q);
+  snap.forEach(d=>{
     uid=d.id;
-    wallet=d.data().balance||0;
-    document.getElementById("wallet").innerText=wallet;
+    wallet = d.data().balance || wallet;
+    document.getElementById("wallet").innerText = wallet;
   });
-})();
+}
+loadWallet();
 
-/* WRAP BET FUNCTION (SAFE) */
-const _bet = window.bet;
-window.bet = async function(n){
-  const before = wallet;
-  _bet(n);
-  if(wallet!==before && uid){
-    await updateDoc(doc(db,"users",uid),{balance:wallet});
+/* AUTO SYNC WALLET (NO GAME TOUCH) */
+setInterval(async ()=>{
+  if(!uid) return;
+  if(wallet !== lastWallet){
+    lastWallet = wallet;
+    await updateDoc(doc(db,"users",uid),{ balance: wallet });
   }
-};
+},600);
 </script>
 
 </body>
