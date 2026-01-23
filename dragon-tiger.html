@@ -14,24 +14,40 @@ body{margin:0;background:#0b0b0b;color:#fff;font-family:Arial}
 .timer{font-size:22px;color:#ff4d6d;margin-top:6px}
 
 .row{display:flex;gap:10px}
-.box{flex:1;padding:20px;border-radius:12px;text-align:center;font-size:18px;font-weight:bold}
+.box{flex:1;padding:20px;border-radius:12px;text-align:center;font-size:22px;font-weight:bold}
 .dragon{background:#2196f3}
 .tiger{background:#ff5722}
 
 .bet-btns button{flex:1;background:#333}
-.bet-btns button.active{outline:3px solid #00e5ff;transform:scale(1.05)}
+.bet-btns button.active{
+  outline:3px solid #00e5ff;
+  transform:scale(1.05)
+}
 
 input{width:100%;padding:14px;border-radius:10px;border:none;margin-top:10px}
 button{width:100%;padding:14px;margin-top:10px;border:none;border-radius:10px;font-size:16px;font-weight:bold;background:#2196f3;color:#fff}
 button:disabled{opacity:.5}
 
-.cardInner{transition:.6s;transform-style:preserve-3d}
-.flip{transform:rotateY(180deg)}
+.cardInner{
+  transition:.6s;
+  transform-style:preserve-3d;
+}
+.flip{transform:rotateY(360deg)}
 
 .history{font-size:14px;line-height:1.6;margin-top:6px}
 
-.popup{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);z-index:99}
-.popup div{background:#1e1e1e;padding:25px;border-radius:14px;font-size:18px}
+.popup{
+  position:fixed;inset:0;display:none;
+  align-items:center;justify-content:center;
+  background:rgba(0,0,0,.6);z-index:99
+}
+.popup div{
+  background:#1e1e1e;
+  padding:25px;
+  border-radius:14px;
+  font-size:18px;
+  text-align:center
+}
 .win{color:#4caf50}
 .lose{color:#ff5252}
 </style>
@@ -60,7 +76,6 @@ button:disabled{opacity:.5}
 
   <div class="row bet-btns">
     <button id="btnDragon" onclick="selectSide('DRAGON')">DRAGON</button>
-    <button id="btnDraw" onclick="selectSide('DRAW')">DRAW</button>
     <button id="btnTiger" onclick="selectSide('TIGER')">TIGER</button>
   </div>
 
@@ -104,12 +119,12 @@ async function loadWallet(){
   render();
 }
 
-/* ================= PERSIST ================= */
+/* ---------- STATE (PERSIST) ---------- */
 const KEY="DT_STATE";
 
 let time=25, phase="BET", selected=null;
 let bets=[], last10=[];
-let total={DRAGON:0,TIGER:0,DRAW:0};
+let total={DRAGON:0,TIGER:0};
 
 function saveState(){
   localStorage.setItem(KEY,JSON.stringify({
@@ -124,7 +139,7 @@ function loadState(){
   selected=d.selected??null;
   bets=d.bets??[];
   last10=d.last10??[];
-  total=d.total??{DRAGON:0,TIGER:0,DRAW:0};
+  total=d.total??{DRAGON:0,TIGER:0};
 }
 
 /* UI */
@@ -132,10 +147,14 @@ function render(){
   info.innerText=`Wallet: ₹${wallet.toFixed(2)}`;
   timer.innerText=time+"s";
   betBtn.disabled=phase!=="BET";
-  last10El.innerHTML=last10.join("<br>");
-  myBets.innerHTML=bets.map(b=>`${b.side} ₹${b.amt} → ${b.res}`).join("<br>");
+
+  last10.innerHTML = last10.map(x=>x).join("<br>");
+  myBets.innerHTML = bets.map(b=>`${b.side} ₹${b.amt} → ${b.res}`).join("<br>");
+
   document.querySelectorAll(".bet-btns button").forEach(b=>b.classList.remove("active"));
-  if(selected) document.getElementById("btn"+selected.charAt(0)+selected.slice(1).toLowerCase()).classList.add("active");
+  if(selected){
+    document.getElementById("btn"+selected.charAt(0)+selected.slice(1).toLowerCase()).classList.add("active");
+  }
 }
 
 function popupMsg(msg,cls=""){
@@ -145,18 +164,28 @@ function popupMsg(msg,cls=""){
   setTimeout(()=>popup.style.display="none",1500);
 }
 
-/* ACTIONS */
-window.selectSide=s=>{if(phase==="BET"){selected=s;saveState();render();}}
+/* SELECT */
+window.selectSide=s=>{
+  if(phase!=="BET")return;
+  selected=s;
+  saveState();
+  render();
+};
 
+/* PLACE BET */
 window.placeBet=async()=>{
   const a=+amount.value;
   if(!selected||a<1||a>wallet)return;
+
   wallet-=a;
   await updateDoc(doc(db,"users",uid),{balance:wallet});
+
   bets.unshift({side:selected,amt:a,res:"PENDING"});
   total[selected]+=a;
+
   popupMsg("BET PLACED");
-  saveState();render();
+  saveState();
+  render();
 };
 
 /* GAME LOOP */
@@ -167,14 +196,16 @@ setInterval(()=>{
     else if(phase==="LOCK"){showResult();phase="RESULT";time=5}
     else{
       phase="BET";time=25;selected=null;
-      total={DRAGON:0,TIGER:0,DRAW:0};
-      dragonVal.innerText="?";tigerVal.innerText="?";
+      total={DRAGON:0,TIGER:0};
+      dragonVal.innerText="?";
+      tigerVal.innerText="?";
     }
   }
-  saveState();render();
+  saveState();
+  render();
 },1000);
 
-/* RESULT */
+/* RESULT (LOWER BET WINS) */
 async function showResult(){
   dragonCard.classList.add("flip");
   tigerCard.classList.add("flip");
@@ -185,9 +216,11 @@ async function showResult(){
   dragonVal.innerText=d;
   tigerVal.innerText=t;
 
-  let win="DRAW";
-  if(total.DRAGON && total.TIGER){
-    win=total.DRAGON<total.TIGER?"DRAGON":"TIGER";
+  let win;
+  if(total.DRAGON===total.TIGER){
+    win = d<t ? "DRAGON" : "TIGER";
+  }else{
+    win = total.DRAGON < total.TIGER ? "DRAGON" : "TIGER";
   }
 
   last10.unshift("WIN → "+win);
