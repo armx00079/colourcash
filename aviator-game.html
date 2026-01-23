@@ -153,6 +153,8 @@ function loop(){
       crash=randCrash();
       sEl.innerText="Flying…";
     }
+    if(active[0]) document.getElementById("btn1").innerText="CASH OUT";
+if(active[1]) document.getElementById("btn2").innerText="CASH OUT";
     multi += 0.02 + multi*0.004;
     multi=+multi.toFixed(2);
     mEl.innerText=multi+"x";
