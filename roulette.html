@@ -14,6 +14,42 @@ body{margin:0;font-family:Arial;background:#0e3b2f;color:#fff}
 
 .locked{filter:blur(2px);pointer-events:none}
 
+/* WHEEL */
+.wheel-wrap{display:flex;justify-content:center;margin:15px 0}
+.wheel{
+  width:220px;height:220px;border-radius:50%;
+  border:8px solid #222;
+  background:conic-gradient(
+    green 0deg 10deg,
+    red 10deg 20deg, black 20deg 30deg,
+    red 30deg 40deg, black 40deg 50deg,
+    red 50deg 60deg, black 60deg 70deg,
+    red 70deg 80deg, black 80deg 90deg,
+    red 90deg 100deg, black 100deg 110deg,
+    red 110deg 120deg, black 120deg 130deg,
+    red 130deg 140deg, black 140deg 150deg,
+    red 150deg 160deg, black 160deg 170deg,
+    red 170deg 180deg, black 180deg 190deg,
+    red 190deg 200deg, black 200deg 210deg,
+    red 210deg 220deg, black 220deg 230deg,
+    red 230deg 240deg, black 240deg 250deg,
+    red 250deg 260deg, black 260deg 270deg,
+    red 270deg 280deg, black 280deg 290deg,
+    red 290deg 300deg, black 300deg 310deg,
+    red 310deg 320deg, black 320deg 330deg,
+    red 330deg 340deg, black 340deg 360deg
+  );
+  transition:transform 3s cubic-bezier(.17,.67,.12,1);
+}
+.pointer{
+  width:0;height:0;
+  border-left:10px solid transparent;
+  border-right:10px solid transparent;
+  border-bottom:18px solid #fff;
+  margin:auto;
+}
+
+/* GRID */
 .grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
 .num{padding:12px 0;border-radius:8px;font-weight:bold;text-align:center;cursor:pointer}
 .red{background:#c62828}
@@ -21,6 +57,7 @@ body{margin:0;font-family:Arial;background:#0e3b2f;color:#fff}
 .green{background:#2e7d32}
 .num.active{outline:3px solid #00e5ff}
 
+/* CONTROLS */
 .controls{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
 .ctrl{background:#333;padding:12px;border-radius:10px;text-align:center;font-weight:bold;cursor:pointer}
 .ctrl.active{outline:3px solid #00e5ff;background:#555}
@@ -30,6 +67,7 @@ button{width:100%;padding:14px;margin-top:10px;border:none;border-radius:12px;ba
 
 .history{font-size:14px;line-height:1.6;margin-top:6px}
 
+/* POPUP */
 .popup{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:10}
 .popup div{background:#1b1b1b;padding:22px;border-radius:14px;font-size:18px}
 .win{color:#4caf50}
@@ -42,9 +80,16 @@ button{width:100%;padding:14px;margin-top:10px;border:none;border-radius:12px;ba
 <div class="header">🎡 ROULETTE</div>
 
 <div class="card center">
-  <div id="wallet">Wallet: ₹500</div>
+  <div id="wallet">Wallet: ₹0</div>
   <div class="timer" id="timer">25s</div>
   <div id="lockText"></div>
+</div>
+
+<div class="wheel-wrap">
+  <div class="pointer"></div>
+</div>
+<div class="wheel-wrap">
+  <div id="wheel" class="wheel"></div>
 </div>
 
 <div class="card" id="game">
@@ -75,10 +120,25 @@ button{width:100%;padding:14px;margin-top:10px;border:none;border-radius:12px;ba
 
 <div class="popup" id="popup"><div id="popupText"></div></div>
 
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, getDocs, query, where, doc, updateDoc }
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+/* 🔥 FIREBASE */
+const app = initializeApp({
+  apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
+  authDomain:"colourcash-ea60e.firebaseapp.com",
+  projectId:"colourcash-ea60e"
+});
+const db = getFirestore(app);
+
+const email = localStorage.getItem("userEmail");
+let uid="";
+
 /* ---------- STATE ---------- */
 let state = JSON.parse(localStorage.getItem("roulette_state")) || {
-  wallet:500,
+  wallet:0,
   phase:"BET",
   time:25,
   selected:null,
@@ -87,10 +147,22 @@ let state = JSON.parse(localStorage.getItem("roulette_state")) || {
 };
 const save=()=>localStorage.setItem("roulette_state",JSON.stringify(state));
 
+/* ---------- LOAD WALLET ---------- */
+async function loadWallet(){
+  const q=query(collection(db,"users"),where("email","==",email));
+  const s=await getDocs(q);
+  s.forEach(d=>{
+    uid=d.id;
+    state.wallet=d.data().balance||0;
+  });
+  render();
+}
+
 /* ---------- ELEMENTS ---------- */
 const walletEl=wallet, timerEl=timer, lastEl=last, betsEl=bets;
 const game=document.getElementById("game");
 const lockText=document.getElementById("lockText");
+const wheel=document.getElementById("wheel");
 const popup=document.getElementById("popup");
 const popupText=document.getElementById("popupText");
 
@@ -100,16 +172,9 @@ function render(){
   timerEl.innerText=state.time+"s";
   lastEl.innerHTML=state.last.join(", ");
   betsEl.innerHTML=state.bets.map(b=>`${b.type} ₹${b.amt} → ${b.res}`).join("<br>");
-
-  if(state.phase==="LOCK"){
-    game.classList.add("locked");
-    lockText.innerText="🔒 BET LOCKED";
-  }else{
-    game.classList.remove("locked");
-    lockText.innerText="";
-  }
+  game.classList.toggle("locked",state.phase==="LOCK");
+  lockText.innerText=state.phase==="LOCK"?"🔒 BET LOCKED":"";
 }
-render();
 
 /* ---------- NUMBERS ---------- */
 const red=[1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
@@ -124,28 +189,25 @@ for(let i=0;i<=36;i++){
   grid.appendChild(d);
 }
 
-const clearSel=()=>{
-  document.querySelectorAll(".num,.ctrl").forEach(x=>x.classList.remove("active"));
-};
+const clearSel=()=>document.querySelectorAll(".num,.ctrl").forEach(x=>x.classList.remove("active"));
 
 function selectNumber(n,el){
   if(state.phase!=="BET")return;
-  clearSel();
-  el.classList.add("active");
+  clearSel(); el.classList.add("active");
   state.selected={type:"NUMBER",value:n};
 }
 function selectGroup(g,el){
   if(state.phase!=="BET")return;
-  clearSel();
-  el.classList.add("active");
+  clearSel(); el.classList.add("active");
   state.selected={type:g};
 }
 
 /* ---------- BET ---------- */
-function placeBet(){
+async function placeBet(){
   let amt=+amount.value;
   if(!state.selected||amt<1||amt>state.wallet)return;
   state.wallet-=amt;
+  await updateDoc(doc(db,"users",uid),{balance:state.wallet});
   state.bets.unshift({type:state.selected.type,value:state.selected.value,amt,res:"PENDING"});
   popupMsg("BET PLACED");
   save();render();
@@ -159,13 +221,15 @@ function popupMsg(t,c=""){
   setTimeout(()=>popup.style.display="none",1500);
 }
 
-/* ---------- RESULT ---------- */
-function spin(){
+/* ---------- SPIN ---------- */
+async function spin(){
   let result=Math.floor(Math.random()*37);
+  wheel.style.transform=`rotate(${1440 + result*10}deg)`;
+
   state.last.unshift(result);
   state.last=state.last.slice(0,10);
 
-  state.bets.forEach(b=>{
+  for(let b of state.bets){
     if(b.res==="PENDING"){
       let win=false;
       if(b.type==="NUMBER"&&b.value===result) win=true;
@@ -179,6 +243,7 @@ function spin(){
       if(win){
         let w=b.amt*2;
         state.wallet+=w;
+        await updateDoc(doc(db,"users",uid),{balance:state.wallet});
         b.res="WIN ₹"+w;
         popupMsg("WIN ₹"+w,"win");
       }else{
@@ -186,23 +251,21 @@ function spin(){
         popupMsg("LOSS","lose");
       }
     }
-  });
+  }
 }
 
-/* ---------- LOOP (FIXED) ---------- */
+/* ---------- LOOP ---------- */
 setInterval(()=>{
   state.time--;
 
   if(state.phase==="BET" && state.time===5){
     state.phase="LOCK";
   }
-
   if(state.phase==="LOCK" && state.time===0){
     spin();
     state.phase="RESULT";
     state.time=5;
   }
-
   if(state.phase==="RESULT" && state.time===0){
     state.phase="BET";
     state.time=25;
@@ -212,6 +275,9 @@ setInterval(()=>{
 
   save();render();
 },1000);
+
+/* INIT */
+loadWallet();
 </script>
 
 </body>
