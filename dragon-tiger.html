@@ -18,14 +18,8 @@ body{margin:0;background:#0b0b0b;color:#fff;font-family:Arial}
 .dragon{background:#2196f3}
 .tiger{background:#ff5722}
 
-.bet-btns button{
-  flex:1;
-  background:#333;
-}
-.bet-btns button.active{
-  outline:3px solid #00e5ff;
-  transform:scale(1.05);
-}
+.bet-btns button{flex:1;background:#333}
+.bet-btns button.active{outline:3px solid #00e5ff;transform:scale(1.05)}
 
 input{width:100%;padding:14px;border-radius:10px;border:none;margin-top:10px}
 button{width:100%;padding:14px;margin-top:10px;border:none;border-radius:10px;font-size:16px;font-weight:bold;background:#2196f3;color:#fff}
@@ -36,18 +30,8 @@ button:disabled{opacity:.5}
 
 .history{font-size:14px;line-height:1.6;margin-top:6px}
 
-.popup{
-  position:fixed;inset:0;display:none;
-  align-items:center;justify-content:center;
-  background:rgba(0,0,0,.6);z-index:99
-}
-.popup div{
-  background:#1e1e1e;
-  padding:25px;
-  border-radius:14px;
-  font-size:18px;
-  text-align:center
-}
+.popup{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);z-index:99}
+.popup div{background:#1e1e1e;padding:25px;border-radius:14px;font-size:18px}
 .win{color:#4caf50}
 .lose{color:#ff5252}
 </style>
@@ -100,6 +84,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getFirestore, collection, getDocs, query, where, doc, updateDoc }
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+/* FIREBASE */
 const app = initializeApp({
   apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
   authDomain:"colourcash-ea60e.firebaseapp.com",
@@ -107,6 +92,7 @@ const app = initializeApp({
 });
 const db = getFirestore(app);
 
+/* USER */
 const email = localStorage.getItem("userEmail");
 let uid="", wallet=0;
 
@@ -118,18 +104,38 @@ async function loadWallet(){
   render();
 }
 
-/* STATE */
+/* ================= PERSIST ================= */
+const KEY="DT_STATE";
+
 let time=25, phase="BET", selected=null;
 let bets=[], last10=[];
 let total={DRAGON:0,TIGER:0,DRAW:0};
+
+function saveState(){
+  localStorage.setItem(KEY,JSON.stringify({
+    time,phase,selected,bets,last10,total
+  }));
+}
+
+function loadState(){
+  const d=JSON.parse(localStorage.getItem(KEY)||"{}");
+  time=d.time??25;
+  phase=d.phase??"BET";
+  selected=d.selected??null;
+  bets=d.bets??[];
+  last10=d.last10??[];
+  total=d.total??{DRAGON:0,TIGER:0,DRAW:0};
+}
 
 /* UI */
 function render(){
   info.innerText=`Wallet: ₹${wallet.toFixed(2)}`;
   timer.innerText=time+"s";
   betBtn.disabled=phase!=="BET";
-  last10.innerHTML=last10.map(x=>x).join("<br>");
+  last10El.innerHTML=last10.join("<br>");
   myBets.innerHTML=bets.map(b=>`${b.side} ₹${b.amt} → ${b.res}`).join("<br>");
+  document.querySelectorAll(".bet-btns button").forEach(b=>b.classList.remove("active"));
+  if(selected) document.getElementById("btn"+selected.charAt(0)+selected.slice(1).toLowerCase()).classList.add("active");
 }
 
 function popupMsg(msg,cls=""){
@@ -139,15 +145,9 @@ function popupMsg(msg,cls=""){
   setTimeout(()=>popup.style.display="none",1500);
 }
 
-/* SELECT */
-window.selectSide=s=>{
-  if(phase!=="BET")return;
-  selected=s;
-  document.querySelectorAll(".bet-btns button").forEach(b=>b.classList.remove("active"));
-  document.getElementById("btn"+s.charAt(0)+s.slice(1).toLowerCase()).classList.add("active");
-};
+/* ACTIONS */
+window.selectSide=s=>{if(phase==="BET"){selected=s;saveState();render();}}
 
-/* PLACE BET */
 window.placeBet=async()=>{
   const a=+amount.value;
   if(!selected||a<1||a>wallet)return;
@@ -156,7 +156,7 @@ window.placeBet=async()=>{
   bets.unshift({side:selected,amt:a,res:"PENDING"});
   total[selected]+=a;
   popupMsg("BET PLACED");
-  render();
+  saveState();render();
 };
 
 /* GAME LOOP */
@@ -169,10 +169,9 @@ setInterval(()=>{
       phase="BET";time=25;selected=null;
       total={DRAGON:0,TIGER:0,DRAW:0};
       dragonVal.innerText="?";tigerVal.innerText="?";
-      document.querySelectorAll(".bet-btns button").forEach(b=>b.classList.remove("active"));
     }
   }
-  render();
+  saveState();render();
 },1000);
 
 /* RESULT */
@@ -188,7 +187,7 @@ async function showResult(){
 
   let win="DRAW";
   if(total.DRAGON && total.TIGER){
-    win = total.DRAGON < total.TIGER ? "DRAGON" : "TIGER";
+    win=total.DRAGON<total.TIGER?"DRAGON":"TIGER";
   }
 
   last10.unshift("WIN → "+win);
@@ -211,7 +210,9 @@ async function showResult(){
 }
 
 /* INIT */
+loadState();
 loadWallet();
+render();
 </script>
 
 </body>
