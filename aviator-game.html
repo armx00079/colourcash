@@ -35,11 +35,13 @@ button{flex:1;padding:10px;border:none;border-radius:8px;font-weight:bold;font-s
 
 <div class="header">
   <div class="logo">Aviator</div>
-  <div class="balance">₹ <span id="wallet">3000</span></div>
+  <div class="balance">₹ <span id="wallet">0</span></div>
 </div>
 
 <div class="history" id="history"></div>
-<div class="game"><div class="multiplier" id="multi">WAITING</div></div>
+<div class="game">
+  <div class="multiplier" id="multi">WAITING</div>
+</div>
 <div class="status" id="status"></div>
 
 <div class="controls">
@@ -74,41 +76,52 @@ button{flex:1;padding:10px;border:none;border-radius:8px;font-weight:bold;font-s
   </div>
 </div>
 
-<div class="popup-bg" id="popupBg"><div class="popup" id="popup"></div></div>
+<div class="popup-bg" id="popupBg">
+  <div class="popup" id="popup"></div>
+</div>
 
 <script>
-/* ================= STATE ================= */
+/* ================== STATE ================== */
 let S = JSON.parse(localStorage.getItem("AVIATOR_STATE")) || {
-  wallet:3000,state:"BET",timer:25,multi:1,
-  crash:0,active:[false,false],betAmt:[0,0],history:[]
+  wallet:3000,
+  state:"BET",        // BET | LOCK | FLY | CRASH
+  timer:25,
+  multi:1,
+  crash:0,
+  active:[false,false],
+  betAmt:[0,0],
+  history:[]
 };
 
-const wEl=walletEl=document.getElementById("wallet");
-const mEl=document.getElementById("multi");
-const sEl=document.getElementById("status");
-const hEl=document.getElementById("history");
+const walletEl=document.getElementById("wallet");
+const multiEl=document.getElementById("multi");
+const statusEl=document.getElementById("status");
+const historyEl=document.getElementById("history");
 
-function save(){ localStorage.setItem("AVIATOR_STATE",JSON.stringify(S)); }
+/* ================== SAVE / LOAD ================== */
+function save(){
+  localStorage.setItem("AVIATOR_STATE",JSON.stringify(S));
+}
 
-/* ================= UI ================= */
+/* ================== UI ================== */
 function popup(msg,type){
   popupBg.style.display="flex";
-  popupBox.className="popup "+type;
-  popupBox.innerText=msg;
+  popup.className="popup "+type;
+  popup.innerText=msg;
   setTimeout(()=>popupBg.style.display="none",1200);
 }
 
 function renderHistory(){
-  hEl.innerHTML="";
+  historyEl.innerHTML="";
   S.history.forEach(x=>{
     let s=document.createElement("span");
     s.textContent=x+"x";
     s.className=x<2?"low":x<10?"mid":"high";
-    hEl.appendChild(s);
+    historyEl.appendChild(s);
   });
 }
 
-/* ================= GAME ================= */
+/* ================== GAME LOGIC ================== */
 function randCrash(){
   let r=Math.random();
   if(r<0.6) return +(1+Math.random()*1.5).toFixed(2);
@@ -117,34 +130,44 @@ function randCrash(){
 }
 
 function tick(){
-  if(S.state==="BET" || S.state==="LOCK"){
+  if(S.state==="BET"){
+    statusEl.innerText="Place your bets ("+S.timer+"s)";
     S.timer--;
-    sEl.innerText=(S.state==="BET"?"Place your bets":"Bet locked")+" ("+S.timer+"s)";
     if(S.timer<=0){
-      if(S.state==="BET"){ S.state="LOCK"; S.timer=5; }
-      else startFly();
+      S.state="LOCK";
+      S.timer=5;
+    }
+  }
+  else if(S.state==="LOCK"){
+    statusEl.innerText="Bet locked ("+S.timer+"s)";
+    S.timer--;
+    if(S.timer<=0){
+      startFly();
     }
   }
   else if(S.state==="FLY"){
     S.multi+=0.01+S.multi*0.003;
     S.multi=+S.multi.toFixed(2);
-    mEl.innerText=S.multi+"x";
-    if(S.multi>=S.crash) crash();
+    multiEl.innerText=S.multi+"x";
+    statusEl.innerText="Flying...";
+    if(S.multi>=S.crash){
+      crash();
+    }
   }
   save();
 }
 
 function startFly(){
   S.state="FLY";
-  S.multi=1;
-  S.crash=S.crash||randCrash();
-  sEl.innerText="Flying…";
+  if(!S.crash) S.crash=randCrash();
+  S.multi= S.multi<1 ? 1 : S.multi;
 }
 
 function crash(){
   S.state="CRASH";
-  mEl.innerText="CRASHED @ "+S.crash+"x";
-  mEl.classList.add("crashed");
+  multiEl.innerText="CRASHED @ "+S.crash+"x";
+  multiEl.classList.add("crashed");
+  statusEl.innerText="Crashed";
   S.history.unshift(S.crash);
   S.history=S.history.slice(0,10);
   renderHistory();
@@ -152,37 +175,53 @@ function crash(){
 }
 
 function resetRound(){
-  S.state="BET";S.timer=25;S.multi=1;S.crash=0;
+  S.state="BET";
+  S.timer=25;
+  S.multi=1;
+  S.crash=0;
   S.active=[false,false];
   document.getElementById("btn1").innerText="BET";
   document.getElementById("btn2").innerText="BET";
+  multiEl.classList.remove("crashed");
 }
 
-/* ================= BET ================= */
+/* ================== BET ================== */
 function bet(n){
   let i=n-1;
   let amt=+document.getElementById("amt"+n).value;
+
   if(S.state==="BET"){
     if(S.wallet<amt) return popup("Low Balance","loss");
-    S.wallet-=amt;S.active[i]=true;S.betAmt[i]=amt;
+    S.wallet-=amt;
+    S.active[i]=true;
+    S.betAmt[i]=amt;
     document.getElementById("btn"+n).innerText="CASH OUT";
     popup("Bet Placed","betp");
   }
   else if(S.state==="FLY" && S.active[i]){
     let win=Math.floor(S.betAmt[i]*S.multi);
-    S.wallet+=win;S.active[i]=false;
+    S.wallet+=win;
+    S.active[i]=false;
     document.getElementById("btn"+n).innerText="BET";
     popup("Cashed Out @ "+S.multi+"x","win");
   }
-  wEl.innerText=S.wallet;save();
+  walletEl.innerText=S.wallet;
+  save();
 }
 
-function chg(n,v){let i=document.getElementById("amt"+n);i.value=Math.max(1,+i.value+v);}
-function setAmt(n,v){document.getElementById("amt"+n).value=v;}
+function chg(n,v){
+  let i=document.getElementById("amt"+n);
+  i.value=Math.max(1,+i.value+v);
+}
+function setAmt(n,v){
+  document.getElementById("amt"+n).value=v;
+}
 
-/* ================= INIT ================= */
-wEl.innerText=S.wallet;
+/* ================== INIT ================== */
+walletEl.innerText=S.wallet;
 renderHistory();
+multiEl.innerText = S.state==="FLY" ? S.multi+"x" : "WAITING";
+
 setInterval(tick,1000);
 </script>
 
