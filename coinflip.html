@@ -43,74 +43,28 @@ body{margin:0;font-family:Arial;background:#081c2f;color:#fff}
   transition:transform 1s;
 }
 
-.flip{
-  animation:spin 1s linear;
-}
+.flip{animation:spin 1s linear}
+@keyframes spin{from{transform:rotateY(0deg)}to{transform:rotateY(720deg)}}
 
-@keyframes spin{
-  from{transform:rotateY(0deg)}
-  to{transform:rotateY(720deg)}
-}
+.controls{padding:15px;background:#041425}
+.betrow{display:flex;gap:10px;align-items:center;margin-bottom:12px}
+.betrow button{width:40px;height:40px;border:none;border-radius:10px;background:#123a5c;color:#fff;font-size:18px}
+.betrow input{flex:1;padding:10px;border:none;border-radius:10px;font-size:18px;text-align:center}
 
-.controls{
-  padding:15px;
-  background:#041425;
-}
-
-.betrow{
-  display:flex;gap:10px;align-items:center;
-  margin-bottom:12px;
-}
-
-.betrow button{
-  width:40px;height:40px;
-  border:none;border-radius:10px;
-  background:#123a5c;color:#fff;
-  font-size:18px;
-}
-
-.betrow input{
-  flex:1;padding:10px;
-  border:none;border-radius:10px;
-  font-size:18px;text-align:center;
-}
-
-.action{
-  display:flex;gap:12px;
-}
-
-.action button{
-  flex:1;
-  padding:14px;
-  border:none;
-  border-radius:12px;
-  font-size:18px;
-  font-weight:bold;
-  color:#fff;
-}
-
+.action{display:flex;gap:12px}
+.action button{flex:1;padding:14px;border:none;border-radius:12px;font-size:18px;font-weight:bold;color:#fff}
 .head{background:#2ecc71}
 .tail{background:#3498db}
 
-.popup-bg{
-  position:fixed;inset:0;
-  background:rgba(0,0,0,.6);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  z-index:99;
-}
-
-.popup{
-  background:#0b2a45;
-  padding:20px 26px;
-  border-radius:14px;
-  font-size:20px;
-  font-weight:bold;
-}
-
+.popup-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:99}
+.popup{background:#0b2a45;padding:20px 26px;border-radius:14px;font-size:20px;font-weight:bold}
 .win{color:#2ecc71}
 .loss{color:#ff5252}
+
+/* NEW */
+.mybets{padding:12px;background:#041425}
+.mybets h3{margin:0 0 8px;font-size:16px}
+.mybets div{font-size:14px;padding:6px;border-bottom:1px solid #123}
 </style>
 </head>
 
@@ -128,18 +82,21 @@ body{margin:0;font-family:Arial;background:#081c2f;color:#fff}
 </div>
 
 <div class="controls">
-
   <div class="betrow">
     <button onclick="chg(-1)">−</button>
     <input id="amt" value="10">
     <button onclick="chg(1)">+</button>
   </div>
-
   <div class="action">
     <button class="head" onclick="play('HEAD')">BET HEAD</button>
     <button class="tail" onclick="play('TAIL')">BET TAIL</button>
   </div>
+</div>
 
+<!-- 🔥 MY BETS HISTORY -->
+<div class="mybets">
+  <h3>My Bets</h3>
+  <div id="mybets"></div>
 </div>
 
 <div class="popup-bg" id="popupBg">
@@ -149,60 +106,68 @@ body{margin:0;font-family:Arial;background:#081c2f;color:#fff}
 <script>
 let wallet = +localStorage.getItem("coin_wallet") || 1000;
 let history = JSON.parse(localStorage.getItem("coin_history")||"[]");
+let bets = JSON.parse(localStorage.getItem("coin_bets")||"[]");
 
 const walletEl = document.getElementById("wallet");
 const coin = document.getElementById("coin");
 const histEl = document.getElementById("history");
+const betsEl = document.getElementById("mybets");
 const popupBg = document.getElementById("popupBg");
 const popup = document.getElementById("popup");
 
 walletEl.innerText = wallet;
 renderHistory();
+renderBets();
 
 function chg(v){
-  let a = document.getElementById("amt");
-  a.value = Math.max(1, +a.value + v);
+  let a=document.getElementById("amt");
+  a.value=Math.max(1,+a.value+v);
 }
 
 function play(choice){
-  let amt = +document.getElementById("amt").value;
-  if(wallet < amt){
-    return showPopup("Low Balance","loss");
-  }
+  let amt=+document.getElementById("amt").value;
+  if(wallet<amt) return showPopup("Low Balance","loss");
 
-  wallet -= amt;
-  walletEl.innerText = wallet;
+  wallet-=amt;
+  walletEl.innerText=wallet;
   saveWallet();
 
   coin.classList.add("flip");
 
   setTimeout(()=>{
     coin.classList.remove("flip");
-    let r = Math.random();
-    let result;
-
-    if(r < 0.3){
-      result = choice;
-    }else{
-      result = choice === "HEAD" ? "TAIL" : "HEAD";
-    }
-
-    coin.innerText = result==="HEAD" ? "🙂" : "🪙";
+    let r=Math.random();
+    let result = r<0.3 ? choice : (choice==="HEAD"?"TAIL":"HEAD");
+    coin.innerText=result==="HEAD"?"🙂":"🪙";
 
     history.unshift(result);
-    history = history.slice(0,10);
+    history=history.slice(0,10);
     renderHistory();
     saveHistory();
 
-    if(result === choice){
-      let win = amt * 2;
-      wallet += win;
-      walletEl.innerText = wallet;
+    let winAmt=0;
+    let status="LOSS";
+    if(result===choice){
+      winAmt=amt*2;
+      wallet+=winAmt;
+      walletEl.innerText=wallet;
       saveWallet();
-      showPopup("You Win ₹"+win,"win");
+      status="WIN";
+      showPopup("You Win ₹"+winAmt,"win");
     }else{
       showPopup("You Lose","loss");
     }
+
+    bets.unshift({
+      time:new Date().toLocaleTimeString(),
+      choice,
+      result,
+      amt,
+      status
+    });
+    bets=bets.slice(0,20);
+    localStorage.setItem("coin_bets",JSON.stringify(bets));
+    renderBets();
   },1000);
 }
 
@@ -210,8 +175,17 @@ function renderHistory(){
   histEl.innerHTML="";
   history.forEach(h=>{
     let s=document.createElement("span");
-    s.innerText = h==="HEAD" ? "🙂 HEAD" : "🪙 TAIL";
+    s.innerText=h==="HEAD"?"🙂 HEAD":"🪙 TAIL";
     histEl.appendChild(s);
+  });
+}
+
+function renderBets(){
+  betsEl.innerHTML="";
+  bets.forEach(b=>{
+    let d=document.createElement("div");
+    d.innerText=`${b.time} | ${b.choice} | ₹${b.amt} | ${b.status}`;
+    betsEl.appendChild(d);
   });
 }
 
@@ -222,15 +196,11 @@ function showPopup(msg,type){
   setTimeout(()=>popupBg.style.display="none",1500);
 }
 
-function saveWallet(){
-  localStorage.setItem("coin_wallet",wallet);
-}
-function saveHistory(){
-  localStorage.setItem("coin_history",JSON.stringify(history));
-}
+function saveWallet(){localStorage.setItem("coin_wallet",wallet);}
+function saveHistory(){localStorage.setItem("coin_history",JSON.stringify(history));}
 </script>
 
-<!-- ================= FIREBASE WALLET CONNECT (ONLY ADDITION) ================= -->
+<!-- FIREBASE WALLET CONNECT (ADDITION ONLY) -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, collection, query, where, getDocs, doc, updateDoc } 
@@ -241,32 +211,30 @@ const app = initializeApp({
   authDomain:"colourcash-ea60e.firebaseapp.com",
   projectId:"colourcash-ea60e"
 });
-const db = getFirestore(app);
+const db=getFirestore(app);
 
-const email = localStorage.getItem("userEmail");
-let uid = "";
-let lastWallet = wallet;
+const email=localStorage.getItem("userEmail");
+let uid="";
+let lastWallet=wallet;
 
-/* LOAD WALLET FROM FIREBASE */
 async function loadWallet(){
   if(!email) return;
-  const q = query(collection(db,"users"), where("email","==",email));
-  const snap = await getDocs(q);
+  const q=query(collection(db,"users"),where("email","==",email));
+  const snap=await getDocs(q);
   snap.forEach(d=>{
-    uid = d.id;
-    wallet = d.data().balance || wallet;
-    walletEl.innerText = wallet;
+    uid=d.id;
+    wallet=d.data().balance||wallet;
+    walletEl.innerText=wallet;
     localStorage.setItem("coin_wallet",wallet);
   });
 }
 loadWallet();
 
-/* AUTO SYNC WALLET */
-setInterval(async ()=>{
+setInterval(async()=>{
   if(!uid) return;
-  if(wallet !== lastWallet){
-    lastWallet = wallet;
-    await updateDoc(doc(db,"users",uid), { balance: wallet });
+  if(wallet!==lastWallet){
+    lastWallet=wallet;
+    await updateDoc(doc(db,"users",uid),{balance:wallet});
   }
 },800);
 </script>
