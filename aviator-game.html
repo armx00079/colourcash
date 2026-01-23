@@ -6,240 +6,271 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 
 <style>
-body{
-  margin:0;
-  background:#0b0b0b;
-  color:#fff;
-  font-family:Arial;
-}
+body{margin:0;font-family:Arial;background:#0b0b0b;color:#fff}
 
-.header{
-  display:flex;
-  justify-content:space-between;
-  padding:14px;
-  font-size:22px;
-  font-weight:bold;
-}
-.header span{color:#00e676}
+/* HEADER */
+.header{display:flex;justify-content:space-between;align-items:center;padding:14px;background:#111}
+.logo{font-size:26px;font-weight:bold;color:#ff1744}
+.balance{font-size:18px;color:#00e676}
 
-.history{
-  padding:6px 14px;
-  font-size:14px;
-  color:#5dade2;
-}
+/* HISTORY */
+.history{display:flex;gap:10px;padding:10px;overflow-x:auto;background:#0f0f0f}
+.history span{font-size:14px}
+.low{color:#64b5f6}
+.mid{color:#00e676}
+.high{color:#e040fb}
 
-.game{
-  height:45vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:48px;
-  font-weight:bold;
-  color:#ff5252;
-}
+/* GAME */
+.game{height:40vh;background:radial-gradient(circle at bottom,#1a1a1a,#000);display:flex;align-items:center;justify-content:center;position:relative}
+.multiplier{text-align:center;font-size:64px;font-weight:bold}
+.crashed{color:#ff5252}
 
-.controls{
-  padding:12px;
-}
+/* STATUS */
+.status{text-align:center;padding:8px;color:#aaa;font-size:16px}
 
-.bet-box{
-  background:#1c1c1c;
-  padding:12px;
-  border-radius:12px;
-  margin-bottom:12px;
-}
+/* BET AREA */
+.controls{padding:12px;display:flex;flex-direction:column;gap:12px}
+.betbox{background:#151515;border-radius:14px;padding:12px}
+.row{display:flex;gap:8px;margin-bottom:8px}
+input{flex:1;padding:10px;border:none;border-radius:8px;font-size:16px;text-align:center}
+button{flex:1;padding:10px;border:none;border-radius:8px;font-weight:bold;font-size:16px}
+.gray{background:#333;color:#fff}
+.green{background:#2ecc71;color:#000}
+.locked{opacity:.5;pointer-events:none}
 
-.bet-row{
-  display:flex;
-  align-items:center;
-  gap:6px;
+/* POPUP */
+.popup-bg{
+  position:fixed;inset:0;background:rgba(0,0,0,.6);
+  display:none;align-items:center;justify-content:center;z-index:999
 }
-
-.bet-row input{
-  flex:1;
-  padding:10px;
-  font-size:18px;
-  text-align:center;
-  border-radius:8px;
-  border:none;
-}
-
-.bet-row button{
-  width:40px;
-  height:40px;
-  font-size:20px;
-  border:none;
-  border-radius:8px;
-  background:#333;
-  color:#fff;
-}
-
-.quick{
-  display:flex;
-  gap:6px;
-  margin-top:6px;
-}
-.quick button{
-  flex:1;
-  padding:8px;
-  background:#333;
-  border:none;
-  border-radius:8px;
-  color:#fff;
-}
-
-.bet-btn{
-  margin-top:8px;
-  width:100%;
-  padding:12px;
-  background:#2ecc71;
-  border:none;
-  border-radius:10px;
-  font-size:18px;
-  font-weight:bold;
-}
-
 .popup{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.7);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  z-index:9999;
+  background:#1c1c1c;padding:20px 26px;
+  border-radius:14px;font-size:20px;font-weight:bold
 }
-.popup-box{
-  background:#111;
-  padding:25px;
-  border-radius:14px;
-  text-align:center;
-  font-size:22px;
-}
-.popup.win{color:#2ecc71}
-.popup.loss{color:#ff5252}
-.popup.bet{color:#5dade2}
+.win{color:#2ecc71}
+.loss{color:#ff5252}
+.betp{color:#64b5f6}
 </style>
 </head>
 
 <body>
 
 <div class="header">
-  <div>Aviator</div>
-  <div>₹ <span id="wallet">3000</span></div>
+  <div class="logo">Aviator</div>
+  <div class="balance">₹ <span id="wallet">3000</span></div>
 </div>
 
 <div class="history" id="history"></div>
 
-<div class="game" id="screen">WAITING</div>
-
-<div class="controls">
-  <div class="bet-box">
-    <div class="bet-row">
-      <button onclick="chg(-1)">-</button>
-      <input id="betAmt" value="10">
-      <button onclick="chg(1)">+</button>
-    </div>
-    <div class="quick">
-      <button onclick="setAmt(1)">1</button>
-      <button onclick="setAmt(2)">2</button>
-      <button onclick="setAmt(5)">5</button>
-      <button onclick="setAmt(10)">10</button>
-    </div>
-    <button class="bet-btn" id="betBtn" onclick="placeBet()">BET</button>
-  </div>
+<div class="game">
+  <div class="multiplier" id="multi">WAITING</div>
 </div>
 
-<div class="popup" id="popup">
-  <div class="popup-box" id="popupBox"></div>
+<div class="status" id="status">Place your bets (25s)</div>
+
+<div class="controls">
+
+  <!-- BET 1 -->
+  <div class="betbox" id="box1">
+    <div class="row">
+      <button class="gray" onclick="chg(1,-1)">-</button>
+      <input id="amt1" value="10">
+      <button class="gray" onclick="chg(1,1)">+</button>
+    </div>
+    <div class="row">
+      <button class="gray" onclick="setAmt(1,1)">1</button>
+      <button class="gray" onclick="setAmt(1,2)">2</button>
+      <button class="gray" onclick="setAmt(1,5)">5</button>
+      <button class="gray" onclick="setAmt(1,10)">10</button>
+    </div>
+    <button class="green" id="btn1" onclick="bet(1)">BET</button>
+  </div>
+
+  <!-- BET 2 -->
+  <div class="betbox" id="box2">
+    <div class="row">
+      <button class="gray" onclick="chg(2,-1)">-</button>
+      <input id="amt2" value="1">
+      <button class="gray" onclick="chg(2,1)">+</button>
+    </div>
+    <div class="row">
+      <button class="gray" onclick="setAmt(2,1)">1</button>
+      <button class="gray" onclick="setAmt(2,2)">2</button>
+      <button class="gray" onclick="setAmt(2,5)">5</button>
+      <button class="gray" onclick="setAmt(2,10)">10</button>
+    </div>
+    <button class="green" id="btn2" onclick="bet(2)">BET</button>
+  </div>
+
+</div>
+
+<div class="popup-bg" id="popupBg">
+  <div class="popup" id="popup"></div>
 </div>
 
 <script>
-let wallet = 3000;
-let state="WAIT";
-let multiplier=1;
-let crashAt=0;
-let interval;
-let bet=0;
+let wallet=3000;
+let state="BET";
+let timer=25;
+let multi=1;
+let crash=0;
+let flyInt=null;
+let active=[false,false];
+let betAmt=[0,0];
 let history=[];
 
-function showPopup(type,msg){
-  const p=document.getElementById("popup");
-  const b=document.getElementById("popupBox");
-  p.style.display="flex";
-  b.className="popup-box "+type;
-  b.innerHTML=msg;
-  setTimeout(()=>p.style.display="none",1500);
+const wEl=document.getElementById("wallet");
+const mEl=document.getElementById("multi");
+const sEl=document.getElementById("status");
+const hEl=document.getElementById("history");
+const popupBg=document.getElementById("popupBg");
+const popup=document.getElementById("popup");
+
+function showPopup(msg,type){
+  popup.className="popup "+type;
+  popup.innerText=msg;
+  popupBg.style.display="flex";
+  setTimeout(()=>popupBg.style.display="none",1500);
 }
 
-function setAmt(v){betAmt.value=v}
-function chg(v){betAmt.value=+betAmt.value+v}
-
-function getCrash(){
+function randCrash(){
   let r=Math.random();
-  if(r<0.5) return +(1+Math.random()*1.5).toFixed(2);
+  if(r<0.6) return +(1+Math.random()*1.5).toFixed(2);
   if(r<0.85) return +(2+Math.random()*3).toFixed(2);
   return +(5+Math.random()*15).toFixed(2);
 }
 
-function placeBet(){
-  if(state!=="WAIT") return;
-  bet=+betAmt.value;
-  if(bet<1||bet>wallet) return;
-  wallet-=bet;
-  update();
-  showPopup("bet","BET PLACED<br>₹"+bet);
+function renderHistory(){
+  hEl.innerHTML="";
+  history.forEach(x=>{
+    let s=document.createElement("span");
+    s.textContent=x+"x";
+    s.className=x<2?"low":x<10?"mid":"high";
+    hEl.appendChild(s);
+  });
 }
+
+/* ================= REFRESH SAVE ================= */
+function saveState(){
+  localStorage.setItem("aviator_state",JSON.stringify({
+    wallet,state,timer,multi,crash,active,betAmt,history
+  }));
+}
+
+function loadState(){
+  let d=localStorage.getItem("aviator_state");
+  if(!d) return false;
+  d=JSON.parse(d);
+  wallet=d.wallet;
+  state=d.state;
+  timer=d.timer;
+  multi=d.multi;
+  crash=d.crash;
+  active=d.active;
+  betAmt=d.betAmt;
+  history=d.history;
+  wEl.innerText=wallet;
+  renderHistory();
+  return true;
+}
+/* ================= END ================= */
 
 function startRound(){
+  state="BET";
+  timer=25;
+  sEl.innerText=`Place your bets (${timer}s)`;
+  mEl.innerText="WAITING";
+  document.getElementById("box1").classList.remove("locked");
+  document.getElementById("box2").classList.remove("locked");
+
+  let t=setInterval(()=>{
+    timer--;
+    sEl.innerText=`Place your bets (${timer}s)`;
+    if(timer===0){clearInterval(t);lockBets();}
+  },1000);
+}
+
+function lockBets(){
+  state="LOCK";
+  timer=5;
+  sEl.innerText=`Bet locked (${timer}s)`;
+  document.getElementById("box1").classList.add("locked");
+  document.getElementById("box2").classList.add("locked");
+
+  let t=setInterval(()=>{
+    timer--;
+    sEl.innerText=`Bet locked (${timer}s)`;
+    if(timer===0){clearInterval(t);startFly();}
+  },1000);
+}
+
+function startFly(){
   state="FLY";
-  multiplier=1;
-  crashAt=getCrash();
-  betBtn.innerText="CASH OUT";
-  interval=setInterval(fly,60);
+  multi=1;
+  crash=randCrash();
+  sEl.innerText="Flying…";
+  mEl.classList.remove("crashed");
+
+  flyInt=setInterval(()=>{
+    multi+=0.02+multi*0.004;
+    multi=+multi.toFixed(2);
+    mEl.innerText=multi+"x";
+    if(multi>=crash) endRound();
+  },50);
 }
 
-function fly(){
-  multiplier+=0.02+multiplier*0.01;
-  multiplier=+multiplier.toFixed(2);
-  screen.innerText=multiplier+"x";
-  if(multiplier>=crashAt) crash();
+function endRound(){
+  clearInterval(flyInt);
+  state="CRASH";
+  mEl.innerText="CRASHED @ "+crash+"x";
+  mEl.classList.add("crashed");
+  history.unshift(crash);
+  history=history.slice(0,10);
+  renderHistory();
+  active=[false,false];
+  document.getElementById("btn1").innerText="BET";
+  document.getElementById("btn2").innerText="BET";
+  setTimeout(startRound,2000);
 }
 
-betBtn.onclick=()=>{
-  if(state==="FLY"){
-    clearInterval(interval);
-    let win=+(bet*multiplier).toFixed(0);
-    wallet+=win;
-    showPopup("win","CASHED OUT<br>₹"+win);
-    end(multiplier);
+function bet(n){
+  let i=n-1;
+  let amt=+document.getElementById("amt"+n).value;
+
+  if(state==="BET"){
+    if(wallet<amt) return showPopup("Low Balance","loss");
+    wallet-=amt;
+    wEl.innerText=wallet;
+    active[i]=true;
+    betAmt[i]=amt;
+    document.getElementById("btn"+n).innerText="CASH OUT";
+    showPopup("Bet Placed","betp");
   }
-};
-
-function crash(){
-  clearInterval(interval);
-  showPopup("loss","CRASHED @ "+multiplier+"x");
-  end(multiplier);
+  else if(state==="FLY" && active[i]){
+    active[i]=false;
+    let win=Math.floor(amt*multi);
+    wallet+=win;
+    wEl.innerText=wallet;
+    document.getElementById("btn"+n).innerText="BET";
+    showPopup("Cashed Out @ "+multi+"x","win");
+  }
 }
 
-function end(val){
-  history.unshift(val+"x");
-  history=history.slice(0,6);
-  document.getElementById("history").innerText=history.join("   ");
-  state="WAIT";
-  betBtn.innerText="BET";
-  screen.innerText="WAITING";
-  update();
+function chg(n,v){
+  let i=document.getElementById("amt"+n);
+  i.value=Math.max(1,+i.value+v);
+}
+function setAmt(n,v){
+  document.getElementById("amt"+n).value=v;
 }
 
-function update(){
-  wallet.innerText=wallet;
+/* AUTO SAVE */
+setInterval(saveState,500);
+
+/* INIT */
+if(!loadState()){
+  startRound();
 }
-
-setInterval(()=>{
-  if(state==="WAIT") startRound();
-},3000);
-
-update();
 </script>
 
 </body>
