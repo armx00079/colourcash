@@ -13,7 +13,7 @@ body{margin:0;font-family:Arial;background:#0e3b2f;color:#fff}
 .timer{font-size:22px;color:#ffd54f}
 .lock{color:#ffcc00;margin-top:6px}
 
-/* ===== WHEEL ===== */
+/* WHEEL */
 .wheel-wrap{display:flex;justify-content:center;margin:20px 0}
 .wheel{
   width:300px;height:300px;border-radius:50%;
@@ -32,7 +32,7 @@ body{margin:0;font-family:Arial;background:#0e3b2f;color:#fff}
   pointer-events:none;
 }
 
-/* ===== GRID ===== */
+/* GRID */
 .grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
 .num{padding:12px 0;border-radius:8px;font-weight:bold;text-align:center;cursor:pointer}
 .red{background:#c62828}
@@ -40,14 +40,13 @@ body{margin:0;font-family:Arial;background:#0e3b2f;color:#fff}
 .green{background:#2e7d32}
 .num.active{outline:3px solid #00e5ff}
 
-/* ===== CONTROLS ===== */
+/* CONTROLS */
 .controls{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
 .ctrl{background:#333;padding:12px;border-radius:10px;text-align:center;font-weight:bold;cursor:pointer}
 .ctrl.active{outline:3px solid #00e5ff;background:#555}
 
 input{width:100%;padding:12px;margin-top:10px;border:none;border-radius:10px}
 button{width:100%;padding:14px;margin-top:10px;border:none;border-radius:12px;background:#2196f3;color:#fff;font-size:16px;font-weight:bold}
-button:disabled{opacity:.5}
 
 .history{font-size:14px;line-height:1.6;margin-top:6px}
 
@@ -58,7 +57,7 @@ button:disabled{opacity:.5}
 .lose{color:#ff5252}
 .warn{color:#ff5252}
 
-.blur{filter:blur(3px)}
+.blur{filter:blur(3px);pointer-events:none}
 </style>
 </head>
 
@@ -104,47 +103,47 @@ button:disabled{opacity:.5}
 
 <div class="popup" id="popup"><div id="popupText"></div></div>
 
-<!-- 🔥 FIREBASE -->
 <script type="module">
+/* 🔥 FIREBASE */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, collection, query, where, getDocs, doc, updateDoc } 
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const app = initializeApp({
-  apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
-  authDomain:"colourcash-ea60e.firebaseapp.com",
-  projectId:"colourcash-ea60e"
+  apiKey: "AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
+  authDomain: "colourcash-ea60e.firebaseapp.com",
+  projectId: "colourcash-ea60e"
 });
 const db = getFirestore(app);
 
+/* ===== GAME STATE ===== */
+let state=JSON.parse(localStorage.getItem("roulette_state"))||{
+  wallet:0,phase:"BET",time:25,selected:null,bets:[],last:[]
+};
+const save=()=>localStorage.setItem("roulette_state",JSON.stringify(state));
+
 let uid="";
-const email = localStorage.getItem("userEmail");
+const email=localStorage.getItem("userEmail");
 
-window.loadWallet = async ()=>{
+/* LOAD WALLET */
+async function loadWallet(){
   if(!email) return;
-  const q = query(collection(db,"users"), where("email","==",email));
-  const s = await getDocs(q);
+  const q=query(collection(db,"users"),where("email","==",email));
+  const s=await getDocs(q);
   s.forEach(d=>{
-    uid = d.id;
-    state.wallet = d.data().balance || 0;
+    uid=d.id;
+    state.wallet=d.data().balance||0;
   });
-  save();
   render();
-};
+}
 
-window.syncWallet = async ()=>{
+/* SYNC WALLET */
+async function syncWallet(){
   if(!uid) return;
-  await updateDoc(doc(db,"users",uid), { balance: state.wallet });
-};
-</script>
+  await updateDoc(doc(db,"users",uid),{balance:state.wallet});
+}
 
-<script>
-/* ===== GAME ===== */
-let state = JSON.parse(localStorage.getItem("roulette_state")) || {
-  wallet:0, phase:"BET", time:25, selected:null, bets:[], last:[]
-};
-const save = ()=>localStorage.setItem("roulette_state",JSON.stringify(state));
-
+/* GAME LOGIC */
 const red=[1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
 const black=[2,4,6,8,10,11,13,15,17,20,22,24,26,28,29,31,33,35];
 
@@ -171,18 +170,17 @@ for(let i=0;i<=36;i++){
 }
 
 function clearSel(){
-  document.querySelectorAll(".num").forEach(x=>x.classList.remove("active"));
-  document.querySelectorAll(".ctrl").forEach(x=>x.classList.remove("active"));
+  document.querySelectorAll(".num,.ctrl").forEach(x=>x.classList.remove("active"));
 }
 
-function selectNumber(n,el){
+window.selectNumber=(n,el)=>{
   if(state.phase!=="BET")return;
-  clearSel(); el.classList.add("active");
+  clearSel();el.classList.add("active");
   state.selected={type:"NUMBER",value:n};
 }
-function selectGroup(g,el){
+window.selectGroup=(g,el)=>{
   if(state.phase!=="BET")return;
-  clearSel(); el.classList.add("active");
+  clearSel();el.classList.add("active");
   state.selected={type:g};
 }
 
@@ -193,16 +191,16 @@ function popupMsg(msg,cls){
   setTimeout(()=>popup.style.display="none",1800);
 }
 
-function placeBet(){
+window.placeBet=()=>{
   let amt=+amount.value;
-  if(amt>state.wallet){ popupMsg("INSUFFICIENT BALANCE","warn"); return; }
+  if(amt>state.wallet){popupMsg("INSUFFICIENT BALANCE","warn");return;}
   if(!state.selected||amt<1)return;
 
   state.wallet-=amt;
   syncWallet();
   state.bets.unshift({type:state.selected.type,value:state.selected.value,amt,res:"PENDING"});
   popupMsg("BET PLACED");
-  save(); render();
+  save();render();
 }
 
 function spin(){
@@ -242,10 +240,11 @@ function spin(){
         popupMsg(`❌ ${result} → LOSS`,"lose");
       }
     });
-    save(); render();
+    save();render();
   },4600);
 }
 
+/* LOOP */
 setInterval(()=>{
   state.time--;
   if(state.phase==="BET"&&state.time===5){
@@ -266,7 +265,7 @@ setInterval(()=>{
     lockText.innerText="";
     game.classList.remove("blur");
   }
-  save(); render();
+  save();render();
 },1000);
 
 function render(){
@@ -276,7 +275,7 @@ function render(){
   bets.innerHTML=state.bets.map(b=>`${b.type} ₹${b.amt} → ${b.res}`).join("<br>");
 }
 
-loadWallet();
+await loadWallet();
 render();
 </script>
 
