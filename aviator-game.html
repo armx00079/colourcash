@@ -7,28 +7,16 @@
 
 <style>
 body{margin:0;font-family:Arial;background:#0b0b0b;color:#fff}
-
-/* HEADER */
-.header{display:flex;justify-content:space-between;align-items:center;padding:14px;background:#111}
+.header{display:flex;justify-content:space-between;padding:14px;background:#111}
 .logo{font-size:26px;font-weight:bold;color:#ff1744}
 .balance{font-size:18px;color:#00e676}
-
-/* HISTORY */
 .history{display:flex;gap:10px;padding:10px;overflow-x:auto;background:#0f0f0f}
 .history span{font-size:14px}
-.low{color:#64b5f6}
-.mid{color:#00e676}
-.high{color:#e040fb}
-
-/* GAME */
-.game{height:40vh;background:radial-gradient(circle at bottom,#1a1a1a,#000);display:flex;align-items:center;justify-content:center;position:relative}
-.multiplier{text-align:center;font-size:64px;font-weight:bold}
+.low{color:#64b5f6}.mid{color:#00e676}.high{color:#e040fb}
+.game{height:40vh;display:flex;align-items:center;justify-content:center;background:#000}
+.multiplier{font-size:64px;font-weight:bold}
 .crashed{color:#ff5252}
-
-/* STATUS */
-.status{text-align:center;padding:8px;color:#aaa;font-size:16px}
-
-/* BET AREA */
+.status{text-align:center;padding:8px;color:#aaa}
 .controls{padding:12px;display:flex;flex-direction:column;gap:12px}
 .betbox{background:#151515;border-radius:14px;padding:12px}
 .row{display:flex;gap:8px;margin-bottom:8px}
@@ -37,19 +25,9 @@ button{flex:1;padding:10px;border:none;border-radius:8px;font-weight:bold;font-s
 .gray{background:#333;color:#fff}
 .green{background:#2ecc71;color:#000}
 .locked{opacity:.5;pointer-events:none}
-
-/* POPUP */
-.popup-bg{
-  position:fixed;inset:0;background:rgba(0,0,0,.6);
-  display:none;align-items:center;justify-content:center;z-index:999
-}
-.popup{
-  background:#1c1c1c;padding:20px 26px;
-  border-radius:14px;font-size:20px;font-weight:bold
-}
-.win{color:#2ecc71}
-.loss{color:#ff5252}
-.betp{color:#64b5f6}
+.popup-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center}
+.popup{background:#1c1c1c;padding:20px 26px;border-radius:14px;font-size:20px;font-weight:bold}
+.win{color:#2ecc71}.loss{color:#ff5252}.betp{color:#64b5f6}
 </style>
 </head>
 
@@ -61,16 +39,10 @@ button{flex:1;padding:10px;border:none;border-radius:8px;font-weight:bold;font-s
 </div>
 
 <div class="history" id="history"></div>
-
-<div class="game">
-  <div class="multiplier" id="multi">WAITING</div>
-</div>
-
-<div class="status" id="status">Place your bets (25s)</div>
+<div class="game"><div class="multiplier" id="multi">WAITING</div></div>
+<div class="status" id="status"></div>
 
 <div class="controls">
-
-  <!-- BET 1 -->
   <div class="betbox" id="box1">
     <div class="row">
       <button class="gray" onclick="chg(1,-1)">-</button>
@@ -86,7 +58,6 @@ button{flex:1;padding:10px;border:none;border-radius:8px;font-weight:bold;font-s
     <button class="green" id="btn1" onclick="bet(1)">BET</button>
   </div>
 
-  <!-- BET 2 -->
   <div class="betbox" id="box2">
     <div class="row">
       <button class="gray" onclick="chg(2,-1)">-</button>
@@ -101,49 +72,35 @@ button{flex:1;padding:10px;border:none;border-radius:8px;font-weight:bold;font-s
     </div>
     <button class="green" id="btn2" onclick="bet(2)">BET</button>
   </div>
-
 </div>
 
-<!-- POPUP -->
-<div class="popup-bg" id="popupBg">
-  <div class="popup" id="popup"></div>
-</div>
+<div class="popup-bg" id="popupBg"><div class="popup" id="popup"></div></div>
 
 <script>
-let wallet=3000;
-let state="BET";
-let timer=25;
-let multi=1;
-let crash=0;
-let flyInt=null;
-let active=[false,false];
-let betAmt=[0,0];
-let history=[];
+/* ================= STATE ================= */
+let S = JSON.parse(localStorage.getItem("AVIATOR_STATE")) || {
+  wallet:3000,state:"BET",timer:25,multi:1,
+  crash:0,active:[false,false],betAmt:[0,0],history:[]
+};
 
 const wEl=walletEl=document.getElementById("wallet");
 const mEl=document.getElementById("multi");
 const sEl=document.getElementById("status");
 const hEl=document.getElementById("history");
-const popupBg=document.getElementById("popupBg");
-const popup=document.getElementById("popup");
 
-function showPopup(msg,type){
-  popup.className="popup "+type;
-  popup.innerText=msg;
+function save(){ localStorage.setItem("AVIATOR_STATE",JSON.stringify(S)); }
+
+/* ================= UI ================= */
+function popup(msg,type){
   popupBg.style.display="flex";
-  setTimeout(()=>popupBg.style.display="none",1500);
-}
-
-function randCrash(){
-  let r=Math.random();
-  if(r<0.6) return +(1+Math.random()*1.5).toFixed(2);
-  if(r<0.85) return +(2+Math.random()*3).toFixed(2);
-  return +(5+Math.random()*15).toFixed(2);
+  popupBox.className="popup "+type;
+  popupBox.innerText=msg;
+  setTimeout(()=>popupBg.style.display="none",1200);
 }
 
 function renderHistory(){
   hEl.innerHTML="";
-  history.forEach(x=>{
+  S.history.forEach(x=>{
     let s=document.createElement("span");
     s.textContent=x+"x";
     s.className=x<2?"low":x<10?"mid":"high";
@@ -151,116 +108,82 @@ function renderHistory(){
   });
 }
 
-function startRound(){
-  state="BET";
-  timer=25;
-  sEl.innerText=`Place your bets (${timer}s)`;
-  mEl.innerText="WAITING";
-  document.getElementById("box1").classList.remove("locked");
-  document.getElementById("box2").classList.remove("locked");
-
-  let t=setInterval(()=>{
-    timer--;
-    if(timer>0){
-      sEl.innerText=`Place your bets (${timer}s)`;
-    }
-    if(timer===0){
-      clearInterval(t);
-      lockBets();
-    }
-  },1000);
+/* ================= GAME ================= */
+function randCrash(){
+  let r=Math.random();
+  if(r<0.6) return +(1+Math.random()*1.5).toFixed(2);
+  if(r<0.85) return +(2+Math.random()*3).toFixed(2);
+  return +(5+Math.random()*15).toFixed(2);
 }
 
-function lockBets(){
-  state="LOCK";
-  timer=5;
-  sEl.innerText=`Bet locked (${timer}s)`;
-  document.getElementById("box1").classList.add("locked");
-  document.getElementById("box2").classList.add("locked");
-
-  let t=setInterval(()=>{
-    timer--;
-    if(timer>0){
-      sEl.innerText=`Bet locked (${timer}s)`;
+function tick(){
+  if(S.state==="BET" || S.state==="LOCK"){
+    S.timer--;
+    sEl.innerText=(S.state==="BET"?"Place your bets":"Bet locked")+" ("+S.timer+"s)";
+    if(S.timer<=0){
+      if(S.state==="BET"){ S.state="LOCK"; S.timer=5; }
+      else startFly();
     }
-    if(timer===0){
-      clearInterval(t);
-      startFly();
-    }
-  },1000);
+  }
+  else if(S.state==="FLY"){
+    S.multi+=0.01+S.multi*0.003;
+    S.multi=+S.multi.toFixed(2);
+    mEl.innerText=S.multi+"x";
+    if(S.multi>=S.crash) crash();
+  }
+  save();
 }
 
 function startFly(){
-  state="FLY";
-  multi=1;
-  crash=randCrash();
-  mEl.classList.remove("crashed");
+  S.state="FLY";
+  S.multi=1;
+  S.crash=S.crash||randCrash();
   sEl.innerText="Flying…";
-
-  document.getElementById("box1").classList.remove("locked");
-  document.getElementById("box2").classList.remove("locked");
-
-  flyInt=setInterval(()=>{
-    multi+=0.01+multi*0.003;
-    multi=+multi.toFixed(2);
-    mEl.innerText=multi+"x";
-    if(multi>=crash){
-      endRound();
-    }
-  },60);
 }
 
-function endRound(){
-  clearInterval(flyInt);
-  state="CRASH";
-  mEl.innerText="CRASHED\n@ "+crash+"x";
+function crash(){
+  S.state="CRASH";
+  mEl.innerText="CRASHED @ "+S.crash+"x";
   mEl.classList.add("crashed");
-  sEl.innerText="";
-
-  history.unshift(crash);
-  history=history.slice(0,10);
+  S.history.unshift(S.crash);
+  S.history=S.history.slice(0,10);
   renderHistory();
+  setTimeout(resetRound,2000);
+}
 
-  active=[false,false];
+function resetRound(){
+  S.state="BET";S.timer=25;S.multi=1;S.crash=0;
+  S.active=[false,false];
   document.getElementById("btn1").innerText="BET";
   document.getElementById("btn2").innerText="BET";
-
-  setTimeout(startRound,2000);
 }
 
+/* ================= BET ================= */
 function bet(n){
   let i=n-1;
   let amt=+document.getElementById("amt"+n).value;
-
-  if(state==="BET"){
-    if(wallet<amt) return showPopup("Low Balance","loss");
-    wallet-=amt;
-    wEl.innerText=wallet;
-    active[i]=true;
-    betAmt[i]=amt;
+  if(S.state==="BET"){
+    if(S.wallet<amt) return popup("Low Balance","loss");
+    S.wallet-=amt;S.active[i]=true;S.betAmt[i]=amt;
     document.getElementById("btn"+n).innerText="CASH OUT";
-    showPopup("Bet Placed","betp");
+    popup("Bet Placed","betp");
   }
-  else if(state==="FLY" && active[i]){
-    active[i]=false;
-    let win=Math.floor(amt*multi);
-    wallet+=win;
-    wEl.innerText=wallet;
+  else if(S.state==="FLY" && S.active[i]){
+    let win=Math.floor(S.betAmt[i]*S.multi);
+    S.wallet+=win;S.active[i]=false;
     document.getElementById("btn"+n).innerText="BET";
-    showPopup("Cashed Out @ "+multi+"x","win");
+    popup("Cashed Out @ "+S.multi+"x","win");
   }
+  wEl.innerText=S.wallet;save();
 }
 
-function chg(n,v){
-  let i=document.getElementById("amt"+n);
-  i.value=Math.max(1,+i.value+v);
-}
-function setAmt(n,v){
-  document.getElementById("amt"+n).value=v;
-}
+function chg(n,v){let i=document.getElementById("amt"+n);i.value=Math.max(1,+i.value+v);}
+function setAmt(n,v){document.getElementById("amt"+n).value=v;}
 
+/* ================= INIT ================= */
+wEl.innerText=S.wallet;
 renderHistory();
-startRound();
+setInterval(tick,1000);
 </script>
 
 </body>
