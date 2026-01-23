@@ -15,32 +15,16 @@ body{margin:0;font-family:Arial;background:#0e3b2f;color:#fff}
 .lock{color:#ffcc00;margin-top:6px}
 
 /* ===== WHEEL ===== */
-.wheel-wrap{
-  display:flex;
-  justify-content:center;
-  margin:18px 0;
-}
+.wheel-wrap{display:flex;justify-content:center;margin:18px 0}
 .wheel{
-  width:280px;
-  height:280px;
-  border-radius:50%;
+  width:280px;height:280px;border-radius:50%;
   border:10px solid #111;
-  background:
-    repeating-conic-gradient(
-      #c62828 0deg 10deg,
-      #111 10deg 20deg
-    );
-  position:relative;
-  transition:transform 4s cubic-bezier(.17,.67,.12,1);
+  background:repeating-conic-gradient(#c62828 0deg 10deg,#111 10deg 20deg);
+  transition:transform 4s cubic-bezier(.25,.8,.25,1);
 }
 .wheel span{
-  position:absolute;
-  top:50%;
-  left:50%;
-  transform-origin:0 0;
-  font-size:12px;
-  font-weight:bold;
-  color:#fff;
+  position:absolute;top:50%;left:50%;
+  transform-origin:0 0;font-size:12px;font-weight:bold
 }
 
 /* ===== GRID ===== */
@@ -57,13 +41,18 @@ body{margin:0;font-family:Arial;background:#0e3b2f;color:#fff}
 .ctrl.active{outline:3px solid #00e5ff;background:#555}
 
 input{width:100%;padding:12px;margin-top:10px;border:none;border-radius:10px}
-button{width:100%;padding:14px;margin-top:10px;border:none;border-radius:12px;background:#2196f3;color:#fff;font-size:16px;font-weight:bold}
-button:disabled{opacity:.6}
+button{
+  width:100%;padding:14px;margin-top:10px;border:none;
+  border-radius:12px;background:#2196f3;color:#fff;
+  font-size:16px;font-weight:bold
+}
+button:disabled{opacity:.5}
 
 .history{font-size:14px;line-height:1.6;margin-top:6px}
 
 /* POPUP */
-.popup{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:20}
+.popup{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;
+align-items:center;justify-content:center;z-index:20}
 .popup div{background:#1b1b1b;padding:22px;border-radius:14px;font-size:18px}
 .win{color:#4caf50}
 .lose{color:#ff5252}
@@ -99,7 +88,7 @@ button:disabled{opacity:.6}
   </div>
 
   <input id="amount" type="number" placeholder="Min ₹1">
-  <button onclick="placeBet()">PLACE BET</button>
+  <button id="betBtn" onclick="placeBet()">PLACE BET</button>
 </div>
 
 <div class="card">
@@ -114,38 +103,24 @@ button:disabled{opacity:.6}
 
 <div class="popup" id="popup"><div id="popupText"></div></div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, getDocs, query, where, doc, updateDoc }
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-/* FIREBASE */
-const app = initializeApp({
-  apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
-  authDomain:"colourcash-ea60e.firebaseapp.com",
-  projectId:"colourcash-ea60e"
-});
-const db = getFirestore(app);
-const email=localStorage.getItem("userEmail");
-let uid="";
-
-/* STATE */
+<script>
+/* ===== STATE ===== */
 let state=JSON.parse(localStorage.getItem("roulette_state"))||{
-  wallet:0,phase:"BET",time:25,selected:null,bets:[],last:[]
+  wallet:500,phase:"BET",time:25,selected:null,bets:[],last:[]
 };
 const save=()=>localStorage.setItem("roulette_state",JSON.stringify(state));
 
-/* ELEMENTS */
+/* ===== ELEMENTS ===== */
 const wheel=document.getElementById("wheel");
 const popup=document.getElementById("popup");
 const popupText=document.getElementById("popupText");
 const game=document.getElementById("game");
 
-/* COLORS */
+/* ===== COLORS ===== */
 const red=[1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
 const black=[2,4,6,8,10,11,13,15,17,20,22,24,26,28,29,31,33,35];
 
-/* BUILD WHEEL NUMBERS */
+/* ===== BUILD WHEEL NUMBERS ===== */
 for(let i=0;i<37;i++){
   let s=document.createElement("span");
   let ang=(360/37)*i;
@@ -155,7 +130,7 @@ for(let i=0;i<37;i++){
   wheel.appendChild(s);
 }
 
-/* GRID */
+/* ===== GRID ===== */
 const grid=document.getElementById("numbers");
 for(let i=0;i<=36;i++){
   let d=document.createElement("div");
@@ -165,8 +140,12 @@ for(let i=0;i<=36;i++){
   grid.appendChild(d);
 }
 
-const clearSel=()=>document.querySelectorAll(".num,.ctrl").forEach(x=>x.classList.remove("active"));
+function clearSel(){
+  document.querySelectorAll(".num").forEach(x=>x.classList.remove("active"));
+  document.querySelectorAll(".ctrl").forEach(x=>x.classList.remove("active"));
+}
 
+/* ===== SELECT ===== */
 function selectNumber(n,el){
   if(state.phase!=="BET")return;
   clearSel();el.classList.add("active");
@@ -178,26 +157,17 @@ function selectGroup(g,el){
   state.selected={type:g};
 }
 
-/* WALLET */
-async function loadWallet(){
-  const q=query(collection(db,"users"),where("email","==",email));
-  const s=await getDocs(q);
-  s.forEach(d=>{uid=d.id;state.wallet=d.data().balance||0});
-  render();
-}
-
-/* BET */
-async function placeBet(){
+/* ===== BET ===== */
+function placeBet(){
   let amt=+amount.value;
-  if(!state.selected||amt<1||amt>state.wallet)return;
+  if(state.phase!=="BET"||!state.selected||amt<1||amt>state.wallet)return;
   state.wallet-=amt;
-  await updateDoc(doc(db,"users",uid),{balance:state.wallet});
   state.bets.unshift({type:state.selected.type,value:state.selected.value,amt,res:"PENDING"});
   popupMsg("BET PLACED");
   save();render();
 }
 
-/* POPUP */
+/* ===== POPUP ===== */
 function popupMsg(t,c=""){
   popupText.className=c;
   popupText.innerText=t;
@@ -205,44 +175,42 @@ function popupMsg(t,c=""){
   setTimeout(()=>popup.style.display="none",1800);
 }
 
-/* SPIN */
-async function spin(){
+/* ===== SPIN ===== */
+function spin(){
   let result=Math.floor(Math.random()*37);
   let deg=(360/37)*result;
-  wheel.style.transform=`rotate(${1440-deg}deg)`;
+  wheel.style.transform=`rotate(${1440+deg}deg)`; // 🔒 FIXED CLOCKWISE
 
-  setTimeout(async ()=>{
+  setTimeout(()=>{
     state.last.unshift(result);
     state.last=state.last.slice(0,10);
 
-    for(let b of state.bets){
-      if(b.res==="PENDING"){
-        let win=false;
-        if(b.type==="NUMBER"&&b.value===result) win=true;
-        if(b.type==="RED"&&red.includes(result)) win=true;
-        if(b.type==="BLACK"&&black.includes(result)) win=true;
-        if(b.type==="EVEN"&&result!==0&&result%2===0) win=true;
-        if(b.type==="ODD"&&result%2===1) win=true;
-        if(b.type==="LOW"&&result>=1&&result<=18) win=true;
-        if(b.type==="HIGH"&&result>=19) win=true;
+    state.bets.forEach(b=>{
+      if(b.res!=="PENDING")return;
+      let win=false;
+      if(b.type==="NUMBER"&&b.value===result) win=true;
+      if(b.type==="RED"&&red.includes(result)) win=true;
+      if(b.type==="BLACK"&&black.includes(result)) win=true;
+      if(b.type==="EVEN"&&result!==0&&result%2===0) win=true;
+      if(b.type==="ODD"&&result%2===1) win=true;
+      if(b.type==="LOW"&&result>=1&&result<=18) win=true;
+      if(b.type==="HIGH"&&result>=19) win=true;
 
-        if(win){
-          let w=b.amt*2;
-          state.wallet+=w;
-          await updateDoc(doc(db,"users",uid),{balance:state.wallet});
-          b.res="WIN ₹"+w;
-          popupMsg(`🎉 ${result} → WIN ₹${w}`,"win");
-        }else{
-          b.res="LOSS";
-          popupMsg(`❌ ${result} → LOSS`,"lose");
-        }
+      if(win){
+        let w=b.amt*2;
+        state.wallet+=w;
+        b.res="WIN ₹"+w;
+        popupMsg(`🎉 ${result} → WIN ₹${w}`,"win");
+      }else{
+        b.res="LOSS";
+        popupMsg(`❌ ${result} → LOSS`,"lose");
       }
-    }
+    });
     save();render();
-  },3800);
+  },3900);
 }
 
-/* LOOP */
+/* ===== LOOP ===== */
 setInterval(()=>{
   state.time--;
 
@@ -269,15 +237,14 @@ setInterval(()=>{
   save();render();
 },1000);
 
-/* RENDER */
+/* ===== RENDER ===== */
 function render(){
   wallet.innerText=`Wallet: ₹${state.wallet}`;
   timer.innerText=state.time+"s";
   last.innerHTML=state.last.join(", ");
   bets.innerHTML=state.bets.map(b=>`${b.type} ₹${b.amt} → ${b.res}`).join("<br>");
 }
-
-loadWallet();
+render();
 </script>
 
 </body>
