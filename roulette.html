@@ -25,17 +25,28 @@ body{
   border-radius:14px;
 }
 .center{text-align:center}
-.timer{font-size:20px;color:#ffd54f}
+.timer{
+  font-size:22px;
+  margin-top:6px;
+  color:#ffd54f;
+}
 
+/* BLUR WHEN LOCK */
+.locked{
+  filter:blur(2px);
+  pointer-events:none;
+}
+
+/* GRID */
 .grid{
   display:grid;
   grid-template-columns:repeat(6,1fr);
   gap:6px;
 }
 .num{
-  padding:10px 0;
+  padding:12px 0;
   border-radius:8px;
-  font-size:14px;
+  font-size:15px;
   font-weight:bold;
   text-align:center;
   cursor:pointer;
@@ -43,8 +54,11 @@ body{
 .red{background:#c62828}
 .black{background:#111}
 .green{background:#2e7d32}
-.num.active{outline:3px solid #00e5ff}
+.num.active{
+  outline:3px solid #00e5ff;
+}
 
+/* CONTROLS */
 .controls{
   display:grid;
   grid-template-columns:repeat(3,1fr);
@@ -53,7 +67,7 @@ body{
 }
 .ctrl{
   background:#333;
-  padding:10px;
+  padding:12px;
   border-radius:10px;
   text-align:center;
   font-weight:bold;
@@ -71,6 +85,7 @@ input{
   border:none;
   border-radius:10px;
 }
+
 button{
   width:100%;
   padding:14px;
@@ -90,11 +105,7 @@ button:disabled{opacity:.5}
   margin-top:6px;
 }
 
-.locked{
-  filter:blur(2px);
-  pointer-events:none;
-}
-
+/* POPUP */
 .popup{
   position:fixed;
   inset:0;
@@ -120,11 +131,12 @@ button:disabled{opacity:.5}
 <div class="header">🎡 ROULETTE</div>
 
 <div class="card center">
-  <div id="wallet">Wallet: ₹0</div>
+  <div id="wallet">Wallet: ₹500</div>
   <div class="timer" id="timer">25s</div>
+  <div id="lockText"></div>
 </div>
 
-<div class="card" id="gameCard">
+<div class="card" id="gameArea">
   <div class="grid" id="numbers"></div>
 
   <div class="controls">
@@ -155,9 +167,9 @@ button:disabled{opacity:.5}
 <script>
 /* ---------- STATE ---------- */
 let state = JSON.parse(localStorage.getItem("roulette_state")) || {
-  wallet:600,
-  time:25,
+  wallet:500,
   phase:"BET",
+  time:25,
   selected:null,
   bets:[],
   last:[]
@@ -171,8 +183,8 @@ const lastEl=last;
 const betsEl=bets;
 const popup=document.getElementById("popup");
 const popupText=document.getElementById("popupText");
-const gameCard=document.getElementById("gameCard");
-const betBtn=document.getElementById("betBtn");
+const gameArea=document.getElementById("gameArea");
+const lockText=document.getElementById("lockText");
 
 /* ---------- RENDER ---------- */
 function render(){
@@ -180,6 +192,14 @@ function render(){
   timerEl.innerText=state.time+"s";
   lastEl.innerHTML=state.last.join(", ");
   betsEl.innerHTML=state.bets.map(b=>`${b.type}${b.value!==undefined?" "+b.value:""} ₹${b.amt} → ${b.res}`).join("<br>");
+
+  if(state.phase==="LOCK"){
+    gameArea.classList.add("locked");
+    lockText.innerText="🔒 BET LOCKED";
+  }else{
+    gameArea.classList.remove("locked");
+    lockText.innerText="";
+  }
 }
 render();
 
@@ -233,15 +253,11 @@ function popupMsg(t,c=""){
   setTimeout(()=>popup.style.display="none",1500);
 }
 
-/* ---------- GAME LOOP (FIXED) ---------- */
+/* ---------- GAME LOOP ---------- */
 setInterval(()=>{
   if(state.phase==="BET"){
     state.time--;
-    if(state.time===5){
-      state.phase="LOCK";
-      betBtn.disabled=true;
-      gameCard.classList.add("locked");
-    }
+    if(state.time===5) state.phase="LOCK";
     if(state.time<=0){
       spin();
       state.phase="RESULT";
@@ -254,8 +270,6 @@ setInterval(()=>{
       state.phase="BET";
       state.time=25;
       state.selected=null;
-      betBtn.disabled=false;
-      gameCard.classList.remove("locked");
       clearSelection();
     }
   }
