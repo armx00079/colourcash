@@ -6,79 +6,50 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 
 <style>
-body{
-  margin:0;
-  font-family:Arial;
-  background:#0b0b0b;
-  color:#fff;
-}
+body{margin:0;font-family:Arial;background:#0b0b0b;color:#fff}
 
 /* HEADER */
-.header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:14px;
-  background:#111;
-}
+.header{display:flex;justify-content:space-between;align-items:center;padding:14px;background:#111}
 .logo{font-size:26px;font-weight:bold;color:#ff1744}
 .balance{font-size:18px;color:#00e676}
 
 /* HISTORY */
-.history{
-  display:flex;
-  gap:10px;
-  padding:10px;
-  overflow-x:auto;
-  background:#0f0f0f;
-}
+.history{display:flex;gap:10px;padding:10px;overflow-x:auto;background:#0f0f0f}
 .history span{font-size:14px}
 .low{color:#64b5f6}
 .mid{color:#00e676}
 .high{color:#e040fb}
 
 /* GAME */
-.game{
-  height:40vh;
-  background:radial-gradient(circle at bottom,#1a1a1a,#000);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-.multiplier{
-  font-size:64px;
-  font-weight:bold;
-}
+.game{height:40vh;background:radial-gradient(circle at bottom,#1a1a1a,#000);display:flex;align-items:center;justify-content:center;position:relative}
+.multiplier{text-align:center;font-size:64px;font-weight:bold}
 .crashed{color:#ff5252}
 
 /* STATUS */
-.status{text-align:center;padding:8px;color:#aaa}
+.status{text-align:center;padding:8px;color:#aaa;font-size:16px}
 
 /* BET AREA */
-.controls{
-  padding:12px;
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-}
-.betbox{
-  background:#151515;
-  border-radius:14px;
-  padding:12px;
-}
+.controls{padding:12px;display:flex;flex-direction:column;gap:12px}
+.betbox{background:#151515;border-radius:14px;padding:12px}
 .row{display:flex;gap:8px;margin-bottom:8px}
-input{
-  flex:1;padding:10px;border:none;border-radius:8px;
-  font-size:16px;text-align:center
-}
-button{
-  flex:1;padding:10px;border:none;border-radius:8px;
-  font-weight:bold;font-size:16px
-}
+input{flex:1;padding:10px;border:none;border-radius:8px;font-size:16px;text-align:center}
+button{flex:1;padding:10px;border:none;border-radius:8px;font-weight:bold;font-size:16px}
 .gray{background:#333;color:#fff}
 .green{background:#2ecc71;color:#000}
-.blue{background:#2196f3;color:#fff}
 .locked{opacity:.5;pointer-events:none}
+
+/* POPUP */
+.popup-bg{
+  position:fixed;inset:0;background:rgba(0,0,0,.6);
+  display:none;align-items:center;justify-content:center;z-index:999
+}
+.popup{
+  background:#1c1c1c;padding:20px 26px;
+  border-radius:14px;font-size:20px;font-weight:bold
+}
+.win{color:#2ecc71}
+.loss{color:#ff5252}
+.betp{color:#64b5f6}
 </style>
 </head>
 
@@ -95,7 +66,7 @@ button{
   <div class="multiplier" id="multi">WAITING</div>
 </div>
 
-<div class="status" id="status">Next round starting…</div>
+<div class="status" id="status">Place your bets (25s)</div>
 
 <div class="controls">
 
@@ -115,7 +86,7 @@ button{
     <button class="green" id="btn1" onclick="bet(1)">BET</button>
   </div>
 
-  <!-- BET 2 (NICHE) -->
+  <!-- BET 2 -->
   <div class="betbox" id="box2">
     <div class="row">
       <button class="gray" onclick="chg(2,-1)">-</button>
@@ -133,21 +104,35 @@ button{
 
 </div>
 
+<!-- POPUP -->
+<div class="popup-bg" id="popupBg">
+  <div class="popup" id="popup"></div>
+</div>
+
 <script>
 let wallet=3000;
-let state="WAIT"; // WAIT | BET | LOCK | FLY
-let timer=30;
+let state="BET";
+let timer=25;
 let multi=1;
 let crash=0;
 let flyInt=null;
-let history=[];
 let active=[false,false];
 let betAmt=[0,0];
+let history=[];
 
-const wEl=document.getElementById("wallet");
+const wEl=walletEl=document.getElementById("wallet");
 const mEl=document.getElementById("multi");
 const sEl=document.getElementById("status");
 const hEl=document.getElementById("history");
+const popupBg=document.getElementById("popupBg");
+const popup=document.getElementById("popup");
+
+function showPopup(msg,type){
+  popup.className="popup "+type;
+  popup.innerText=msg;
+  popupBg.style.display="flex";
+  setTimeout(()=>popupBg.style.display="none",1500);
+}
 
 function randCrash(){
   let r=Math.random();
@@ -159,26 +144,44 @@ function randCrash(){
 function renderHistory(){
   hEl.innerHTML="";
   history.forEach(x=>{
-    let sp=document.createElement("span");
-    sp.textContent=x+"x";
-    sp.className=x<2?"low":x<10?"mid":"high";
-    hEl.appendChild(sp);
+    let s=document.createElement("span");
+    s.textContent=x+"x";
+    s.className=x<2?"low":x<10?"mid":"high";
+    hEl.appendChild(s);
   });
 }
 
-function startTimer(){
-  timer=30;
+function startRound(){
   state="BET";
-  sEl.textContent="Place your bets";
-  mEl.textContent="WAITING";
+  timer=25;
+  sEl.innerText=`Place your bets (${timer}s)`;
+  mEl.innerText="WAITING";
+  document.getElementById("box1").classList.remove("locked");
+  document.getElementById("box2").classList.remove("locked");
 
   let t=setInterval(()=>{
     timer--;
-    if(timer===5){
-      state="LOCK";
-      sEl.textContent="Bets locked";
-      document.getElementById("box1").classList.add("locked");
-      document.getElementById("box2").classList.add("locked");
+    if(timer>0){
+      sEl.innerText=`Place your bets (${timer}s)`;
+    }
+    if(timer===0){
+      clearInterval(t);
+      lockBets();
+    }
+  },1000);
+}
+
+function lockBets(){
+  state="LOCK";
+  timer=5;
+  sEl.innerText=`Bet locked (${timer}s)`;
+  document.getElementById("box1").classList.add("locked");
+  document.getElementById("box2").classList.add("locked");
+
+  let t=setInterval(()=>{
+    timer--;
+    if(timer>0){
+      sEl.innerText=`Bet locked (${timer}s)`;
     }
     if(timer===0){
       clearInterval(t);
@@ -192,13 +195,15 @@ function startFly(){
   multi=1;
   crash=randCrash();
   mEl.classList.remove("crashed");
-  sEl.textContent="Flying…";
+  sEl.innerText="Flying…";
+
+  document.getElementById("box1").classList.remove("locked");
+  document.getElementById("box2").classList.remove("locked");
 
   flyInt=setInterval(()=>{
     multi+=0.01+multi*0.003;
     multi=+multi.toFixed(2);
-    mEl.textContent=multi+"x";
-
+    mEl.innerText=multi+"x";
     if(multi>=crash){
       endRound();
     }
@@ -208,26 +213,19 @@ function startFly(){
 function endRound(){
   clearInterval(flyInt);
   state="CRASH";
-  mEl.textContent="CRASHED @ "+crash+"x";
+  mEl.innerText="CRASHED\n@ "+crash+"x";
   mEl.classList.add("crashed");
-
-  active.forEach((a,i)=>{
-    if(a){
-      // lost
-      active[i]=false;
-    }
-  });
+  sEl.innerText="";
 
   history.unshift(crash);
   history=history.slice(0,10);
   renderHistory();
 
-  document.getElementById("box1").classList.remove("locked");
-  document.getElementById("box2").classList.remove("locked");
-  document.getElementById("btn1").textContent="BET";
-  document.getElementById("btn2").textContent="BET";
+  active=[false,false];
+  document.getElementById("btn1").innerText="BET";
+  document.getElementById("btn2").innerText="BET";
 
-  setTimeout(startTimer,2000);
+  setTimeout(startRound,2000);
 }
 
 function bet(n){
@@ -235,19 +233,21 @@ function bet(n){
   let amt=+document.getElementById("amt"+n).value;
 
   if(state==="BET"){
-    if(wallet<amt) return alert("Low balance");
+    if(wallet<amt) return showPopup("Low Balance","loss");
     wallet-=amt;
-    wEl.textContent=wallet;
+    wEl.innerText=wallet;
     active[i]=true;
     betAmt[i]=amt;
-    document.getElementById("btn"+n).textContent="CASH OUT";
+    document.getElementById("btn"+n).innerText="CASH OUT";
+    showPopup("Bet Placed","betp");
   }
   else if(state==="FLY" && active[i]){
     active[i]=false;
     let win=Math.floor(amt*multi);
     wallet+=win;
-    wEl.textContent=wallet;
-    document.getElementById("btn"+n).textContent="BET";
+    wEl.innerText=wallet;
+    document.getElementById("btn"+n).innerText="BET";
+    showPopup("Cashed Out @ "+multi+"x","win");
   }
 }
 
@@ -260,7 +260,7 @@ function setAmt(n,v){
 }
 
 renderHistory();
-startTimer();
+startRound();
 </script>
 
 </body>
