@@ -208,7 +208,43 @@ function setAmt(n,v){
 
 renderHistory();
 </script>
+<!-- ================= HARD REFRESH ROUND FIX (FINAL) ================= -->
+<script>
+(function(){
+  const KEY = "AVIATOR_PERSIST_STATE";
 
+  // LOAD
+  const saved = localStorage.getItem(KEY);
+  if(saved){
+    try{
+      const d = JSON.parse(saved);
+      if(d.roundStart) roundStart = d.roundStart;
+      if(d.state) state = d.state;
+      if(d.multi) multi = d.multi;
+      if(d.crash) crash = d.crash;
+      if(d.active) active = d.active;
+      if(d.betAmt) betAmt = d.betAmt;
+      if(d.history){
+        history = d.history;
+        renderHistory();
+      }
+    }catch(e){}
+  }
+
+  // SAVE CONTINUOUSLY
+  setInterval(()=>{
+    localStorage.setItem(KEY, JSON.stringify({
+      roundStart,
+      state,
+      multi,
+      crash,
+      active,
+      betAmt,
+      history
+    }));
+  }, 500);
+})();
+</script>
 <!-- ================= FIREBASE WALLET SYNC (ONLY ADDITION) ================= -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
