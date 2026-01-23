@@ -1,134 +1,236 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>WIN GO</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
-
-<style>
-/* ⚠️ ORIGINAL CSS – NOT TOUCHED */
-body{margin:0;font-family:Arial;background:#0f0f0f;color:#fff}
-.header{text-align:center;padding:15px;font-size:22px}
-.top{display:flex;justify-content:space-between;padding:0 15px;color:#bbb}
-.timer{text-align:center;font-size:34px;color:#ff4081;margin:10px}
-.card{background:#1c1c1c;margin:15px;padding:15px;border-radius:12px}
-input{width:100%;padding:12px;font-size:18px;border-radius:8px;border:none;text-align:center}
-.grid3,.grid5{display:grid;gap:8px;margin-top:10px}
-.grid3{grid-template-columns:repeat(3,1fr)}
-.grid5{grid-template-columns:repeat(5,1fr)}
-.btn{padding:14px;border:none;border-radius:10px;font-weight:bold;color:#fff}
-.red{background:#e53935}
-.green{background:#43a047}
-.violet{background:#8e24aa}
-.dark{background:#333}
-.bigsmall{display:flex;margin-top:10px}
-.bigsmall button{flex:1;padding:12px;border:none;font-size:16px}
-.big{background:#f4a261}
-.small{background:#4dabf7}
-.lock{pointer-events:none;opacity:.4}
-</style>
-</head>
-
-<body>
-
-<div class="header">🎨 WIN GO</div>
-
-<div class="top">
-  <div>Period: <span id="period">----</span></div>
-  <div>Wallet: ₹<span id="wallet">0</span></div>
-</div>
-
-<div class="timer">⏳ <span id="time">--</span>s</div>
-
-<div class="card" id="betBox">
-  <input id="amount" type="number" placeholder="Min ₹1">
-
-  <div class="grid3">
-    <button class="btn red" onclick="bet('color','RED')">RED</button>
-    <button class="btn green" onclick="bet('color','GREEN')">GREEN</button>
-    <button class="btn violet" onclick="bet('color','VIOLET')">VIOLET</button>
-  </div>
-
-  <div class="grid5">
-    <button class="btn dark" onclick="bet('number',0)">0</button>
-    <button class="btn dark" onclick="bet('number',1)">1</button>
-    <button class="btn dark" onclick="bet('number',2)">2</button>
-    <button class="btn dark" onclick="bet('number',3)">3</button>
-    <button class="btn dark" onclick="bet('number',4)">4</button>
-    <button class="btn dark" onclick="bet('number',5)">5</button>
-    <button class="btn dark" onclick="bet('number',6)">6</button>
-    <button class="btn dark" onclick="bet('number',7)">7</button>
-    <button class="btn dark" onclick="bet('number',8)">8</button>
-    <button class="btn dark" onclick="bet('number',9)">9</button>
-  </div>
-
-  <div class="bigsmall">
-    <button class="big" onclick="bet('bs','BIG')">Big</button>
-    <button class="small" onclick="bet('bs','SMALL')">Small</button>
-  </div>
-</div>
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, onSnapshot, updateDoc } 
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-const app = initializeApp({
-  apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
-  authDomain:"colourcash-ea60e.firebaseapp.com",
-  projectId:"colourcash-ea60e"
-});
-const db = getFirestore(app);
-
-const periodEl = document.getElementById("period");
-const timeEl = document.getElementById("time");
-const betBox = document.getElementById("betBox");
-const walletEl = document.getElementById("wallet");
-
-let betEnd = 0;
-let status = "BET";
-let wallet = 1000; // demo wallet
-
-walletEl.innerText = wallet;
-
-/* 🔥 LISTEN GLOBAL ROUND */
-onSnapshot(doc(db,"wingo_round","current"), snap=>{
-  if(!snap.exists()) return;
-  const d = snap.data();
-
-  periodEl.innerText = d.period;
-  betEnd = d.betEnd;
-  status = d.status;
-
-  if(status==="BET"){
-    betBox.classList.remove("lock");
-  }else{
-    betBox.classList.add("lock");
-  }
-});
-
-/* ⏳ TIMER FIX */
-setInterval(()=>{
-  if(!betEnd) return;
-  const now = Math.floor(Date.now()/1000);
-  let t = betEnd - now;
-  if(t < 0) t = 0;
-  timeEl.innerText = t;
-},1000);
-
-/* 🎯 BET FUNCTION */
-window.bet = (type,val)=>{
-  if(status!=="BET") return alert("Bet Locked");
-  let amt = Number(amount.value||0);
-  if(amt < 1) return alert("Min ₹1");
-  if(amt > wallet) return alert("Low Balance");
-
-  wallet -= amt;
-  walletEl.innerText = wallet;
-
-  alert("BET PLACED → " + type + " : " + val);
-};
-</script>
-
-</body>
-</html>
+<!DOCTYPE html>  <html>  
+<head>  
+<meta charset="UTF-8">  
+<title>WIN GO</title>  
+<meta name="viewport" content="width=device-width,initial-scale=1">  <style>  
+/* ⚠️ ORIGINAL CSS – NOT TOUCHED */  
+body{margin:0;font-family:Arial;background:#0f0f0f;color:#fff}  
+.header{text-align:center;padding:15px;font-size:22px}  
+.top{display:flex;justify-content:space-between;padding:0 15px;color:#bbb}  
+.timer{text-align:center;font-size:34px;color:#ff4081;margin:10px}  
+.card{background:#1c1c1c;margin:15px;padding:15px;border-radius:12px}  
+input{width:100%;padding:12px;font-size:18px;border-radius:8px;border:none;text-align:center}  
+.grid3,.grid5{display:grid;gap:8px;margin-top:10px}  
+.grid3{grid-template-columns:repeat(3,1fr)}  
+.grid5{grid-template-columns:repeat(5,1fr)}  
+.btn{padding:14px;border:none;border-radius:10px;font-weight:bold;color:#fff}  
+.red{background:#e53935}  
+.green{background:#43a047}  
+.violet{background:#8e24aa}  
+.dark{background:#333}  
+.multi{background:#eee;color:#000}  
+.multi.active{background:#43a047;color:#fff}  
+.bigsmall{display:flex;margin-top:10px}  
+.bigsmall button{flex:1;padding:12px;border:none;font-size:16px}  
+.big{background:#f4a261}  
+.small{background:#4dabf7}  
+.tabs{display:flex;gap:10px;margin:15px}  
+.tab{flex:1;padding:12px;border-radius:10px;text-align:center;font-weight:bold}  
+.active{background:#ff6f6f}  
+.inactive{background:#333}  
+table{width:100%;border-collapse:collapse;font-size:14px}  
+th,td{padding:8px;text-align:center}  
+th{background:#ff6f6f}  
+.win{color:#4caf50}  
+.loss{color:#f44336}  
+.lock{pointer-events:none;opacity:.4}  
+  
+/* POPUP */  
+.popup-overlay{  
+  position:fixed;inset:0;background:rgba(0,0,0,.65);  
+  display:none;align-items:center;justify-content:center;z-index:9999  
+}  
+.popup{  
+  background:#1c1c1c;border-radius:16px;padding:22px;  
+  text-align:center;width:80%;max-width:320px  
+}  
+.popup.win{border:2px solid #4caf50}  
+.popup.loss{border:2px solid #f44336}  
+.popup.bet{border:2px solid #2196f3}  
+</style>  </head>  <body>  <div class="header">🎨 WIN GO</div>  <div class="top">  
+  <div>Period: <span id="period"></span></div>  
+  <div>Wallet: ₹<span id="wallet"></span></div>  
+</div>  <div class="timer">⏳ <span id="time"></span>s</div>  <div class="card" id="betBox">  
+  <input id="amount" type="number" placeholder="Min ₹1">    <div class="grid3">  
+    <button class="btn red" onclick="bet('color','RED')">RED</button>  
+    <button class="btn green" onclick="bet('color','GREEN')">GREEN</button>  
+    <button class="btn violet" onclick="bet('color','VIOLET')">VIOLET</button>  
+  </div>    <div class="grid5">  
+    <button class="btn dark" onclick="bet('number',0)">0</button>  
+    <button class="btn dark" onclick="bet('number',1)">1</button>  
+    <button class="btn dark" onclick="bet('number',2)">2</button>  
+    <button class="btn dark" onclick="bet('number',3)">3</button>  
+    <button class="btn dark" onclick="bet('number',4)">4</button>  
+    <button class="btn dark" onclick="bet('number',5)">5</button>  
+    <button class="btn dark" onclick="bet('number',6)">6</button>  
+    <button class="btn dark" onclick="bet('number',7)">7</button>  
+    <button class="btn dark" onclick="bet('number',8)">8</button>  
+    <button class="btn dark" onclick="bet('number',9)">9</button>  
+  </div>    <div class="grid5">  
+    <button class="multi active" onclick="setMulti(1,this)">X1</button>  
+    <button class="multi" onclick="setMulti(5,this)">X5</button>  
+    <button class="multi" onclick="setMulti(10,this)">X10</button>  
+    <button class="multi" onclick="setMulti(20,this)">X20</button>  
+    <button class="multi" onclick="setMulti(50,this)">X50</button>  
+  </div>    <div class="bigsmall">  
+    <button class="big" onclick="bet('bs','BIG')">Big</button>  
+    <button class="small" onclick="bet('bs','SMALL')">Small</button>  
+  </div>  
+</div>  <div class="tabs">  
+  <div class="tab active" onclick="showTab('game')">Game History</div>  
+  <div class="tab inactive" onclick="showTab('bets')">My Bets</div>  
+</div>  <div class="card">  
+  <table>  
+    <thead id="thead"></thead>  
+    <tbody id="tbody"></tbody>  
+  </table>  
+</div>  <div class="popup-overlay" id="popupOverlay">  
+  <div class="popup" id="popupBox"></div>  
+</div>  <script type="module">  
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";  
+import { getFirestore,getDocs,collection,query,where,doc,updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";  
+  
+const app = initializeApp({  
+  apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",  
+  authDomain:"colourcash-ea60e.firebaseapp.com",  
+  projectId:"colourcash-ea60e"  
+});  
+const db = getFirestore(app);  
+  
+const userEmail = localStorage.getItem("userEmail");  
+let userDocId="";  
+  
+let S=JSON.parse(localStorage.getItem("WG"))||{  
+ period:20260120100001,time:30,wallet:0,  
+ bets:[],history:[],mybets:[]  
+};  
+  
+let multi=1,tab="game",locked=false;  
+const save=()=>localStorage.setItem("WG",JSON.stringify(S));  
+const $=i=>document.getElementById(i);  
+  
+function showPopup(type,msg){  
+ popupBox.className="popup "+type;  
+ popupBox.innerHTML=msg;  
+ popupOverlay.style.display="flex";  
+ setTimeout(()=>popupOverlay.style.display="none",2000);  
+}  
+  
+async function loadMainWallet(){  
+ const snap=await getDocs(query(collection(db,"users"),where("email","==",userEmail)));  
+ snap.forEach(d=>{userDocId=d.id;S.wallet=d.data().balance||0});  
+ save();render();  
+}  
+  
+function setMulti(x,e){  
+ multi=x;  
+ document.querySelectorAll('.multi').forEach(b=>b.classList.remove('active'));  
+ e.classList.add('active');  
+}  
+  
+async function bet(type,val){  
+ if(locked) return;  
+ let amt=Number(amount.value||0);  
+ if(amt<1) return showPopup("loss","<h2>Min ₹1</h2>");  
+ let total=amt*multi;  
+ if(total>S.wallet) return showPopup("loss","<h2>Low Balance</h2>");  
+  
+ S.wallet-=total;  
+ await updateDoc(doc(db,"users",userDocId),{balance:S.wallet});  
+ S.bets.push({type,val,amt:total,p:S.period});  
+ showPopup("bet","<h2>Bet Placed</h2><p>₹"+total+"</p>");  
+ save();render();  
+}  
+  
+/* 🔥🔥🔥 HOUSE CONTROL LOGIC ADDED 🔥🔥🔥 */  
+async function finish(){  
+  
+ let bigAmt=0,smallAmt=0,redAmt=0,greenAmt=0,violetAmt=0;  
+  
+ S.bets.forEach(b=>{  
+  if(b.type==="bs"){  
+    if(b.val==="BIG") bigAmt+=b.amt;  
+    if(b.val==="SMALL") smallAmt+=b.amt;  
+  }  
+  if(b.type==="color"){  
+    if(b.val==="RED") redAmt+=b.amt;  
+    if(b.val==="GREEN") greenAmt+=b.amt;  
+    if(b.val==="VIOLET") violetAmt+=b.amt;  
+  }  
+ });  
+  
+ let bsWin = bigAmt>smallAmt?"SMALL":"BIG";  
+ let colorWin="RED";  
+ if(redAmt>greenAmt && redAmt>violetAmt) colorWin="GREEN";  
+ else if(greenAmt>redAmt && greenAmt>violetAmt) colorWin="RED";  
+  
+ let possible=[];  
+ for(let i=0;i<=9;i++){  
+  let c=i==0||i==5?'VIOLET':i%2?'GREEN':'RED';  
+  let bs=i>=5?'BIG':'SMALL';  
+  if(c===colorWin && bs===bsWin) possible.push(i);  
+ }  
+  
+ let n=possible.length?possible[Math.floor(Math.random()*possible.length)]:Math.floor(Math.random()*10);  
+ let c=n==0||n==5?'VIOLET':n%2?'GREEN':'RED';  
+ let bs=n>=5?'BIG':'SMALL';  
+  
+ S.history.unshift({p:S.period,n,bs,c});  
+ S.history=S.history.slice(0,10);  
+  
+ for(const b of S.bets){  
+  let win=0;  
+  if(b.type=='number'&&b.val==n) win=b.amt*10;  
+  if(b.type=='color'&&b.val==c) win=b.amt*(c=='VIOLET'?5:2);  
+  if(b.type=='bs'&&b.val==bs) win=b.amt*2;  
+  
+  S.wallet+=win;  
+  showPopup(win?"win":"loss",`<h2>${win?"YOU WIN":"YOU LOST"}</h2><p>₹${win||b.amt}</p>`);  
+  S.mybets.unshift({p:b.p,b:b.type+":"+b.val,a:b.amt,r:win?`+₹${win}`:`-₹${b.amt}`,w:win>0});  
+ }  
+  
+ await updateDoc(doc(db,"users",userDocId),{balance:S.wallet});  
+ S.bets=[];S.period++;S.time=30;locked=false;  
+ save();draw();render();  
+}  
+  
+function render(){  
+ period.innerText=S.period;  
+ wallet.innerText=S.wallet;  
+ time.innerText=S.time;  
+ betBox.className=S.time<=5?'card lock':'card';  
+}  
+  
+function draw(){  
+ let th=$("thead"),tb=$("tbody");  
+ th.innerHTML=tb.innerHTML="";  
+ if(tab=="game"){  
+  th.innerHTML="<tr><th>Period</th><th>Number</th><th>Big/Small</th><th>Color</th></tr>";  
+  S.history.forEach(r=>tb.innerHTML+=`<tr><td>${r.p}</td><td>${r.n}</td><td>${r.bs}</td><td>${r.c}</td></tr>`);  
+ }else{  
+  th.innerHTML="<tr><th>Period</th><th>Bet</th><th>Amount</th><th>Result</th></tr>";  
+  S.mybets.forEach(b=>tb.innerHTML+=`<tr><td>${b.p}</td><td>${b.b}</td><td>₹${b.a}</td><td class="${b.w?'win':'loss'}">${b.r}</td></tr>`);  
+ }  
+}  
+  
+function showTab(t){  
+ tab=t;  
+ document.querySelectorAll('.tab')[0].className="tab "+(t=="game"?"active":"inactive");  
+ document.querySelectorAll('.tab')[1].className="tab "+(t=="bets"?"active":"inactive");  
+ draw();  
+}  
+  
+window.bet=bet;  
+window.setMulti=setMulti;  
+window.showTab=showTab;  
+  
+setInterval(()=>{  
+ S.time--;  
+ if(S.time<=5) locked=true;  
+ if(S.time<=0) finish();  
+ save();render();  
+},1000);  
+  
+loadMainWallet();render();draw();  
+</script>  </body>  
+</html>  
