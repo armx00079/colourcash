@@ -12,36 +12,31 @@ body{
   background:#0e3b2f;
   color:#fff;
 }
-
 .header{
   text-align:center;
   padding:14px;
   font-size:22px;
   font-weight:bold;
 }
-
 .card{
   background:#0f5132;
   margin:10px;
   padding:12px;
   border-radius:14px;
 }
-
 .center{text-align:center}
-
 .timer{
   font-size:20px;
   margin-top:6px;
   color:#ffd54f;
 }
 
-/* GRID FIXED FOR MOBILE */
+/* GRID */
 .grid{
   display:grid;
   grid-template-columns:repeat(6,1fr);
   gap:6px;
 }
-
 .num{
   padding:10px 0;
   border-radius:8px;
@@ -53,24 +48,26 @@ body{
 .red{background:#c62828}
 .black{background:#111}
 .green{background:#2e7d32}
+.num.active{outline:3px solid #00e5ff}
 
-.num.active{
-  outline:3px solid #00e5ff;
-}
-
+/* CONTROLS */
 .controls{
   display:grid;
   grid-template-columns:repeat(3,1fr);
   gap:8px;
   margin-top:10px;
 }
-
 .ctrl{
   background:#333;
   padding:10px;
   border-radius:10px;
   text-align:center;
   font-weight:bold;
+  cursor:pointer;
+}
+.ctrl.active{
+  outline:3px solid #00e5ff;
+  background:#555;
 }
 
 input{
@@ -80,7 +77,6 @@ input{
   border:none;
   border-radius:10px;
 }
-
 button{
   width:100%;
   padding:14px;
@@ -92,7 +88,6 @@ button{
   font-size:16px;
   font-weight:bold;
 }
-
 button:disabled{opacity:.5}
 
 .history{
@@ -101,6 +96,7 @@ button:disabled{opacity:.5}
   margin-top:6px;
 }
 
+/* POPUP */
 .popup{
   position:fixed;
   inset:0;
@@ -134,12 +130,12 @@ button:disabled{opacity:.5}
   <div class="grid" id="numbers"></div>
 
   <div class="controls">
-    <div class="ctrl" onclick="selectGroup('RED')">RED</div>
-    <div class="ctrl" onclick="selectGroup('BLACK')">BLACK</div>
-    <div class="ctrl" onclick="selectGroup('EVEN')">EVEN</div>
-    <div class="ctrl" onclick="selectGroup('ODD')">ODD</div>
-    <div class="ctrl" onclick="selectGroup('LOW')">1–18</div>
-    <div class="ctrl" onclick="selectGroup('HIGH')">19–36</div>
+    <div class="ctrl" onclick="selectGroup('RED',this)">RED</div>
+    <div class="ctrl" onclick="selectGroup('BLACK',this)">BLACK</div>
+    <div class="ctrl" onclick="selectGroup('EVEN',this)">EVEN</div>
+    <div class="ctrl" onclick="selectGroup('ODD',this)">ODD</div>
+    <div class="ctrl" onclick="selectGroup('LOW',this)">1–18</div>
+    <div class="ctrl" onclick="selectGroup('HIGH',this)">19–36</div>
   </div>
 
   <input id="amount" type="number" placeholder="Min ₹1">
@@ -159,7 +155,7 @@ button:disabled{opacity:.5}
 <div class="popup" id="popup"><div id="popupText"></div></div>
 
 <script>
-/* ---------- PERSISTENT STATE ---------- */
+/* ---------- STATE ---------- */
 let state = JSON.parse(localStorage.getItem("roulette_state")) || {
   wallet:600,
   time:25,
@@ -168,22 +164,22 @@ let state = JSON.parse(localStorage.getItem("roulette_state")) || {
   bets:[],
   last:[]
 };
-
 function save(){localStorage.setItem("roulette_state",JSON.stringify(state))}
 
-/* ---------- UI ---------- */
-const walletEl=document.getElementById("wallet");
-const timerEl=document.getElementById("timer");
-const lastEl=document.getElementById("last");
-const betsEl=document.getElementById("bets");
+/* ---------- ELEMENTS ---------- */
+const walletEl=wallet;
+const timerEl=timer;
+const lastEl=last;
+const betsEl=bets;
 const popup=document.getElementById("popup");
 const popupText=document.getElementById("popupText");
 
+/* ---------- RENDER ---------- */
 function render(){
   walletEl.innerText=`Wallet: ₹${state.wallet}`;
   timerEl.innerText=state.time+"s";
   lastEl.innerHTML=state.last.join(", ");
-  betsEl.innerHTML=state.bets.map(b=>`${b.type} ₹${b.amt} → ${b.res}`).join("<br>");
+  betsEl.innerHTML=state.bets.map(b=>`${b.type}${b.value!==undefined?" "+b.value:""} ₹${b.amt} → ${b.res}`).join("<br>");
 }
 render();
 
@@ -200,18 +196,24 @@ for(let i=0;i<=36;i++){
   grid.appendChild(d);
 }
 
-function selectNumber(n,el){
-  if(state.phase!=="BET")return;
-  state.selected={type:"NUMBER",value:n};
+function clearSelection(){
   document.querySelectorAll(".num").forEach(x=>x.classList.remove("active"));
-  el.classList.add("active");
+  document.querySelectorAll(".ctrl").forEach(x=>x.classList.remove("active"));
 }
 
-/* ---------- GROUP BET ---------- */
-function selectGroup(g){
+/* ---------- SELECT ---------- */
+function selectNumber(n,el){
   if(state.phase!=="BET")return;
+  clearSelection();
+  el.classList.add("active");
+  state.selected={type:"NUMBER",value:n};
+}
+
+function selectGroup(g,el){
+  if(state.phase!=="BET")return;
+  clearSelection();
+  el.classList.add("active");
   state.selected={type:g};
-  document.querySelectorAll(".num").forEach(x=>x.classList.remove("active"));
 }
 
 /* ---------- BET ---------- */
@@ -219,7 +221,7 @@ function placeBet(){
   let amt=+amount.value;
   if(!state.selected||amt<1||amt>state.wallet)return;
   state.wallet-=amt;
-  state.bets.unshift({type:state.selected.type,amt,res:"PENDING"});
+  state.bets.unshift({type:state.selected.type,value:state.selected.value,amt,res:"PENDING"});
   popupMsg("BET PLACED");
   save();render();
 }
@@ -234,16 +236,22 @@ function popupMsg(t,c=""){
 
 /* ---------- GAME LOOP ---------- */
 setInterval(()=>{
-  if(state.time>0) state.time--;
-  else{
-    if(state.phase==="BET"){
-      state.phase="LOCK";state.time=5;
-    }else if(state.phase==="LOCK"){
+  if(state.phase==="BET"){
+    state.time--;
+    if(state.time===5) state.phase="LOCK";
+    if(state.time<=0){
       spin();
-      state.phase="RESULT";state.time=5;
-    }else{
-      state.phase="BET";state.time=25;
+      state.phase="RESULT";
+      state.time=5;
+    }
+  }
+  else if(state.phase==="RESULT"){
+    state.time--;
+    if(state.time<=0){
+      state.phase="BET";
+      state.time=25;
       state.selected=null;
+      clearSelection();
     }
   }
   save();render();
@@ -258,10 +266,10 @@ function spin(){
   state.bets.forEach(b=>{
     if(b.res==="PENDING"){
       let win=false;
-      if(b.type==="NUMBER" && state.selected?.value===result) win=true;
+      if(b.type==="NUMBER" && b.value===result) win=true;
       if(b.type==="RED" && red.includes(result)) win=true;
       if(b.type==="BLACK" && black.includes(result)) win=true;
-      if(b.type==="EVEN" && result%2===0 && result!==0) win=true;
+      if(b.type==="EVEN" && result!==0 && result%2===0) win=true;
       if(b.type==="ODD" && result%2===1) win=true;
       if(b.type==="LOW" && result>=1 && result<=18) win=true;
       if(b.type==="HIGH" && result>=19) win=true;
