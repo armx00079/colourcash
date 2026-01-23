@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>🐉 Dragon Tiger</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{margin:0;background:#0b0b0b;color:#fff;font-family:Arial}
+.header{text-align:center;padding:15px;font-size:26px;font-weight:bold}
+.card{background:#1a1a1a;margin:12px;padding:15px;border-radius:14px}
+.center{text-align:center}
+.row{display:flex;gap:10px}
+.box{flex:1;padding:20px;border-radius:12px;text-align:center;font-size:18px;font-weight:bold}
+.dragon{background:#2196f3}
+.tiger{background:#ff5722}
+.draw{background:#4caf50}
+input{width:100%;padding:14px;border-radius:10px;border:none;margin-top:10px}
+button{width:100%;padding:14px;margin-top:10px;border:none;border-radius:10px;font-size:16px;font-weight:bold;background:#2196f3;color:#fff}
+button:disabled{opacity:.5}
+.timer{font-size:22px;color:#ff4d6d;margin-top:6px}
+.history{font-size:14px;line-height:1.6;margin-top:6px}
+
+.cardInner{transition:.6s;transform-style:preserve-3d}
+.flip{transform:rotateY(180deg)}
+
+.popup{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6)}
+.popup div{background:#1e1e1e;padding:25px;border-radius:14px;font-size:18px}
+</style>
+</head>
+
+<body>
+
+<div class="header">🐉 DRAGON • TIGER</div>
+
+<div class="card center">
+  <div id="info"></div>
+  <div class="timer" id="timer">25s</div>
+</div>
+
+<div class="card">
+  <div class="row">
+    <div class="box dragon"><div id="dragonCard" class="cardInner">🐉 <span id="dragonVal">?</span></div></div>
+    <div class="box tiger"><div id="tigerCard" class="cardInner">🐅 <span id="tigerVal">?</span></div></div>
+  </div>
+
+  <input id="amount" type="number" min="1" placeholder="Min ₹1">
+
+  <div class="row">
+    <button onclick="select('DRAGON')">DRAGON</button>
+    <button onclick="select('DRAW')">DRAW</button>
+    <button onclick="select('TIGER')">TIGER</button>
+  </div>
+
+  <button id="betBtn" onclick="placeBet()">PLACE BET</button>
+</div>
+
+<div class="card">
+  <b>Last 10 Games</b>
+  <div class="history" id="history"></div>
+</div>
+
+<div class="card">
+  <b>My Bets</b>
+  <div class="history" id="myBets"></div>
+</div>
+
+<div class="popup" id="popup"><div id="popupText"></div></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, getDocs, query, where, doc, updateDoc }
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
+  authDomain:"colourcash-ea60e.firebaseapp.com",
+  projectId:"colourcash-ea60e"
+});
+const db = getFirestore(app);
+
+const email=localStorage.getItem("userEmail");
+let uid="", wallet=0;
+
+/* LOAD WALLET */
+async function loadWallet(){
+  const q=query(collection(db,"users"),where("email","==",email));
+  const s=await getDocs(q);
+  s.forEach(d=>{uid=d.id;wallet=d.data().balance||0});
+  render();
+}
+
+/* STATE */
+let time=25, phase="BET", selected=null;
+let bets=[], history=[];
+let total={DRAGON:0,TIGER:0,DRAW:0};
+
+function popupMsg(m){
+  popupText.innerText=m;
+  popup.style.display="flex";
+  setTimeout(()=>popup.style.display="none",1500);
+}
+
+function render(){
+  info.innerText=`Wallet: ₹${wallet.toFixed(2)}`;
+  timer.innerText=time+"s";
+  betBtn.disabled=phase!=="BET";
+  historyEl.innerHTML=history.map(h=>`#${h.p} → ${h.r}`).join("<br>");
+  myBets.innerHTML=bets.map(b=>`#${b.p} ${b.side} ₹${b.amt} ${b.res}`).join("<br>");
+}
+
+window.select=s=>{ if(phase==="BET") selected=s };
+
+window.placeBet=async()=>{
+  const a=+amount.value;
+  if(!selected||a<1||a>wallet)return;
+  wallet-=a;
+  await updateDoc(doc(db,"users",uid),{balance:wallet});
+  bets.unshift({p:Date.now(),side:selected,amt:a,res:"PENDING"});
+  total[selected]+=a;
+  popupMsg("Bet Placed");
+  render();
+};
+
+/* LOOP */
+setInterval(()=>{
+  if(time>0) time--;
+  else{
+    if(phase==="BET"){phase="LOCK";time=5}
+    else if(phase==="LOCK"){result();phase="RESULT";time=5}
+    else{
+      phase="BET";time=25;selected=null;
+      total={DRAGON:0,TIGER:0,DRAW:0};
+      dragonVal.innerText="?";tigerVal.innerText="?";
+    }
+  }
+  render();
+},1000);
+
+/* RESULT LOGIC (LOWER BET WINS) */
+async function result(){
+  let win="DRAW";
+  if(total.DRAGON && total.TIGER){
+    win = total.DRAGON < total.TIGER ? "DRAGON" : "TIGER";
+  }
+
+  history.unshift({p:Date.now(),r:win});
+  history=history.slice(0,10);
+
+  bets.forEach(async b=>{
+    if(b.res==="PENDING"){
+      if(b.side===win){
+        let w=b.side==="DRAW"?b.amt*8:b.amt*2;
+        wallet+=w;
+        await updateDoc(doc(db,"users",uid),{balance:wallet});
+        b.res="WIN ₹"+w;
+        popupMsg("WIN ₹"+w);
+      }else{
+        b.res="LOSS";
+      }
+    }
+  });
+}
+
+loadWallet();
+</script>
+
+</body>
+</html>
