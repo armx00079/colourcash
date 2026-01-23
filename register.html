@@ -1,148 +1,119 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Register – Colour Cash</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<!DOCTYPE html>  <html lang="en">  
+<head>  
+<meta charset="UTF-8">  
+<title>Register – Colour Cash</title>  
+<meta name="viewport" content="width=device-width, initial-scale=1">  <style>  
+body{margin:0;font-family:Arial;background:#0f0f0f;color:#fff}  
+.container{  
+  max-width:380px;margin:80px auto;background:#1b1b1b;  
+  padding:25px;border-radius:16px;text-align:center  
+}  
+input{  
+  width:100%;padding:14px;margin-top:12px;  
+  border-radius:10px;border:none;font-size:15px  
+}  
+button{  
+  width:100%;padding:14px;margin-top:16px;  
+  border:none;border-radius:10px;background:#2ecc71;  
+  color:#fff;font-size:16px;font-weight:bold  
+}  
+.popup{  
+  position:fixed;inset:0;background:rgba(0,0,0,.6);  
+  display:none;align-items:center;justify-content:center  
+}  
+.popup div{  
+  background:#1e1e1e;padding:25px;border-radius:14px;font-size:18px  
+}  
+a{color:#2ecc71;text-decoration:none}  
+</style>  </head>  <body>  <div class="container">  
+  <h2>🎨 Colour Cash</h2>  
+  <p>Create your account</p>    <input type="email" id="email" placeholder="Email">  
+  <input type="password" id="password" placeholder="Password">  
+  <input type="password" id="confirm" placeholder="Confirm Password">  <button onclick="register()">REGISTER</button>
 
-<style>
-body{margin:0;font-family:Arial;background:#0f0f0f;color:#fff}
-.container{
-  max-width:380px;margin:80px auto;background:#1b1b1b;
-  padding:25px;border-radius:16px;text-align:center
-}
-input{
-  width:100%;padding:14px;margin-top:12px;
-  border-radius:10px;border:none;font-size:15px
-}
-button{
-  width:100%;padding:14px;margin-top:16px;
-  border:none;border-radius:10px;background:#2ecc71;
-  color:#fff;font-size:16px;font-weight:bold
-}
-.popup{
-  position:fixed;inset:0;background:rgba(0,0,0,.6);
-  display:none;align-items:center;justify-content:center
-}
-.popup div{
-  background:#1e1e1e;padding:25px;border-radius:14px;font-size:18px
-}
-a{color:#2ecc71;text-decoration:none}
-</style>
-</head>
-
-<body>
-
-<div class="container">
-  <h2>🎨 Colour Cash</h2>
-  <p>Create your account</p>
-
-  <input type="email" id="email" placeholder="Email">
-  <input type="password" id="password" placeholder="Password">
-  <input type="password" id="confirm" placeholder="Confirm Password">
-
-  <button onclick="register()">REGISTER</button>
-
-  <p style="margin-top:12px">
-    Already registered? <a href="login.html">Login</a>
-  </p>
-</div>
-
-<div class="popup" id="popup"><div id="popupText"></div></div>
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword }
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-/* 🔥 Firestore */
-import { getFirestore, doc, setDoc, updateDoc, increment }
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
-  authDomain: "colourcash-ea60e.firebaseapp.com",
-  projectId: "colourcash-ea60e"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-const popup = document.getElementById("popup");
-const popupText = document.getElementById("popupText");
-
-function showPopup(msg){
-  popupText.innerText = msg;
-  popup.style.display = "flex";
-  setTimeout(()=>popup.style.display="none",1500);
-}
-
-/* 🔥 NEW CODE — GET REFERRAL UID FROM URL */
-const params = new URLSearchParams(window.location.search);
-const referredBy = params.get("ref"); // user.uid of referrer
-
-window.register = () => {
-  const email = document.getElementById("email").value.trim();
-  const pass = document.getElementById("password").value;
-  const confirm = document.getElementById("confirm").value;
-
-  if(!email || !pass || !confirm){
-    showPopup("Fill all fields");
-    return;
-  }
-  if(pass !== confirm){
-    showPopup("Passwords do not match");
-    return;
-  }
-
-  createUserWithEmailAndPassword(auth, email, pass)
-  .then(async (result)=>{
-    const user = result.user;
-
-    /* 🔹 EXISTING CODE (UNCHANGED) */
-    localStorage.setItem("userEmail", user.email);
-    localStorage.setItem(
-      "userName",
-      user.displayName || user.email.split("@")[0]
-    );
-
-    const now = new Date().toLocaleString();
-    localStorage.setItem("lastLogin", now);
-
-    let users = JSON.parse(localStorage.getItem("users")) || [];
-    if(!users.find(u => u.email === user.email)){
-      users.push({ email: user.email, balance: 0 });
-    }
-    localStorage.setItem("users", JSON.stringify(users));
-
-    /* =================================================
-       🔥 ADDITION — SAVE USER + REFERRAL INFO
-       ================================================= */
-    await setDoc(doc(db, "users", user.uid), {
-      email: user.email,
-      password: pass,
-      balance: 0,
-      role: "user",
-      referredBy: referredBy || null,
-      createdAt: new Date()
-    });
-
-    /* 🔥 ADDITION — GIVE ₹10 TO REFERRER */
-    if(referredBy){
-      await updateDoc(doc(db, "users", referredBy), {
-        balance: increment(10)
-      });
-    }
-    /* ================================================= */
-
-    showPopup("Registration Successful 🎉");
-    setTimeout(()=>location.href="index.html",1500);
-  })
-  .catch(err=>{
-    showPopup(err.message);
-  });
-};
-</script>
-</body>
-</html>
+  <p style="margin-top:12px">  
+    Already registered? <a href="login.html">Login</a>  
+  </p>  
+</div>  <div class="popup" id="popup"><div id="popupText"></div></div>  <script type="module">  
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";  
+import { getAuth, createUserWithEmailAndPassword }  
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";  
+  
+/* 🔥 Firestore */  
+import { getFirestore, doc, setDoc }  
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";  
+  
+const firebaseConfig = {  
+  apiKey: "AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",  
+  authDomain: "colourcash-ea60e.firebaseapp.com",  
+  projectId: "colourcash-ea60e"  
+};  
+  
+const app = initializeApp(firebaseConfig);  
+const auth = getAuth(app);  
+const db = getFirestore(app);  
+  
+const popup = document.getElementById("popup");  
+const popupText = document.getElementById("popupText");  
+  
+function showPopup(msg){  
+  popupText.innerText = msg;  
+  popup.style.display = "flex";  
+  setTimeout(()=>popup.style.display="none",1500);  
+}  
+  
+window.register = () => {  
+  const email = document.getElementById("email").value.trim();  
+  const pass = document.getElementById("password").value;  
+  const confirm = document.getElementById("confirm").value;  
+  
+  if(!email || !pass || !confirm){  
+    showPopup("Fill all fields");  
+    return;  
+  }  
+  if(pass !== confirm){  
+    showPopup("Passwords do not match");  
+    return;  
+  }  
+  
+  createUserWithEmailAndPassword(auth, email, pass)  
+  .then(async (result)=>{  
+    const user = result.user;  
+  
+    /* 🔹 EXISTING CODE (UNCHANGED) */  
+    localStorage.setItem("userEmail", user.email);  
+    localStorage.setItem(  
+      "userName",  
+      user.displayName || user.email.split("@")[0]  
+    );  
+  
+    const now = new Date().toLocaleString();  
+    localStorage.setItem("lastLogin", now);  
+  
+    let users = JSON.parse(localStorage.getItem("users")) || [];  
+    if(!users.find(u => u.email === user.email)){  
+      users.push({ email: user.email, balance: 0 });  
+    }  
+    localStorage.setItem("users", JSON.stringify(users));  
+  
+    /* =================================================  
+       🔥 ONLY ADDITION — PASSWORD FIELD  
+       ================================================= */  
+    await setDoc(doc(db, "users", user.uid), {  
+      email: user.email,  
+      password: pass,       // 🔥 ADDED  
+      balance: 0,  
+      role: "user",  
+      createdAt: new Date()  
+    });  
+    /* ================================================= */  
+  
+    showPopup("Registration Successful 🎉");  
+    setTimeout(()=>location.href="index.html",1500);  
+  })  
+  .catch(err=>{  
+    showPopup(err.message);  
+  });  
+};  
+</script>  </body>  
+</html>  
