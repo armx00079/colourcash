@@ -6,50 +6,112 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body{margin:0;font-family:Arial,sans-serif;background:#0e3b2f;color:#fff}
-.header{text-align:center;padding:14px;font-size:22px;font-weight:bold}
-.card{background:#0f5132;margin:10px;padding:12px;border-radius:14px}
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:#0e3b2f;
+  color:#fff;
+}
+.header{
+  text-align:center;
+  padding:14px;
+  font-size:22px;
+  font-weight:bold;
+}
+.card{
+  background:#0f5132;
+  margin:10px;
+  padding:12px;
+  border-radius:14px;
+}
 .center{text-align:center}
-.timer{font-size:20px;margin-top:6px;color:#ffd54f}
+.timer{font-size:20px;color:#ffd54f}
 
-.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
-.num{padding:10px 0;border-radius:8px;font-size:14px;font-weight:bold;text-align:center;cursor:pointer}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  gap:6px;
+}
+.num{
+  padding:10px 0;
+  border-radius:8px;
+  font-size:14px;
+  font-weight:bold;
+  text-align:center;
+  cursor:pointer;
+}
 .red{background:#c62828}
 .black{background:#111}
 .green{background:#2e7d32}
 .num.active{outline:3px solid #00e5ff}
 
-.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
-.ctrl{background:#333;padding:10px;border-radius:10px;text-align:center;font-weight:bold;cursor:pointer}
-.ctrl.active{outline:3px solid #00e5ff;background:#555}
+.controls{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin-top:10px;
+}
+.ctrl{
+  background:#333;
+  padding:10px;
+  border-radius:10px;
+  text-align:center;
+  font-weight:bold;
+  cursor:pointer;
+}
+.ctrl.active{
+  outline:3px solid #00e5ff;
+  background:#555;
+}
 
-input{width:100%;margin-top:10px;padding:12px;border:none;border-radius:10px}
-button{width:100%;padding:14px;margin-top:10px;border:none;border-radius:12px;background:#2196f3;color:#fff;font-size:16px;font-weight:bold}
-button:disabled{opacity:.6}
+input{
+  width:100%;
+  margin-top:10px;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+}
+button{
+  width:100%;
+  padding:14px;
+  margin-top:10px;
+  border:none;
+  border-radius:12px;
+  background:#2196f3;
+  color:#fff;
+  font-size:16px;
+  font-weight:bold;
+}
+button:disabled{opacity:.5}
 
-.history{font-size:14px;line-height:1.6;margin-top:6px}
+.history{
+  font-size:14px;
+  line-height:1.6;
+  margin-top:6px;
+}
 
-.popup{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:50}
-.popup div{background:#1b1b1b;padding:22px;border-radius:14px;font-size:18px}
-.win{color:#4caf50}
-.lose{color:#ff5252}
+.locked{
+  filter:blur(2px);
+  pointer-events:none;
+}
 
-#lockOverlay{
-  position:fixed;inset:0;
-  background:rgba(0,0,0,.55);
-  backdrop-filter:blur(3px);
+.popup{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.6);
   display:none;
   align-items:center;
   justify-content:center;
-  z-index:40
+  z-index:10;
 }
-#lockOverlay div{
-  background:#222;
-  padding:18px 26px;
-  border-radius:12px;
+.popup div{
+  background:#1b1b1b;
+  padding:22px;
+  border-radius:14px;
   font-size:18px;
-  font-weight:bold
 }
+.win{color:#4caf50}
+.lose{color:#ff5252}
 </style>
 </head>
 
@@ -62,7 +124,7 @@ button:disabled{opacity:.6}
   <div class="timer" id="timer">25s</div>
 </div>
 
-<div class="card">
+<div class="card" id="gameCard">
   <div class="grid" id="numbers"></div>
 
   <div class="controls">
@@ -90,18 +152,29 @@ button:disabled{opacity:.6}
 
 <div class="popup" id="popup"><div id="popupText"></div></div>
 
-<div id="lockOverlay"><div>🔒 BET LOCKED</div></div>
-
 <script>
+/* ---------- STATE ---------- */
 let state = JSON.parse(localStorage.getItem("roulette_state")) || {
-  wallet:600,time:25,phase:"BET",selected:null,bets:[],last:[]
+  wallet:600,
+  time:25,
+  phase:"BET",
+  selected:null,
+  bets:[],
+  last:[]
 };
 function save(){localStorage.setItem("roulette_state",JSON.stringify(state))}
 
-const walletEl=wallet,timerEl=timer,lastEl=last,betsEl=bets;
-const popup=document.getElementById("popup"),popupText=document.getElementById("popupText");
-const lockOverlay=document.getElementById("lockOverlay");
+/* ---------- ELEMENTS ---------- */
+const walletEl=wallet;
+const timerEl=timer;
+const lastEl=last;
+const betsEl=bets;
+const popup=document.getElementById("popup");
+const popupText=document.getElementById("popupText");
+const gameCard=document.getElementById("gameCard");
+const betBtn=document.getElementById("betBtn");
 
+/* ---------- RENDER ---------- */
 function render(){
   walletEl.innerText=`Wallet: ₹${state.wallet}`;
   timerEl.innerText=state.time+"s";
@@ -110,6 +183,7 @@ function render(){
 }
 render();
 
+/* ---------- NUMBERS ---------- */
 const red=[1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
 const black=[2,4,6,8,10,11,13,15,17,20,22,24,26,28,29,31,33,35];
 
@@ -127,17 +201,21 @@ function clearSelection(){
   document.querySelectorAll(".ctrl").forEach(x=>x.classList.remove("active"));
 }
 
+/* ---------- SELECT ---------- */
 function selectNumber(n,el){
   if(state.phase!=="BET")return;
-  clearSelection();el.classList.add("active");
+  clearSelection();
+  el.classList.add("active");
   state.selected={type:"NUMBER",value:n};
 }
 function selectGroup(g,el){
   if(state.phase!=="BET")return;
-  clearSelection();el.classList.add("active");
+  clearSelection();
+  el.classList.add("active");
   state.selected={type:g};
 }
 
+/* ---------- BET ---------- */
 function placeBet(){
   let amt=+amount.value;
   if(!state.selected||amt<1||amt>state.wallet)return;
@@ -147,6 +225,7 @@ function placeBet(){
   save();render();
 }
 
+/* ---------- POPUP ---------- */
 function popupMsg(t,c=""){
   popupText.className=c;
   popupText.innerText=t;
@@ -154,46 +233,61 @@ function popupMsg(t,c=""){
   setTimeout(()=>popup.style.display="none",1500);
 }
 
-function setLock(v){
-  betBtn.disabled=v;
-  betBtn.innerText=v?"BET LOCKED":"PLACE BET";
-  lockOverlay.style.display=v?"flex":"none";
-}
-
+/* ---------- GAME LOOP (FIXED) ---------- */
 setInterval(()=>{
   if(state.phase==="BET"){
     state.time--;
-    if(state.time===5){state.phase="LOCK";setLock(true)}
-    if(state.time===0){spin();state.phase="RESULT";state.time=5}
-  }else if(state.phase==="RESULT"){
+    if(state.time===5){
+      state.phase="LOCK";
+      betBtn.disabled=true;
+      gameCard.classList.add("locked");
+    }
+    if(state.time<=0){
+      spin();
+      state.phase="RESULT";
+      state.time=5;
+    }
+  }
+  else if(state.phase==="RESULT"){
     state.time--;
-    if(state.time===0){
-      state.phase="BET";state.time=25;state.selected=null;
-      clearSelection();setLock(false)
+    if(state.time<=0){
+      state.phase="BET";
+      state.time=25;
+      state.selected=null;
+      betBtn.disabled=false;
+      gameCard.classList.remove("locked");
+      clearSelection();
     }
   }
   save();render();
 },1000);
 
+/* ---------- RESULT ---------- */
 function spin(){
   let result=Math.floor(Math.random()*37);
-  state.last.unshift(result);state.last=state.last.slice(0,10);
+  state.last.unshift(result);
+  state.last=state.last.slice(0,10);
 
   state.bets.forEach(b=>{
     if(b.res==="PENDING"){
       let win=false;
-      if(b.type==="NUMBER"&&b.value===result)win=true;
-      if(b.type==="RED"&&red.includes(result))win=true;
-      if(b.type==="BLACK"&&black.includes(result))win=true;
-      if(b.type==="EVEN"&&result&&result%2===0)win=true;
-      if(b.type==="ODD"&&result%2===1)win=true;
-      if(b.type==="LOW"&&result>=1&&result<=18)win=true;
-      if(b.type==="HIGH"&&result>=19)win=true;
+      if(b.type==="NUMBER" && b.value===result) win=true;
+      if(b.type==="RED" && red.includes(result)) win=true;
+      if(b.type==="BLACK" && black.includes(result)) win=true;
+      if(b.type==="EVEN" && result!==0 && result%2===0) win=true;
+      if(b.type==="ODD" && result%2===1) win=true;
+      if(b.type==="LOW" && result>=1 && result<=18) win=true;
+      if(b.type==="HIGH" && result>=19) win=true;
 
       if(win){
-        let w=b.amt*2;state.wallet+=w;
-        b.res="WIN ₹"+w;popupMsg("WIN ₹"+w,"win")
-      }else{b.res="LOSS";popupMsg("LOSS","lose")}
+        let w=b.amt*2;
+        state.wallet+=w;
+        b.res="WIN ₹"+w;
+        popupMsg("WIN ₹"+w,"win");
+      }else{
+        b.res="LOSS";
+        popupMsg("LOSS","lose");
+      }
     }
   });
 }
