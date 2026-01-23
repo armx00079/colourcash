@@ -70,75 +70,25 @@ button:disabled{opacity:.5}
 
 <div class="popup" id="popup"><div id="popupText"></div></div>
 
-<!-- 🔥🔥🔥 FIRESTORE WALLET ADDITION (ONLY ADDITION) 🔥🔥🔥 -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import {
-  getFirestore,
-  collection,
-  getDocs,
-  query,
-  where,
-  doc,
-  updateDoc
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, query, where, getDocs, doc, updateDoc } 
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+/* 🔥 FIREBASE */
 const app = initializeApp({
   apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
   authDomain:"colourcash-ea60e.firebaseapp.com",
   projectId:"colourcash-ea60e"
 });
 const db = getFirestore(app);
-
 const userEmail = localStorage.getItem("userEmail");
-let userDocId = "";
+let USER_ID = "";
 
-/* LOAD WALLET FROM FIRESTORE */
-async function loadWallet(){
-  const snap = await getDocs(
-    query(collection(db,"users"), where("email","==",userEmail))
-  );
-  snap.forEach(d=>{
-    userDocId = d.id;
-    state.wallet = d.data().balance || 0;
-  });
-  save(); render();
-}
-loadWallet();
-
-/* PATCH PLACE BET */
-const _placeBet = placeBet;
-window.placeBet = async function(){
-  let amt=+amount.value;
-  if(!state.selected||amt<1||amt>state.wallet)return;
-
-  state.wallet -= amt;
-  await updateDoc(doc(db,"users",userDocId),{ balance: state.wallet });
-
-  _placeBet();
-};
-
-/* PATCH WIN */
-const _resolve = resolve;
-window.resolve = async function(){
-  _resolve();
-
-  await updateDoc(doc(db,"users",userDocId),{ balance: state.wallet });
-};
-</script>
-<!-- 🔥🔥🔥 ADDITION END 🔥🔥🔥 -->
-
-<script>
-/* -------- CLEAN RESET (ONE TIME) -------- */
-if(!localStorage.getItem("gdd_clean")){
-  localStorage.clear();
-  localStorage.setItem("gdd_clean","1");
-}
-
-/* -------- STATE -------- */
+/* GAME STATE */
 const cards=["A","K","Q","J","10","9","8","7","6","5","4","3","2"];
 
-let state = JSON.parse(localStorage.getItem("gdd_state")) || {
+let state={
   period:1000,
   wallet:0,
   phase:"BET",
@@ -148,36 +98,88 @@ let state = JSON.parse(localStorage.getItem("gdd_state")) || {
   last10:[]
 };
 
-let interval=null;
+const popupEl=document.getElementById("popup");
+const popupText=document.getElementById("popupText");
 
-/* -------- HELPERS -------- */
-function save(){localStorage.setItem("gdd_state",JSON.stringify(state))}
 function popup(msg){
   popupText.innerText=msg;
-  popup.style.display="flex";
-  setTimeout(()=>popup.style.display="none",1500);
+  popupEl.style.display="flex";
+  setTimeout(()=>popupEl.style.display="none",1200);
 }
 
-/* -------- UI -------- */
+function save(){}
+
 function render(){
   info.innerText=`Period: ${state.period} | Wallet: ₹${state.wallet.toFixed(2)}`;
   status.innerText=state.phase==="BET"?"BET NOW":state.phase==="LOCK"?"LOCKED":"RESULT";
   timer.innerText=state.time+"s";
-
   betBtn.disabled=state.phase!=="BET";
-
   godCard.classList.toggle("active",state.selected==="GOD");
   devilCard.classList.toggle("active",state.selected==="DEVIL");
-
   last10.innerHTML=state.last10.map(r=>`#${r.p} → ${r.r}`).join("<br>");
   myBets.innerHTML=state.bets.map(b=>`P${b.p} | ${b.side} | ₹${b.amt} | ${b.res}`).join("<br>");
 }
 
-/* -------- GAME LOOP -------- */
-function startLoop(){
-  if(interval) clearInterval(interval);
-  interval=setInterval(()=>{
-    if(state.time>0){state.time--}
+/* 🔥 LOAD WALLET */
+async function loadWallet(){
+  const q=query(collection(db,"users"),where("email","==",userEmail));
+  const snap=await getDocs(q);
+  snap.forEach(d=>{
+    USER_ID=d.id;
+    state.wallet=d.data().balance||0;
+  });
+  render();
+}
+
+function selectBet(s){
+  if(state.phase!=="BET")return;
+  state.selected=s;
+  render();
+}
+
+async function placeBet(){
+  const amt=+amount.value;
+  if(!state.selected||amt<1||amt>state.wallet)return;
+  state.wallet-=amt;
+  await updateDoc(doc(db,"users",USER_ID),{balance:state.wallet});
+  state.bets.unshift({p:state.period,side:state.selected,amt,res:"PENDING"});
+  popup("Bet Placed");
+  render();
+}
+
+function resolve(){
+  state.phase="RESULT";
+  state.time=5;
+  const g=cards[Math.random()*cards.length|0];
+  const d=cards[Math.random()*cards.length|0];
+  godCard.innerText=g;
+  devilCard.innerText=d;
+
+  const result =
+    cards.indexOf(g)<cards.indexOf(d)?"GOD":
+    cards.indexOf(d)<cards.indexOf(g)?"DEVIL":"DRAW";
+
+  state.last10.unshift({p:state.period,r:result});
+  state.last10=state.last10.slice(0,10);
+
+  state.bets.forEach(async b=>{
+    if(b.p===state.period && b.res==="PENDING"){
+      if(b.side===result){
+        const win=b.amt*2;
+        state.wallet+=win;
+        await updateDoc(doc(db,"users",USER_ID),{balance:state.wallet});
+        b.res="WIN ₹"+win;
+        popup("YOU WIN ₹"+win);
+      }else{
+        b.res="LOSS";
+      }
+    }
+  });
+}
+
+function loop(){
+  setInterval(()=>{
+    if(state.time>0) state.time--;
     else{
       if(state.phase==="BET"){state.phase="LOCK";state.time=5}
       else if(state.phase==="LOCK"){resolve()}
@@ -190,23 +192,13 @@ function startLoop(){
         devilCard.innerText="DEVIL";
       }
     }
-    save();render();
+    render();
   },1000);
 }
 
-/* -------- ACTIONS -------- */
-function selectBet(s){
-  if(state.phase!=="BET")return;
-  state.selected=s;
-  render();
-}
-
-function placeBet(){}
-function resolve(){}
-
-/* -------- INIT -------- */
+loadWallet();
 render();
-startLoop();
+loop();
 </script>
 
 </body>
