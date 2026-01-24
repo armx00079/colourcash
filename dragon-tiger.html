@@ -63,10 +63,11 @@ body{
   justify-content:center;
   font-weight:bold;
   position:relative;
+  overflow:hidden;
 }
 
 .card small{
-  opacity:.8;
+  opacity:.85;
   font-weight:normal;
 }
 
@@ -114,6 +115,30 @@ body{
   color:#000;
   font-weight:bold;
   box-shadow:0 6px 10px rgba(0,0,0,.5);
+}
+
+/* ================================================= */
+/* 🔥 ADDITION ONLY – REAL DRAGON & TIGER VISUALS 🔥 */
+/* ================================================= */
+
+.dragon::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:url("images/dragon.png") no-repeat right center;
+  background-size:75%;
+  opacity:0.35;
+  pointer-events:none;
+}
+
+.tiger::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:url("images/tiger.png") no-repeat left center;
+  background-size:75%;
+  opacity:0.35;
+  pointer-events:none;
 }
 </style>
 </head>
