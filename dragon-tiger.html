@@ -6,124 +6,47 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body{
-  margin:0;
-  font-family:Arial;
-  background:radial-gradient(circle at top,#0b1c2d,#030b14);
-  color:#fff;
-}
+body{margin:0;font-family:Arial;background:radial-gradient(circle at top,#0b1c2d,#030b14);color:#fff}
 
-/* HEADER */
-.game-header{
-  background:linear-gradient(180deg,#2b1c3a,#1a1025);
-  padding:14px;
-}
-.header-arena{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
+/* ===== HEADER ===== */
+.game-header{background:linear-gradient(180deg,#2b1c3a,#1a1025);padding:14px 10px;border-bottom:1px solid rgba(255,255,255,.08)}
+.header-arena{display:flex;align-items:center;justify-content:space-between}
 .header-arena img{height:80px}
-.center-cards{display:flex;gap:10px}
-.play-card{
-  width:46px;height:62px;
-  background:linear-gradient(135deg,#ffb85c,#ff8c1a);
-  border-radius:8px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:bold;
-  backface-visibility:hidden;
-  transition:.6s;
-}
-.bet-btn{
-  margin:10px auto;
-  padding:8px;
-  width:220px;
-  text-align:center;
-  background:linear-gradient(135deg,#ffcf6a,#ff9f1a);
-  color:#000;
-  border-radius:20px;
-  font-weight:bold;
-}
+.center-cards{display:flex;align-items:center;gap:10px}
+.play-card{width:46px;height:62px;border-radius:8px;background:linear-gradient(135deg,#ffb85c,#ff8c1a);display:flex;align-items:center;justify-content:center;font-weight:bold}
+.vs-text{font-size:20px;color:#ffd56a}
 
-/* TABLE */
+.bet-btn{margin:10px auto;width:220px;padding:8px;text-align:center;border-radius:20px;background:linear-gradient(135deg,#ffcf6a,#ff9f1a);color:#000;font-weight:bold}
+
+.top-history{display:flex;gap:6px;justify-content:center}
+.top-history span{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px}
+
+/* ===== TABLE ===== */
 .table-wrap{display:flex;justify-content:center;margin-top:20px}
-.table{
-  width:360px;
-  background:linear-gradient(#1a2f4a,#0b1c2d);
-  border-radius:18px;
-  padding:18px;
-}
+.table{width:360px;background:linear-gradient(#1a2f4a,#0b1c2d);border-radius:18px;padding:18px}
 .cards{display:flex;justify-content:space-between}
-.card{
-  width:135px;height:95px;
-  border-radius:16px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:bold;
-  position:relative;
-}
-.dragon{background:#6a7bff}
-.tiger{background:#ffb04a}
-.tie{
-  margin:14px auto;
-  height:70px;
-  border-radius:16px;
-  background:linear-gradient(135deg,#6dff8a,#2ecc71);
-  display:flex;
-  align-items:center;
-  justify-content:center;
+.card{width:135px;height:95px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-weight:bold;cursor:pointer;position:relative}
+.dragon{background:linear-gradient(135deg,#6a7bff,#4a5fe0)}
+.tiger{background:linear-gradient(135deg,#ffb04a,#ff8c1a)}
+.tie{margin:14px auto;width:200px;height:70px;border-radius:16px;background:linear-gradient(135deg,#6dff8a,#2ecc71);display:flex;align-items:center;justify-content:center;font-weight:bold;cursor:pointer}
+
+/* ===== BET AMOUNT BADGE ===== */
+.bet-badge{
+ position:absolute;
+ top:6px;
+ right:8px;
+ background:#000;
+ padding:2px 6px;
+ border-radius:12px;
+ font-size:12px;
 }
 
-/* Chips */
+/* ===== CHIPS ===== */
 .chips{display:flex;justify-content:center;gap:10px;margin:18px}
-.chip{
-  width:46px;height:46px;border-radius:50%;
-  background:gold;color:#000;
-  display:flex;align-items:center;justify-content:center;
-  font-weight:bold;cursor:pointer;
-}
+.chip{width:46px;height:46px;border-radius:50%;background:radial-gradient(circle,#ffd56a,#d4a018);display:flex;align-items:center;justify-content:center;font-weight:bold;cursor:pointer}
 
-/* Wallet */
-#wallet{
-  position:fixed;bottom:12px;right:12px;
-  background:#000;padding:8px 14px;
-  border-radius:20px;font-weight:bold;
-}
-
-/* History */
-.history{
-  display:flex;gap:6px;padding:10px;justify-content:center;
-}
-.history span{
-  width:26px;height:26px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-size:13px;
-}
-
-/* WIN POPUP */
-#popup{
-  position:fixed;
-  inset:0;
-  display:none;
-  align-items:center;
-  justify-content:center;
-  background:rgba(0,0,0,.6);
-}
-#popup div{
-  background:#2ecc71;
-  padding:20px 30px;
-  border-radius:20px;
-  font-size:22px;
-  font-weight:bold;
-  animation:pop .4s ease;
-}
-@keyframes pop{
-  from{transform:scale(.5);opacity:0}
-  to{transform:scale(1);opacity:1}
-}
+/* ===== WALLET ===== */
+#walletBox{position:fixed;bottom:10px;right:10px;background:#000;padding:8px 14px;border-radius:20px;font-weight:bold}
 </style>
 </head>
 
@@ -134,15 +57,14 @@ body{
     <img src="images/dragon.png">
     <div class="center-cards">
       <div class="play-card" id="topD"></div>
-      <div>VS</div>
+      <div class="vs-text">VS</div>
       <div class="play-card" id="topT"></div>
     </div>
     <img src="images/tiger.png">
   </div>
-  <div class="bet-btn" id="betBtn"></div>
+  <div class="bet-btn" id="status">START BETTING</div>
+  <div class="top-history" id="topHistory"></div>
 </div>
-
-<div class="history" id="history"></div>
 
 <div class="table-wrap">
   <div class="table">
@@ -159,123 +81,121 @@ body{
   <div class="chip">50</div>
   <div class="chip">100</div>
   <div class="chip">500</div>
-  <div class="chip">1000</div>
+  <div class="chip">1K</div>
 </div>
 
-<div id="wallet"></div>
-
-<div id="popup"><div id="popupText"></div></div>
+<div id="walletBox">💰 Wallet ₹<span id="walletAmt"></span></div>
 
 <script>
-/* ---------- GAME STATE ---------- */
+/* ================= FIXED GAME LOGIC ================= */
+
 const cards=[{n:"A",v:1},{n:"2",v:2},{n:"3",v:3},{n:"4",v:4},{n:"5",v:5},{n:"6",v:6},{n:"7",v:7},{n:"8",v:8},{n:"9",v:9},{n:"10",v:10},{n:"J",v:11},{n:"Q",v:12},{n:"K",v:13}];
 
-let wallet=JSON.parse(localStorage.getItem("wallet"))??5000;
-let history=JSON.parse(localStorage.getItem("history"))??[];
-let timer=JSON.parse(localStorage.getItem("timer"))??30;
-let phase=JSON.parse(localStorage.getItem("phase"))??"BET";
+let wallet = Number(localStorage.getItem("wallet")) || 5000;
+let timer  = Number(localStorage.getItem("timer"))  || 30;
+let bets   = JSON.parse(localStorage.getItem("bets")) || {DRAGON:0,TIGER:0,TIE:0};
+let chip   = 0;
+let interval;
 
-let betAmount=0;
-let betSide=null;
-
-const topD=topD=document.getElementById("topD");
+const walletUI=document.getElementById("walletAmt");
+const status=document.getElementById("status");
+const topD=document.getElementById("topD");
 const topT=document.getElementById("topT");
-const betBtn=document.getElementById("betBtn");
-const walletUI=document.getElementById("wallet");
-const historyUI=document.getElementById("history");
+const topHistory=document.getElementById("topHistory");
 
-/* ---------- UI ---------- */
-function save(){
-  localStorage.setItem("wallet",wallet);
-  localStorage.setItem("history",JSON.stringify(history));
-  localStorage.setItem("timer",timer);
-  localStorage.setItem("phase",phase);
+const dragon=document.getElementById("dragon");
+const tiger=document.getElementById("tiger");
+const tie=document.getElementById("tie");
+
+walletUI.innerText=wallet;
+
+/* ===== CHIP SELECT ===== */
+document.querySelectorAll(".chip").forEach(c=>{
+ c.onclick=()=>{
+  document.querySelectorAll(".chip").forEach(x=>x.style.outline="none");
+  c.style.outline="3px solid #fff";
+  chip=parseInt(c.innerText.replace("K","000"));
+ };
+});
+
+/* ===== PLACE BET ===== */
+function placeBet(side,el){
+ if(timer<=5||!chip||wallet<chip)return;
+ wallet-=chip;
+ bets[side]+=chip;
+ walletUI.innerText=wallet;
+ saveState();
+
+ let badge=el.querySelector(".bet-badge");
+ if(!badge){
+  badge=document.createElement("div");
+  badge.className="bet-badge";
+  el.appendChild(badge);
+ }
+ badge.innerText="₹"+bets[side];
 }
 
-function renderHistory(){
-  historyUI.innerHTML="";
-  history.slice(-15).forEach(r=>{
-    const s=document.createElement("span");
-    s.innerText=r;
-    s.style.background=r==="D"?"#6a7bff":r==="T"?"#ffb04a":"#2ecc71";
-    historyUI.appendChild(s);
-  });
-}
+dragon.onclick=()=>placeBet("DRAGON",dragon);
+tiger.onclick =()=>placeBet("TIGER",tiger);
+tie.onclick   =()=>placeBet("TIE",tie);
 
-function popup(text){
-  popupText.innerText=text;
-  popup.style.display="flex";
-  setTimeout(()=>popup.style.display="none",2500);
-}
-
-/* ---------- GAME LOOP ---------- */
-setInterval(()=>{
-  timer--;
-  if(timer>5){
-    phase="BET";
-    betBtn.innerText="START BETTING "+(timer-5)+"s";
-  }else if(timer>0){
-    phase="LOCK";
-    betBtn.innerText="BET LOCK "+timer+"s";
-  }else{
-    phase="RESULT";
-    betBtn.innerText="RESULT";
-    result();
-    timer=30;
-  }
-  walletUI.innerText="💰 Wallet ₹"+wallet;
-  save();
-},1000);
-
-/* ---------- RESULT ---------- */
+/* ===== DRAW ===== */
 function draw(){return cards[Math.floor(Math.random()*cards.length)]}
 
-function result(){
-  const d=draw(),t=draw();
-  topD.innerText=d.n;
-  topT.innerText=t.n;
+/* ===== ROUND ===== */
+function startRound(){
+ clearInterval(interval);
+ interval=setInterval(()=>{
+  timer--;
+  saveState();
 
-  let win="TIE";
-  if(d.v>t.v)win="DRAGON";
-  if(t.v>d.v)win="TIGER";
-
-  history.push(win[0]);
-  renderHistory();
-
-  if(betSide){
-    wallet-=betAmount;
-    if(betSide===win){
-      wallet+=betSide==="TIE"?betAmount*9:betAmount*2;
-      popup("🎉 YOU WIN ₹"+betAmount);
-    }
+  if(timer>5) status.innerText="START BETTING "+(timer-5)+"s";
+  else if(timer>0) status.innerText="BET LOCK "+timer+"s";
+  else{
+   clearInterval(interval);
+   showResult();
   }
-
-  setTimeout(()=>{
-    topD.innerText="";
-    topT.innerText="";
-    betSide=null;
-  },2500);
+ },1000);
 }
 
-/* ---------- BET ---------- */
-document.querySelectorAll(".chip").forEach(c=>{
-  c.onclick=()=>{
-    document.querySelectorAll(".chip").forEach(x=>x.style.outline="none");
-    c.style.outline="3px solid #fff";
-    betAmount=parseInt(c.innerText);
-  }
-});
+function showResult(){
+ const d=draw(),t=draw();
+ topD.innerText=d.n;
+ topT.innerText=t.n;
 
-["dragon","tiger","tie"].forEach(id=>{
-  document.getElementById(id).onclick=()=>{
-    if(phase!=="BET"||!betAmount||wallet<betAmount)return;
-    betSide=id.toUpperCase();
-  }
-});
+ let result="TIE";
+ if(d.v>t.v) result="DRAGON";
+ if(t.v>d.v) result="TIGER";
 
-/* INIT */
-renderHistory();
-walletUI.innerText="💰 Wallet ₹"+wallet;
+ const h=document.createElement("span");
+ h.innerText=result[0];
+ h.style.background=result==="DRAGON"?"#4a5fe0":result==="TIGER"?"#ff8c1a":"#2ecc71";
+ topHistory.appendChild(h);
+
+ if(bets[result]>0){
+  let win=result==="TIE"?bets[result]*9:bets[result]*2;
+  wallet+=win;
+  alert("🎉 YOU WON ₹"+win);
+ }
+
+ setTimeout(()=>{
+  bets={DRAGON:0,TIGER:0,TIE:0};
+  document.querySelectorAll(".bet-badge").forEach(b=>b.remove());
+  timer=30;
+  saveState();
+  startRound();
+ },3000);
+}
+
+/* ===== SAVE / LOAD ===== */
+function saveState(){
+ localStorage.setItem("wallet",wallet);
+ localStorage.setItem("timer",timer);
+ localStorage.setItem("bets",JSON.stringify(bets));
+}
+
+startRound();
 </script>
+
 </body>
 </html>
