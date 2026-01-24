@@ -3,266 +3,249 @@
 <head>
 <meta charset="UTF-8">
 <title>Dragon Tiger</title>
-<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 body{
   margin:0;
-  background:#0a0f1f;
   font-family:Arial, sans-serif;
+  background:#06131f;
   color:#fff;
   overflow:hidden;
 }
 
-/* FORCE LANDSCAPE */
-@media (orientation:portrait){
-  body::before{
-    content:"Rotate your phone";
-    position:fixed;
-    inset:0;
-    background:#000;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:22px;
-    z-index:999;
-  }
-}
-
-/* ===== HISTORY ===== */
-.history{
+/* ===== TOP HISTORY ===== */
+.history-bar{
   display:flex;
   gap:6px;
-  padding:8px;
-  overflow:hidden;
-  background:#050914;
+  padding:10px;
+  background:#020b14;
+  overflow-x:auto;
 }
-.history span{
-  width:28px;
+.history-bar span{
+  min-width:28px;
   height:28px;
   border-radius:50%;
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:14px;
+  font-size:13px;
   font-weight:bold;
 }
-.hd{background:#4f6bff}
-.ht{background:#ff9a2f}
-.hh{background:#3bcf7a}
+.h-d{background:#5c6cff}
+.h-t{background:#ff9f1a}
+.h-tie{background:#3ccf7e}
 
-/* ===== CARDS ===== */
-.cards{
-  height:32vh;
+/* ===== TABLE ===== */
+.table{
   display:flex;
+  justify-content:space-between;
   align-items:center;
-  justify-content:center;
-  gap:30px;
+  height:62vh;
+  padding:12px;
+  box-sizing:border-box;
 }
-.card-wrap{
+
+.box{
+  flex:1;
+  margin:6px;
+  border-radius:22px;
   position:relative;
+  text-align:center;
+  padding:20px 10px;
+  cursor:pointer;
 }
-.card{
-  width:90px;
-  height:130px;
-  background:#fff;
-  border-radius:12px;
-  color:#000;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:36px;
-  font-weight:bold;
-}
-.glow-dragon::before,
-.glow-tiger::before{
-  content:"";
-  position:absolute;
-  inset:-20px;
-  border-radius:20px;
-  filter:blur(25px);
-  z-index:-1;
-}
-.glow-dragon::before{background:#4f6bff}
-.glow-tiger::before{background:#ff9a2f}
 
+.dragon{
+  background:linear-gradient(135deg,#6a7bff,#3d4fd6);
+}
+.tie{
+  background:linear-gradient(135deg,#5ddc8b,#1fa463);
+}
+.tiger{
+  background:linear-gradient(135deg,#ffb04d,#ff7a00);
+}
+
+.box h2{
+  margin:0;
+  font-size:22px;
+  letter-spacing:1px;
+}
+
+.odds{
+  margin-top:6px;
+  font-size:16px;
+  opacity:.9;
+}
+
+.bet-amt{
+  position:absolute;
+  top:12px;
+  right:14px;
+  background:rgba(0,0,0,.4);
+  padding:6px 10px;
+  border-radius:14px;
+  font-size:14px;
+  display:none;
+}
+
+/* faded animal feel */
+.bg-icon{
+  font-size:90px;
+  opacity:.15;
+  position:absolute;
+  bottom:10px;
+  left:50%;
+  transform:translateX(-50%);
+}
+
+/* ===== VS ===== */
 .vs{
   font-size:26px;
   font-weight:bold;
   opacity:.8;
 }
 
-/* ===== BET ZONES ===== */
-.board{
-  height:26vh;
-  display:flex;
-  gap:10px;
-  padding:10px;
-}
-.zone{
-  flex:1;
-  border-radius:18px;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  position:relative;
-  font-size:20px;
-  font-weight:bold;
-}
-.dragon{background:linear-gradient(135deg,#5a6cff,#3546c8)}
-.tie{background:linear-gradient(135deg,#58d98a,#2fa563)}
-.tiger{background:linear-gradient(135deg,#ffb44d,#ff7a00)}
-
-.odds{
-  font-size:16px;
-  opacity:.9;
-}
-.bet{
-  position:absolute;
-  top:10px;
-  background:rgba(0,0,0,.4);
-  padding:4px 10px;
-  border-radius:20px;
-  font-size:14px;
-}
-
 /* ===== CHIPS ===== */
 .chips{
-  height:16vh;
   display:flex;
-  align-items:center;
   justify-content:center;
-  gap:14px;
-  background:#060b18;
+  gap:10px;
+  padding:12px;
+  background:#020b14;
 }
-.chip{
-  width:60px;
-  height:60px;
-  border-radius:50%;
-  background:radial-gradient(circle,#ffd700,#c9a100);
-  color:#000;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:bold;
-  border:3px solid transparent;
-}
-.chip.active{border-color:#fff}
 
-/* RESULT */
+.chip{
+  width:56px;
+  height:56px;
+  border-radius:50%;
+  background:linear-gradient(135deg,#ffd54f,#ff9800);
+  color:#000;
+  font-weight:bold;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:14px;
+  cursor:pointer;
+  border:3px solid #fff3;
+}
+.chip.active{
+  box-shadow:0 0 0 3px #fff inset;
+}
+
+/* ===== RESULT ===== */
 .result{
-  position:fixed;
+  position:absolute;
   inset:0;
-  background:rgba(0,0,0,.6);
   display:none;
   align-items:center;
   justify-content:center;
-  font-size:42px;
+  background:rgba(0,0,0,.55);
+  font-size:32px;
   font-weight:bold;
+  z-index:5;
 }
-.win{color:#2ecc71}
+.win{color:#3cff8f}
+.lose{color:#ff5252}
 </style>
 </head>
 
 <body>
 
 <!-- HISTORY -->
-<div class="history" id="history"></div>
+<div class="history-bar" id="history"></div>
 
-<!-- CARDS -->
-<div class="cards">
-  <div class="card-wrap glow-dragon">
-    <div class="card" id="cardD">?</div>
-  </div>
-  <div class="vs">VS</div>
-  <div class="card-wrap glow-tiger">
-    <div class="card" id="cardT">?</div>
-  </div>
-</div>
+<!-- TABLE -->
+<div class="table">
 
-<!-- BET BOARD -->
-<div class="board">
-  <div class="zone dragon" onclick="placeBet('D')">
-    <div class="bet" id="bD">0</div>
-    DRAGON
+  <div class="box dragon" onclick="placeBet('DRAGON')">
+    <div class="bet-amt" id="bet-dragon"></div>
+    <h2>DRAGON</h2>
     <div class="odds">1 : 1</div>
+    <div class="bg-icon">🐉</div>
   </div>
-  <div class="zone tie" onclick="placeBet('TIE')">
-    <div class="bet" id="bTIE">0</div>
-    TIE
+
+  <div class="vs">VS</div>
+
+  <div class="box tie" onclick="placeBet('TIE')">
+    <div class="bet-amt" id="bet-tie"></div>
+    <h2>TIE</h2>
     <div class="odds">8 : 1</div>
   </div>
-  <div class="zone tiger" onclick="placeBet('T')">
-    <div class="bet" id="bT">0</div>
-    TIGER
+
+  <div class="vs">VS</div>
+
+  <div class="box tiger" onclick="placeBet('TIGER')">
+    <div class="bet-amt" id="bet-tiger"></div>
+    <h2>TIGER</h2>
     <div class="odds">1 : 1</div>
+    <div class="bg-icon">🐅</div>
   </div>
+
 </div>
 
 <!-- CHIPS -->
 <div class="chips">
-  <div class="chip" onclick="selectChip(10)">10</div>
+  <div class="chip active" onclick="selectChip(10)">10</div>
   <div class="chip" onclick="selectChip(50)">50</div>
   <div class="chip" onclick="selectChip(100)">100</div>
   <div class="chip" onclick="selectChip(500)">500</div>
   <div class="chip" onclick="selectChip(1000)">1000</div>
 </div>
 
-<div class="result" id="result"></div>
+<div class="result" id="resultBox"></div>
 
 <script>
-let chip=0;
-let bets={D:0,T:0,TIE:0};
-let history=[];
+let chip = 10;
+let bets = {DRAGON:0,TIGER:0,TIE:0};
+let history = [];
 
 function selectChip(v){
-  chip=v;
+  chip = v;
   document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
   event.target.classList.add('active');
 }
 
-function placeBet(t){
-  if(!chip) return;
-  bets[t]+=chip;
-  document.getElementById("b"+t).innerText=bets[t];
+function placeBet(side){
+  bets[side]+=chip;
+  document.getElementById("bet-"+side.toLowerCase()).style.display="block";
+  document.getElementById("bet-"+side.toLowerCase()).innerText="₹"+bets[side];
 }
 
-/* AUTO ROUND */
-setInterval(playRound,6000);
-
 function playRound(){
-  let d=Math.ceil(Math.random()*13);
-  let t=Math.ceil(Math.random()*13);
+  let r=Math.random();
+  let result = r<0.45?"DRAGON":r<0.9?"TIGER":"TIE";
 
-  cardD.innerText=d;
-  cardT.innerText=t;
-
-  let win = d>t?"D":t>d?"T":"TIE";
-  history.unshift(win);
-  history=history.slice(0,12);
+  history.unshift(result);
+  history=history.slice(0,20);
   renderHistory();
 
-  let r=document.getElementById("result");
-  r.style.display="flex";
-  r.innerText=(win==="D"?"DRAGON":win==="T"?"TIGER":"TIE")+" WIN";
-  r.className="result win";
-  setTimeout(()=>r.style.display="none",2000);
+  let win=false;
+  if(bets[result]>0) win=true;
 
-  bets={D:0,T:0,TIE:0};
-  bD.innerText=bT.innerText=bTIE.innerText=0;
+  bets={DRAGON:0,TIGER:0,TIE:0};
+  document.querySelectorAll('.bet-amt').forEach(b=>b.style.display="none");
+
+  let box=document.getElementById("resultBox");
+  box.style.display="flex";
+  box.innerText=win?"YOU WIN":"YOU LOSE";
+  box.className="result "+(win?"win":"lose");
+
+  setTimeout(()=>box.style.display="none",1500);
 }
 
 function renderHistory(){
-  historyEl=document.getElementById("history");
-  historyEl.innerHTML="";
-  history.forEach(h=>{
+  let h=document.getElementById("history");
+  h.innerHTML="";
+  history.forEach(x=>{
     let s=document.createElement("span");
-    s.className=h==="D"?"hd":h==="T"?"ht":"hh";
-    s.innerText=h;
-    historyEl.appendChild(s);
+    s.className=x==="DRAGON"?"h-d":x==="TIGER"?"h-t":"h-tie";
+    s.innerText=x[0];
+    h.appendChild(s);
   });
 }
+
+setInterval(playRound,8000);
 </script>
 
 </body>
