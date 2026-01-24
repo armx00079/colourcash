@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Penalty Shoot Betting Game</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:radial-gradient(circle at top,#0b1c2d,#02080f);
+  color:#fff;
+  text-align:center;
+}
+
+/* ===== HEADER ===== */
+.header{
+  padding:15px;
+  font-size:22px;
+  font-weight:bold;
+  background:linear-gradient(180deg,#1e2a3a,#0b1522);
+}
+
+/* ===== WALLET ===== */
+.wallet{
+  position:fixed;
+  bottom:15px;
+  right:15px;
+  background:#000;
+  padding:10px 16px;
+  border-radius:20px;
+  font-weight:bold;
+}
+
+/* ===== GAME AREA ===== */
+.game{
+  margin-top:20px;
+}
+
+.goal{
+  width:280px;
+  height:120px;
+  margin:20px auto;
+  background:#1a2f4a;
+  border-radius:12px;
+  position:relative;
+  overflow:hidden;
+}
+
+.keeper{
+  position:absolute;
+  bottom:10px;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:40px;
+}
+
+.ball{
+  font-size:40px;
+  margin-top:10px;
+}
+
+/* ===== POWER BAR ===== */
+.power-box{
+  width:260px;
+  height:16px;
+  background:#222;
+  border-radius:10px;
+  margin:15px auto;
+  overflow:hidden;
+}
+.power{
+  height:100%;
+  width:0%;
+  background:linear-gradient(90deg,#2ecc71,#f1c40f,#e74c3c);
+}
+
+/* ===== BUTTON ===== */
+.kick-btn{
+  margin-top:15px;
+  padding:10px 30px;
+  border-radius:20px;
+  background:#f1c40f;
+  color:#000;
+  font-weight:bold;
+  display:inline-block;
+}
+
+/* ===== CHIPS ===== */
+.chips{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin:20px 0;
+}
+.chip{
+  width:50px;
+  height:50px;
+  border-radius:50%;
+  background:radial-gradient(circle,#ffd56a,#d4a018);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:bold;
+  color:#000;
+  cursor:pointer;
+}
+.chip.active{
+  outline:3px solid #fff;
+}
+
+/* ===== HISTORY ===== */
+.history{
+  margin-top:15px;
+  font-size:14px;
+}
+
+/* ===== POPUP ===== */
+.popup{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.7);
+  display:none;
+  align-items:center;
+  justify-content:center;
+}
+.popup-box{
+  background:#1e2f45;
+  padding:25px;
+  border-radius:16px;
+  animation:pop .4s ease;
+}
+@keyframes pop{
+  from{transform:scale(.6);opacity:0}
+  to{transform:scale(1);opacity:1}
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">⚽ Penalty Shoot – Betting Game</div>
+
+<div class="game">
+  <div class="goal">
+    <div class="keeper" id="keeper">🧤</div>
+  </div>
+
+  <div class="ball">⚽</div>
+
+  <div class="power-box">
+    <div class="power" id="power"></div>
+  </div>
+
+  <div class="kick-btn" id="kickBtn">TAP TO KICK</div>
+</div>
+
+<div class="chips">
+  <div class="chip">10</div>
+  <div class="chip">50</div>
+  <div class="chip">100</div>
+  <div class="chip">500</div>
+  <div class="chip">1K</div>
+</div>
+
+<div class="history" id="history"></div>
+
+<div class="wallet" id="wallet">💰 Wallet ₹0</div>
+
+<div class="popup" id="popup">
+  <div class="popup-box" id="popupBox"></div>
+</div>
+
+<script>
+/* ===== DATA ===== */
+let wallet = parseInt(localStorage.getItem("wallet")) || 5000;
+let bet = 0;
+let power = 0;
+let dir = 1;
+let moving;
+let history = JSON.parse(localStorage.getItem("history")) || [];
+
+/* ===== ELEMENTS ===== */
+const powerBar = document.getElementById("power");
+const kickBtn = document.getElementById("kickBtn");
+const walletUI = document.getElementById("wallet");
+const keeper = document.getElementById("keeper");
+const historyBox = document.getElementById("history");
+const popup = document.getElementById("popup");
+const popupBox = document.getElementById("popupBox");
+
+/* ===== INIT ===== */
+updateWallet();
+renderHistory();
+startPower();
+
+/* ===== CHIP SELECT ===== */
+document.querySelectorAll(".chip").forEach(c=>{
+  c.onclick=()=>{
+    document.querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));
+    c.classList.add("active");
+    bet = parseInt(c.innerText.replace("K","000"));
+  };
+});
+
+/* ===== POWER MOVE ===== */
+function startPower(){
+  clearInterval(moving);
+  moving = setInterval(()=>{
+    power += dir*2;
+    if(power>=100||power<=0) dir*=-1;
+    powerBar.style.width = power+"%";
+  },30);
+}
+
+/* ===== KICK ===== */
+kickBtn.onclick=()=>{
+  if(bet<=0 || wallet<bet) return alert("Select bet amount");
+  clearInterval(moving);
+
+  wallet -= bet;
+
+  const keeperSide = ["L","C","R"][Math.floor(Math.random()*3)];
+  const shotSide = power<33?"L":power<66?"C":"R";
+
+  keeper.innerText = keeperSide==="L"?"🧤⬅️":keeperSide==="R"?"🧤➡️":"🧤";
+
+  let win = keeperSide !== shotSide;
+
+  if(win){
+    let winAmt = bet*2;
+    wallet += winAmt;
+    showPopup("GOAL! 🎉<br>+₹"+winAmt);
+    history.unshift("WIN ₹"+bet);
+  }else{
+    showPopup("SAVE! ❌<br>-₹"+bet);
+    history.unshift("LOSS ₹"+bet);
+  }
+
+  saveState();
+  updateWallet();
+  renderHistory();
+
+  setTimeout(resetRound
