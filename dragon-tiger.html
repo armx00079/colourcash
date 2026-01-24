@@ -13,7 +13,77 @@ body{
   color:#fff;
 }
 
-/* ===== HISTORY STRIP ===== */
+/* ================= TOP GAME HEADER ================= */
+.game-header{
+  background:linear-gradient(180deg,#2b1c3a,#1a1025);
+  padding:14px 10px 10px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+
+.header-arena{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.header-arena img{
+  height:80px;
+  opacity:.95;
+}
+
+.center-cards{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.play-card{
+  width:46px;
+  height:62px;
+  border-radius:8px;
+  background:linear-gradient(135deg,#ffb85c,#ff8c1a);
+  box-shadow:0 6px 12px rgba(0,0,0,.5);
+}
+
+.vs-text{
+  font-size:20px;
+  font-weight:bold;
+  color:#ffd56a;
+}
+
+/* ===== BET BUTTON ===== */
+.bet-btn{
+  margin:10px auto 6px;
+  width:170px;
+  padding:8px 0;
+  text-align:center;
+  border-radius:20px;
+  background:linear-gradient(135deg,#ffcf6a,#ff9f1a);
+  color:#000;
+  font-weight:bold;
+  box-shadow:0 6px 12px rgba(0,0,0,.5);
+}
+
+/* ===== TOP HISTORY ===== */
+.top-history{
+  display:flex;
+  gap:6px;
+  justify-content:center;
+  margin-top:6px;
+}
+
+.top-history span{
+  width:26px;
+  height:26px;
+  border-radius:50%;
+  background:#1e2f45;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:13px;
+}
+
+/* ================= HISTORY STRIP ================= */
 .history{
   display:flex;
   gap:6px;
@@ -31,7 +101,7 @@ body{
   font-size:13px;
 }
 
-/* ===== TABLE WRAPPER ===== */
+/* ================= TABLE ================= */
 .table-wrap{
   display:flex;
   justify-content:center;
@@ -46,7 +116,6 @@ body{
   box-shadow:0 20px 40px rgba(0,0,0,.6);
 }
 
-/* ===== TOP CARDS ===== */
 .cards{
   display:flex;
   justify-content:space-between;
@@ -97,12 +166,9 @@ body{
   font-weight:bold;
   position:relative;
   overflow:hidden;
-  box-shadow:
-    0 0 12px rgba(46,204,113,0.7),
-    inset 0 0 12px rgba(255,255,255,0.25);
 }
 
-/* ✨ SHINING EFFECT */
+/* Shine */
 .tie::after{
   content:"";
   position:absolute;
@@ -110,12 +176,7 @@ body{
   left:-60%;
   width:50%;
   height:100%;
-  background:linear-gradient(
-    120deg,
-    transparent,
-    rgba(255,255,255,0.45),
-    transparent
-  );
+  background:linear-gradient(120deg,transparent,rgba(255,255,255,.45),transparent);
   animation:tieShine 2.5s infinite;
 }
 
@@ -145,31 +206,26 @@ body{
   box-shadow:0 6px 10px rgba(0,0,0,.5);
 }
 
-/* ================================================= */
-/* 🔥 FIXED – REAL DRAGON & TIGER BACKGROUND IMAGE 🔥 */
-/* ================================================= */
-
+/* ===== CARD BACKGROUND IMAGES ===== */
 .card::before{
   content:"";
   position:absolute;
   inset:0;
   z-index:1;
-  pointer-events:none;
 }
 
 .dragon::before{
   background:url("images/dragon.png") no-repeat right center;
   background-size:75%;
-  opacity:0.35;
+  opacity:.35;
 }
 
 .tiger::before{
   background:url("images/tiger.png") no-repeat left center;
   background-size:75%;
-  opacity:0.35;
+  opacity:.35;
 }
 
-/* 🔒 TEXT ALWAYS ABOVE IMAGE */
 .card > *{
   position:relative;
   z-index:2;
@@ -179,39 +235,46 @@ body{
 
 <body>
 
-<!-- HISTORY -->
-<div class="history">
-  <span>D</span><span>D</span><span>T</span><span>T</span>
-  <span>D</span><span>T</span><span>D</span>
-</div>
-
-<!-- TABLE -->
-<div class="table-wrap">
-  <div class="table">
-
-    <div class="cards">
-      <div class="card dragon">
-        DRAGON
-        <small>1 : 1</small>
-      </div>
-
-      <div class="vs">VS</div>
-
-      <div class="card tiger">
-        TIGER
-        <small>1 : 1</small>
-      </div>
+<!-- ===== TOP DRAGON TIGER HEADER ===== -->
+<div class="game-header">
+  <div class="header-arena">
+    <img src="images/dragon.png">
+    <div class="center-cards">
+      <div class="play-card"></div>
+      <div class="vs-text">VS</div>
+      <div class="play-card"></div>
     </div>
+    <img src="images/tiger.png">
+  </div>
 
-    <div class="tie">
-      TIE
-      <small>8 : 1</small>
-    </div>
+  <div class="bet-btn">START BETTING</div>
 
+  <div class="top-history">
+    <span>D</span><span>T</span><span>D</span>
+    <span>D</span><span>T</span><span>🟢</span><span>D</span>
   </div>
 </div>
 
-<!-- CHIPS -->
+<!-- ===== HISTORY ===== -->
+<div class="history">
+  <span>D</span><span>D</span><span>T</span>
+  <span>T</span><span>D</span><span>T</span><span>D</span>
+</div>
+
+<!-- ===== TABLE ===== -->
+<div class="table-wrap">
+  <div class="table">
+    <div class="cards">
+      <div class="card dragon">DRAGON <small>1 : 1</small></div>
+      <div class="vs">VS</div>
+      <div class="card tiger">TIGER <small>1 : 1</small></div>
+    </div>
+
+    <div class="tie">TIE <small>8 : 1</small></div>
+  </div>
+</div>
+
+<!-- ===== CHIPS ===== -->
 <div class="chips">
   <div class="chip">10</div>
   <div class="chip">50</div>
