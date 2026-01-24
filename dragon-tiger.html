@@ -118,27 +118,33 @@ body{
 }
 
 /* ================================================= */
-/* 🔥 ADDITION ONLY – REAL DRAGON & TIGER VISUALS 🔥 */
+/* 🔥 FIXED – REAL DRAGON & TIGER BACKGROUND IMAGE 🔥 */
 /* ================================================= */
 
-.dragon::before{
+.card::before{
   content:"";
   position:absolute;
   inset:0;
-  background:url("images/dragon.png") no-repeat right center;
-  background-size:75%;
-  opacity:0.35;
+  z-index:1;
   pointer-events:none;
 }
 
+.dragon::before{
+  background:url("images/dragon.png") no-repeat right center;
+  background-size:75%;
+  opacity:0.35;
+}
+
 .tiger::before{
-  content:"";
-  position:absolute;
-  inset:0;
   background:url("images/tiger.png") no-repeat left center;
   background-size:75%;
   opacity:0.35;
-  pointer-events:none;
+}
+
+/* 🔒 TEXT ALWAYS ABOVE IMAGE */
+.card > *{
+  position:relative;
+  z-index:2;
 }
 </style>
 </head>
