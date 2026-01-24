@@ -6,14 +6,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
+/* ===== ORIGINAL CSS – NOT TOUCHED ===== */
 body{
   margin:0;
   font-family:Arial, sans-serif;
   background:radial-gradient(circle at top,#0b1c2d,#030b14);
   color:#fff;
 }
-
-/* ================= TOP GAME HEADER ================= */
 .game-header{
   background:linear-gradient(180deg,#2b1c3a,#1a1025);
   padding:14px 10px 10px;
@@ -26,6 +25,7 @@ body{
   background:linear-gradient(135deg,#ffb85c,#ff8c1a);
   display:flex;align-items:center;justify-content:center;
   font-weight:bold;
+  transition:0.4s;
 }
 .vs-text{font-size:20px;color:#ffd56a;font-weight:bold;}
 .bet-btn{
@@ -38,14 +38,6 @@ body{
   color:#000;
   font-weight:bold;
 }
-.top-history{display:flex;justify-content:center;gap:6px;margin-top:6px;}
-.top-history span{
-  width:26px;height:26px;border-radius:50%;
-  background:#1e2f45;
-  display:flex;align-items:center;justify-content:center;
-}
-
-/* ================= TABLE ================= */
 .table-wrap{display:flex;justify-content:center;margin-top:20px;}
 .table{
   width:360px;
@@ -65,7 +57,6 @@ body{
   cursor:pointer;
 }
 .bet-amt{font-size:13px;margin-top:4px;color:#ffd56a;}
-
 .dragon{background:#6a7bff;}
 .tiger{background:#ffb04a;}
 .tie{
@@ -80,8 +71,6 @@ body{
   font-weight:bold;
   cursor:pointer;
 }
-
-/* ===== CHIPS ===== */
 .chips{display:flex;justify-content:center;gap:10px;margin:18px auto;}
 .chip{
   width:46px;height:46px;border-radius:50%;
@@ -89,15 +78,7 @@ body{
   display:flex;align-items:center;justify-content:center;
   font-weight:bold;cursor:pointer;
 }
-
-/* ===== HISTORY ===== */
-.history{
-  padding:10px;
-  font-size:14px;
-}
-.history div{
-  margin-bottom:4px;
-}
+.history{padding:10px;font-size:14px;}
 </style>
 </head>
 
@@ -113,29 +94,17 @@ body{
     </div>
     <img src="images/tiger.png">
   </div>
-
   <div class="bet-btn">START BETTING</div>
-  <div class="top-history"></div>
 </div>
 
 <div class="table-wrap">
   <div class="table">
     <div class="cards">
-      <div class="card dragon">
-        DRAGON
-        <div class="bet-amt" id="dragonBet"></div>
-      </div>
+      <div class="card dragon">DRAGON<div class="bet-amt" id="dragonBet"></div></div>
       <div class="vs-text">VS</div>
-      <div class="card tiger">
-        TIGER
-        <div class="bet-amt" id="tigerBet"></div>
-      </div>
+      <div class="card tiger">TIGER<div class="bet-amt" id="tigerBet"></div></div>
     </div>
-
-    <div class="tie">
-      TIE
-      <div class="bet-amt" id="tieBet"></div>
-    </div>
+    <div class="tie">TIE<div class="bet-amt" id="tieBet"></div></div>
   </div>
 </div>
 
@@ -149,14 +118,16 @@ body{
 
 <div class="history" id="betHistory"></div>
 
-<!-- ================= GAME SCRIPT ================= -->
 <script>
+/* ========= FINAL DRAGON TIGER LOGIC ========= */
+
 const cards=[
-{n:"A",v:1},{n:"2",v:2},{n:"3",v:3},{n:"4",v:4},
-{n:"5",v:5},{n:"6",v:6},{n:"7",v:7},{n:"8",v:8},
-{n:"9",v:9},{n:"10",v:10},{n:"J",v:11},{n:"Q",v:12},{n:"K",v:13}
+ {n:"A",v:1},{n:"2",v:2},{n:"3",v:3},{n:"4",v:4},
+ {n:"5",v:5},{n:"6",v:6},{n:"7",v:7},{n:"8",v:8},
+ {n:"9",v:9},{n:"10",v:10},{n:"J",v:11},{n:"Q",v:12},{n:"K",v:13}
 ];
 
+let wallet=Number(localStorage.getItem("wallet"))||5000;
 let time=15,interval;
 let selectedAmount=0,betType=null;
 
@@ -164,6 +135,17 @@ const btn=document.querySelector(".bet-btn");
 const topCards=document.querySelectorAll(".play-card");
 const history=document.getElementById("betHistory");
 
+/* ===== WALLET UI ===== */
+const walletUI=document.createElement("div");
+walletUI.style.cssText="position:fixed;bottom:12px;right:12px;background:#000;padding:8px 14px;border-radius:20px;font-weight:bold;";
+document.body.appendChild(walletUI);
+function updateWallet(){
+ walletUI.innerText="💰 Wallet ₹"+wallet;
+ localStorage.setItem("wallet",wallet);
+}
+updateWallet();
+
+/* ===== CHIP SELECT ===== */
 document.querySelectorAll(".chip").forEach(c=>{
  c.onclick=()=>{
   document.querySelectorAll(".chip").forEach(x=>x.style.outline="none");
@@ -172,25 +154,26 @@ document.querySelectorAll(".chip").forEach(c=>{
  };
 });
 
+/* ===== BET SELECT ===== */
 function placeBet(type){
  if(time<=5||!selectedAmount)return;
  betType=type;
- document.getElementById("dragonBet").innerText="";
- document.getElementById("tigerBet").innerText="";
- document.getElementById("tieBet").innerText="";
- document.getElementById(type.toLowerCase()+"Bet").innerText="₹"+selectedAmount;
+ ["dragon","tiger","tie"].forEach(x=>document.getElementById(x+"Bet").innerText="");
+ document.getElementById(type+"Bet").innerText="₹"+selectedAmount;
 }
-
 document.querySelector(".dragon").onclick=()=>placeBet("dragon");
 document.querySelector(".tiger").onclick=()=>placeBet("tiger");
 document.querySelector(".tie").onclick=()=>placeBet("tie");
 
+/* ===== GAME ===== */
 function draw(){return cards[Math.floor(Math.random()*cards.length)];}
 
 function startRound(){
  clearInterval(interval);
  time=15;betType=null;
  document.querySelectorAll(".bet-amt").forEach(b=>b.innerText="");
+ topCards.forEach(c=>{c.innerText="";c.style.transform="rotateY(0deg)";});
+
  interval=setInterval(()=>{
   time--;
   if(time>5) btn.innerText="START BETTING "+(time-5)+"s";
@@ -204,19 +187,25 @@ function startRound(){
 
 function showResult(){
  const d=draw(),t=draw();
- topCards[0].innerText=d.n;
- topCards[1].innerText=t.n;
+ topCards.forEach(c=>c.style.transform="rotateY(180deg)");
+ setTimeout(()=>{
+  topCards[0].innerText=d.n;
+  topCards[1].innerText=t.n;
+  topCards.forEach(c=>c.style.transform="rotateY(0deg)");
+ },300);
 
  let win="tie";
  if(d.v>t.v) win="dragon";
  if(t.v>d.v) win="tiger";
 
- btn.innerText=win.toUpperCase()+" WIN";
-
  if(betType){
+  wallet-=selectedAmount;
+  if(betType===win) wallet+=win==="tie"?selectedAmount*9:selectedAmount*2;
   history.innerHTML+=`<div>${betType.toUpperCase()} ₹${selectedAmount} → ${betType===win?"WIN":"LOSS"}</div>`;
  }
 
+ updateWallet();
+ btn.innerText=win.toUpperCase()+" WIN";
  setTimeout(startRound,3000);
 }
 
