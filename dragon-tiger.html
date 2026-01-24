@@ -369,38 +369,6 @@ function update(){
  else if(timer>0){status.innerText="BET LOCK "+timer;}  
  else{status.innerText="RESULT";}  
 }  
-update();  
-  
-      },3000);  
-    }  
-  },1000);  
-}  
-function showResult(){  
-  const d = drawCard();  
-  const t = drawCard();  
-  
-  dragon.style.transform="rotateY(180deg)";  
-  tiger.style.transform="rotateY(180deg)";  
-  
-  setTimeout(()=>{  
-    dragon.innerHTML = `DRAGON<br><small>${d.n}</small>`;  
-    tiger.innerHTML  = `TIGER<br><small>${t.n}</small>`;  
-    dragon.style.transform="rotateY(0deg)";  
-    tiger.style.transform="rotateY(0deg)";  
-  },300);  
-  
-  let result="TIE";  
-  if(d.v>t.v) result="DRAGON";  
-  if(t.v>d.v) result="TIGER";  
-  
-  const h=document.createElement("span");  
-  h.innerText=result[0];  
-  h.style.background=result==="DRAGON"?"#4a5fe0":result==="TIGER"?"#ff8c1a":"#2ecc71";  
-  topHistory.appendChild(h);  
-}  
-  
-/* ===== START GAME ===== */  
-resetRound();  
-startRoundTimer();  
+
 </script>  </body>  
 </html>
