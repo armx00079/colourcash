@@ -1,225 +1,165 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dragon vs Tiger - Landscape</title>
-    <style>
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body {
-            font-family: Arial, sans-serif;
-            background: #0a001f url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><text x="10" y="50" font-size="60" fill="rgba(255,255,255,0.05)">🐉</text></svg>') repeat,
-                        #0a001f url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><text x="70" y="80" font-size="60" fill="rgba(255,255,255,0.05)">🐅</text></svg>') repeat;
-            color: #fff;
-            height: 100vh;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-        .header {
-            padding: 8px 12px;
-            display: flex;
-            justify-content: space-between;
-            font-size: 12px;
-            background: rgba(0,0,0,0.6);
-        }
-        .version { color: #aaa; }
-        .close { font-size: 24px; cursor: pointer; }
+<meta charset="UTF-8">
+<title>Dragon Tiger</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-        .history {
-            text-align: center;
-            padding: 10px 0;
-            overflow-x: auto;
-            white-space: nowrap;
-        }
-        .history-chain {
-            display: inline-flex;
-            gap: 6px;
-        }
-        .hist-btn {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            color: white;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.5);
-        }
-        .d { background: #0066ff; }
-        .t { background: #ff6600; }
-        .tie { background: #00cc00; }
+<style>
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:radial-gradient(circle at top,#0b1c2d,#030b14);
+  color:#fff;
+}
 
-        .main {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
-        .cards {
-            display: flex;
-            align-items: center;
-            gap: 30px;
-            margin: 20px 0;
-        }
-        .card {
-            width: 140px;
-            height: 200px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.6);
-        }
-        .vs {
-            font-size: 60px;
-            font-weight: bold;
-            color: #ffd700;
-            text-shadow: 0 0 15px #ffd700;
-        }
+/* ===== HISTORY STRIP ===== */
+.history{
+  display:flex;
+  gap:6px;
+  padding:10px;
+  overflow-x:auto;
+  background:rgba(0,0,0,0.4);
+}
+.history span{
+  width:26px;height:26px;
+  border-radius:50%;
+  background:#1e2f45;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:13px;
+}
 
-        .bet-area {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            width: 100%;
-            max-width: 700px;
-        }
-        .bet-box {
-            width: 180px;
-            height: 140px;
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        .bet-box:hover { transform: scale(1.05); }
-        .dragon { border: 4px solid #0066ff; background: rgba(0,102,255,0.15); }
-        .tiger { border: 4px solid #ff6600; background: rgba(255,102,0,0.15); }
-        .tie { border: 4px solid #00cc00; background: rgba(0,204,0,0.1); }
-        .icon { font-size: 60px; margin-bottom: 8px; }
-        .label { font-size: 18px; font-weight: bold; }
-        .ratio { font-size: 16px; color: #ffd700; margin-top: 4px; }
-        .amount { position: absolute; top: 10px; font-size: 20px; color: #ffd700; font-weight: bold; }
+/* ===== TABLE WRAPPER ===== */
+.table-wrap{
+  display:flex;
+  justify-content:center;
+  margin-top:20px;
+}
 
-        .chips {
-            position: fixed;
-            bottom: 20px;
-            left: 0;
-            right: 0;
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            z-index: 10;
-        }
-        .chip {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: #ffdd00;
-            color: #000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 18px;
-            border: 3px solid #ccaa00;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
-        }
-        .chip.selected { border-color: #fff; box-shadow: 0 0 15px #fff; }
+.table{
+  width:360px;
+  background:linear-gradient(#1a2f4a,#0b1c2d);
+  border-radius:18px;
+  padding:18px;
+  box-shadow:0 20px 40px rgba(0,0,0,.6);
+}
 
-        @media (orientation: portrait) {
-            body { font-size: 0.8em; }
-            .cards .card { width: 110px; height: 160px; }
-            .vs { font-size: 40px; gap: 20px; }
-            .bet-box { width: 140px; height: 110px; }
-            .icon { font-size: 45px; }
-        }
-    </style>
+/* ===== TOP CARDS ===== */
+.cards{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.card{
+  width:135px;
+  height:95px;
+  border-radius:16px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  font-weight:bold;
+  position:relative;
+}
+
+.card small{
+  opacity:.8;
+  font-weight:normal;
+}
+
+.dragon{
+  background:linear-gradient(135deg,#6a7bff,#4a5fe0);
+}
+.tiger{
+  background:linear-gradient(135deg,#ffb04a,#ff8c1a);
+}
+
+.vs{
+  font-size:20px;
+  opacity:.7;
+}
+
+/* ===== TIE ===== */
+.tie{
+  margin:14px auto 0;
+  width:200px;
+  height:70px;
+  border-radius:16px;
+  background:linear-gradient(135deg,#63d97b,#3fbf63);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  font-weight:bold;
+}
+
+/* ===== CHIPS ===== */
+.chips{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin:18px auto;
+}
+
+.chip{
+  width:46px;height:46px;
+  border-radius:50%;
+  background:radial-gradient(circle,#ffd56a,#d4a018);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#000;
+  font-weight:bold;
+  box-shadow:0 6px 10px rgba(0,0,0,.5);
+}
+</style>
 </head>
+
 <body>
-    <div class="header">
-        <div class="version">version-20221224242100</div>
-        <div class="close">×</div>
+
+<!-- HISTORY -->
+<div class="history">
+  <span>D</span><span>D</span><span>T</span><span>T</span>
+  <span>D</span><span>T</span><span>D</span>
+</div>
+
+<!-- TABLE -->
+<div class="table-wrap">
+  <div class="table">
+
+    <div class="cards">
+      <div class="card dragon">
+        DRAGON
+        <small>1 : 1</small>
+      </div>
+
+      <div class="vs">VS</div>
+
+      <div class="card tiger">
+        TIGER
+        <small>1 : 1</small>
+      </div>
     </div>
 
-    <div class="history">
-        <div class="history-chain" id="history">
-            <!-- JS से fill होगा -->
-        </div>
+    <div class="tie">
+      TIE
+      <small>8 : 1</small>
     </div>
 
-    <div class="main">
-        <div class="cards">
-            <div class="card"></div>
-            <div class="vs">VS</div>
-            <div class="card"></div>
-        </div>
+  </div>
+</div>
 
-        <div class="bet-area">
-            <div class="bet-box dragon" onclick="placeBet('dragon')">
-                <div class="amount" id="d-amt">0.00</div>
-                <div class="icon">🐉</div>
-                <div class="label">Dragon</div>
-                <div class="ratio">1:1</div>
-            </div>
-            <div class="bet-box tie" onclick="placeBet('tie')">
-                <div class="amount" id="tie-amt">0.00</div>
-                <div class="label">Tie</div>
-                <div class="ratio">8:1</div>
-            </div>
-            <div class="bet-box tiger" onclick="placeBet('tiger')">
-                <div class="amount" id="t-amt">0.00</div>
-                <div class="icon">🐅</div>
-                <div class="label">Tiger</div>
-                <div class="ratio">1:1</div>
-            </div>
-        </div>
-    </div>
+<!-- CHIPS -->
+<div class="chips">
+  <div class="chip">10</div>
+  <div class="chip">50</div>
+  <div class="chip">100</div>
+  <div class="chip">500</div>
+  <div class="chip">1K</div>
+</div>
 
-    <div class="chips">
-        <div class="chip selected" data-val="10">10</div>
-        <div class="chip" data-val="50">50</div>
-        <div class="chip" data-val="100">100</div>
-        <div class="chip" data-val="500">500</div>
-        <div class="chip" data-val="1000">1K</div>
-    </div>
-
-    <script>
-        let selected = 10;
-        const bets = {dragon:0, tie:0, tiger:0};
-        const historyEl = document.getElementById('history');
-        const hist = ['D','T','D','D','T','D','D']; // demo
-
-        // History show
-        hist.forEach(h => {
-            const btn = document.createElement('div');
-            btn.className = 'hist-btn ' + (h==='D'?'d':h==='T'?'t':'tie');
-            btn.textContent = h;
-            historyEl.appendChild(btn);
-        });
-
-        // Chip select
-        document.querySelectorAll('.chip').forEach(c => {
-            c.onclick = () => {
-                document.querySelectorAll('.chip').forEach(cc => cc.classList.remove('selected'));
-                c.classList.add('selected');
-                selected = parseInt(c.dataset.val);
-            };
-        });
-
-        // Place bet
-        function placeBet(side) {
-            bets[side] += selected;
-            document.getElementById(side==='dragon'?'d-amt':side==='tie'?'tie-amt':'t-amt').textContent = bets[side].toFixed(2);
-        }
-    </script>
 </body>
 </html>
