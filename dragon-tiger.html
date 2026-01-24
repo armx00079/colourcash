@@ -411,7 +411,78 @@ setInterval(()=>{
 },1000);
 
 update();
-</script>
+<script>
+/* ================= ADD-ON GAME LOGIC (NO EXISTING CODE TOUCHED) ================= */
 
+let roundTimer = 15;
+let betPhase = "BET"; // BET | LOCK | RESULT
+let roundInterval;
+
+const betButton = document.querySelector(".bet-btn");
+const topHistory = document.querySelector(".top-history");
+
+function resetRound(){
+  roundTimer = 15;
+  betPhase = "BET";
+  betButton.innerText = "START BETTING 15s";
+  dragon.innerHTML = "DRAGON";
+  tiger.innerHTML = "TIGER";
+  [dragon,tiger,tie].forEach(x=>x.style.boxShadow="none");
+}
+
+function startRoundTimer(){
+  clearInterval(roundInterval);
+  roundInterval = setInterval(()=>{
+    roundTimer--;
+
+    if(roundTimer > 5){
+      betPhase = "BET";
+      betButton.innerText = "START BETTING " + (roundTimer-5) + "s";
+    }
+    else if(roundTimer > 0){
+      betPhase = "LOCK";
+      betButton.innerText = "BET LOCK " + roundTimer + "s";
+    }
+    else{
+      betPhase = "RESULT";
+      betButton.innerText = "SHOW RESULT";
+      clearInterval(roundInterval);
+      showResult();
+      setTimeout(()=>{
+        resetRound();
+        startRoundTimer();
+      },3000);
+    }
+  },1000);
+}
+
+function showResult(){
+  const d = drawCard();
+  const t = drawCard();
+
+  dragon.style.transform="rotateY(180deg)";
+  tiger.style.transform="rotateY(180deg)";
+
+  setTimeout(()=>{
+    dragon.innerHTML = `DRAGON<br><small>${d.n}</small>`;
+    tiger.innerHTML  = `TIGER<br><small>${t.n}</small>`;
+    dragon.style.transform="rotateY(0deg)";
+    tiger.style.transform="rotateY(0deg)";
+  },300);
+
+  let result="TIE";
+  if(d.v>t.v) result="DRAGON";
+  if(t.v>d.v) result="TIGER";
+
+  const h=document.createElement("span");
+  h.innerText=result[0];
+  h.style.background=result==="DRAGON"?"#4a5fe0":result==="TIGER"?"#ff8c1a":"#2ecc71";
+  topHistory.appendChild(h);
+}
+
+/* ===== START GAME ===== */
+resetRound();
+startRoundTimer();
+</script>
 </body>
 </html>
