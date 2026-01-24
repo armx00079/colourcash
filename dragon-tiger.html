@@ -204,6 +204,7 @@ body{
   color:#000;
   font-weight:bold;
   box-shadow:0 6px 10px rgba(0,0,0,.5);
+  cursor:pointer;
 }
 
 /* ===== CARD BACKGROUND IMAGES ===== */
@@ -235,7 +236,7 @@ body{
 
 <body>
 
-<!-- ===== TOP DRAGON TIGER HEADER ===== -->
+<!-- ===== TOP HEADER ===== -->
 <div class="game-header">
   <div class="header-arena">
     <img src="images/dragon.png">
@@ -256,21 +257,17 @@ body{
 </div>
 
 <!-- ===== HISTORY ===== -->
-<div class="history">
-  <span>D</span><span>D</span><span>T</span>
-  <span>T</span><span>D</span><span>T</span><span>D</span>
-</div>
+<div class="history"></div>
 
 <!-- ===== TABLE ===== -->
 <div class="table-wrap">
   <div class="table">
     <div class="cards">
-      <div class="card dragon">DRAGON <small>1 : 1</small></div>
+      <div class="card dragon">DRAGON</div>
       <div class="vs">VS</div>
-      <div class="card tiger">TIGER <small>1 : 1</small></div>
+      <div class="card tiger">TIGER</div>
     </div>
-
-    <div class="tie">TIE <small>8 : 1</small></div>
+    <div class="tie">TIE</div>
   </div>
 </div>
 
@@ -282,6 +279,90 @@ body{
   <div class="chip">500</div>
   <div class="chip">1K</div>
 </div>
+
+<!-- ================= GAME SCRIPT (YAHI ADD HAI) ================= -->
+<script>
+let wallet = 5000;
+let selectedChip = 0;
+let selectedBet = null;
+let timer = 15;
+let phase = "bet";
+let history = [];
+
+const cards=[
+ {name:"A",val:1},{name:"2",val:2},{name:"3",val:3},
+ {name:"4",val:4},{name:"5",val:5},{name:"6",val:6},
+ {name:"7",val:7},{name:"8",val:8},{name:"9",val:9},
+ {name:"10",val:10},{name:"J",val:11},
+ {name:"Q",val:12},{name:"K",val:13}
+];
+
+const chips=document.querySelectorAll(".chip");
+const dragonCard=document.querySelector(".card.dragon");
+const tigerCard=document.querySelector(".card.tiger");
+const tieCard=document.querySelector(".tie");
+const historyStrip=document.querySelector(".history");
+
+const status=document.createElement("div");
+status.style.cssText="margin:12px auto;padding:10px 20px;background:#ffd56a;color:#000;border-radius:30px;font-weight:bold;width:max-content";
+document.body.insertBefore(status,document.querySelector(".table-wrap"));
+
+chips.forEach(c=>{
+ c.onclick=()=>{
+  chips.forEach(x=>x.style.outline="none");
+  c.style.outline="3px solid #fff";
+  selectedChip=parseInt(c.innerText.replace("K","000"));
+ };
+});
+
+[dragonCard,tigerCard,tieCard].forEach(card=>{
+ card.onclick=()=>{
+  if(phase!=="bet"||!selectedChip)return;
+  selectedBet=card.innerText;
+  card.style.boxShadow="0 0 20px gold";
+ };
+});
+
+function randomCard(){
+ return cards[Math.floor(Math.random()*cards.length)];
+}
+
+function endRound(){
+ const d=randomCard();
+ const t=randomCard();
+ let result="TIE";
+ if(d.val>t.val) result="DRAGON";
+ else if(t.val>d.val) result="TIGER";
+
+ history.push(result[0]);
+ historyStrip.innerHTML="";
+ history.forEach(h=>{
+  const s=document.createElement("span");
+  s.innerText=h;
+  s.style.background=h=="D"?"#4a5fe0":h=="T"?"#ff8c1a":"#2ecc71";
+  historyStrip.appendChild(s);
+ });
+
+ dragonCard.innerHTML=`DRAGON<br><small>${d.name}</small>`;
+ tigerCard.innerHTML=`TIGER<br><small>${t.name}</small>`;
+ tieCard.innerHTML=`TIE<br><small>${result}</small>`;
+
+ selectedChip=0;
+ selectedBet=null;
+ chips.forEach(x=>x.style.outline="none");
+}
+
+setInterval(()=>{
+ timer--;
+ if(timer>5) status.innerText=`START BETTING (${timer-5})`;
+ else if(timer>0) status.innerText=`BET LOCK (${timer})`;
+ else{
+  status.innerText="RESULT";
+  endRound();
+  timer=15;
+ }
+},1000);
+</script>
 
 </body>
 </html>
