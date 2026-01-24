@@ -282,86 +282,135 @@ body{
 
 <!-- ================= GAME SCRIPT (YAHI ADD HAI) ================= -->
 <script>
+/* =============================
+   DRAGON TIGER – FULL FIXED
+============================= */
+
 let wallet = 5000;
 let selectedChip = 0;
 let selectedBet = null;
-let timer = 15;
 let phase = "bet";
-let history = [];
+let timer = 15;
 
-const cards=[
- {name:"A",val:1},{name:"2",val:2},{name:"3",val:3},
- {name:"4",val:4},{name:"5",val:5},{name:"6",val:6},
- {name:"7",val:7},{name:"8",val:8},{name:"9",val:9},
- {name:"10",val:10},{name:"J",val:11},
- {name:"Q",val:12},{name:"K",val:13}
+const cards = [
+ {n:"A",v:1},{n:"2",v:2},{n:"3",v:3},{n:"4",v:4},
+ {n:"5",v:5},{n:"6",v:6},{n:"7",v:7},{n:"8",v:8},
+ {n:"9",v:9},{n:"10",v:10},{n:"J",v:11},{n:"Q",v:12},{n:"K",v:13}
 ];
 
-const chips=document.querySelectorAll(".chip");
-const dragonCard=document.querySelector(".card.dragon");
-const tigerCard=document.querySelector(".card.tiger");
-const tieCard=document.querySelector(".tie");
-const historyStrip=document.querySelector(".history");
+const dragon = document.querySelector(".card.dragon");
+const tiger  = document.querySelector(".card.tiger");
+const tie    = document.querySelector(".tie");
+const chips  = document.querySelectorAll(".chip");
+const historyBox = document.querySelector(".history");
 
-const status=document.createElement("div");
-status.style.cssText="margin:12px auto;padding:10px 20px;background:#ffd56a;color:#000;border-radius:30px;font-weight:bold;width:max-content";
-document.body.insertBefore(status,document.querySelector(".table-wrap"));
+/* ===== WALLET UI ===== */
+const walletUI = document.createElement("div");
+walletUI.style.cssText = `
+ position:fixed;
+ bottom:12px;
+ right:12px;
+ background:#000;
+ padding:8px 14px;
+ border-radius:20px;
+ font-weight:bold;
+ z-index:9999;
+`;
+document.body.appendChild(walletUI);
 
+/* ===== STATUS ===== */
+const status = document.createElement("div");
+status.style.cssText = `
+ margin:10px auto;
+ padding:8px 20px;
+ background:#ffb04a;
+ color:#000;
+ border-radius:20px;
+ width:max-content;
+ font-weight:bold;
+`;
+document.body.insertBefore(status, document.querySelector(".table-wrap"));
+
+/* ===== CARD FLIP STYLE ===== */
+[dragon,tiger].forEach(card=>{
+ card.style.transformStyle="preserve-3d";
+ card.style.transition="transform .6s";
+});
+
+/* ===== CHIP SELECT ===== */
 chips.forEach(c=>{
  c.onclick=()=>{
-  chips.forEach(x=>x.style.outline="none");
-  c.style.outline="3px solid #fff";
-  selectedChip=parseInt(c.innerText.replace("K","000"));
+   chips.forEach(x=>x.style.outline="none");
+   c.style.outline="3px solid #fff";
+   selectedChip=parseInt(c.innerText.replace("K","000"));
  };
 });
 
-[dragonCard,tigerCard,tieCard].forEach(card=>{
- card.onclick=()=>{
-  if(phase!=="bet"||!selectedChip)return;
-  selectedBet=card.innerText;
-  card.style.boxShadow="0 0 20px gold";
+/* ===== BET SELECT ===== */
+[dragon,tiger,tie].forEach(b=>{
+ b.onclick=()=>{
+  if(phase!=="bet"||!selectedChip||wallet<selectedChip)return;
+  selectedBet=b.classList.contains("dragon")?"DRAGON":
+              b.classList.contains("tiger")?"TIGER":"TIE";
+  [dragon,tiger,tie].forEach(x=>x.style.boxShadow="none");
+  b.style.boxShadow="0 0 20px gold";
  };
 });
 
-function randomCard(){
- return cards[Math.floor(Math.random()*cards.length)];
+/* ===== GAME LOOP ===== */
+function drawCard(){return cards[Math.floor(Math.random()*cards.length)];}
+
+function flip(card,text){
+ card.style.transform="rotateY(180deg)";
+ setTimeout(()=>{
+  card.innerHTML=text;
+  card.style.transform="rotateY(0deg)";
+ },300);
 }
 
 function endRound(){
- const d=randomCard();
- const t=randomCard();
- let result="TIE";
- if(d.val>t.val) result="DRAGON";
- else if(t.val>d.val) result="TIGER";
+ phase="result";
+ let d=drawCard(), t=drawCard();
+ let win="TIE";
+ if(d.v>t.v) win="DRAGON";
+ if(t.v>d.v) win="TIGER";
 
- history.push(result[0]);
- historyStrip.innerHTML="";
- history.forEach(h=>{
-  const s=document.createElement("span");
-  s.innerText=h;
-  s.style.background=h=="D"?"#4a5fe0":h=="T"?"#ff8c1a":"#2ecc71";
-  historyStrip.appendChild(s);
- });
+ flip(dragon,`DRAGON<br><small>${d.n}</small>`);
+ flip(tiger,`TIGER<br><small>${t.n}</small>`);
 
- dragonCard.innerHTML=`DRAGON<br><small>${d.name}</small>`;
- tigerCard.innerHTML=`TIGER<br><small>${t.name}</small>`;
- tieCard.innerHTML=`TIE<br><small>${result}</small>`;
+ if(selectedBet){
+  wallet-=selectedChip;
+  if(selectedBet===win){
+   wallet+=selectedBet==="TIE"?selectedChip*9:selectedChip*2;
+  }
+ }
 
- selectedChip=0;
- selectedBet=null;
- chips.forEach(x=>x.style.outline="none");
+ const h=document.createElement("span");
+ h.innerText=win[0];
+ h.style.background=win==="DRAGON"?"#4a5fe0":win==="TIGER"?"#ff8c1a":"#2ecc71";
+ historyBox.appendChild(h);
+}
+
+function update(){
+ walletUI.innerText="💰 Wallet ₹"+wallet;
+ if(timer>5){status.innerText="START BETTING "+(timer-5);}
+ else if(timer>0){status.innerText="BET LOCK "+timer;}
+ else{status.innerText="RESULT";}
 }
 
 setInterval(()=>{
  timer--;
- if(timer>5) status.innerText=`START BETTING (${timer-5})`;
- else if(timer>0) status.innerText=`BET LOCK (${timer})`;
- else{
-  status.innerText="RESULT";
-  endRound();
+ if(timer===0) endRound();
+ if(timer<0){
   timer=15;
+  phase="bet";
+  selectedBet=null;
+  [dragon,tiger,tie].forEach(x=>x.style.boxShadow="none");
  }
+ update();
 },1000);
+
+update();
 </script>
 
 </body>
