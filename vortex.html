@@ -30,7 +30,7 @@ body{
 
 /* WHEEL */
 .wheel-wrap{
-  margin:30px auto;
+  margin:28px auto;
   width:260px;
   height:260px;
   position:relative;
@@ -41,31 +41,24 @@ body{
   border-radius:50%;
   background:
     conic-gradient(
-      #000000 0deg 144deg,        /* SKULL 40% */
-      #ff3b3b 144deg 234deg,      /* FIRE */
-      #2ecc71 234deg 324deg,      /* LEAF */
-      #3498db 324deg 360deg       /* WATER */
+      #ff3b3b 0deg 90deg,     /* FIRE */
+      #2ecc71 90deg 180deg,  /* LEAF */
+      #3498db 180deg 270deg, /* WATER */
+      #000000 270deg 360deg  /* SKULL */
     );
   transition:transform 3.5s cubic-bezier(.25,.1,.25,1);
   position:relative;
 }
 
-/* SEGMENT EMOJIS */
-.seg{
-  position:absolute;
-  width:100%;
-  height:100%;
-  top:0; left:0;
-  pointer-events:none;
-}
+/* SEGMENT EMOJIS (FIXED POSITIONS) */
 .seg span{
   position:absolute;
   font-size:26px;
 }
-.skull{top:18px; left:50%; transform:translateX(-50%)}
-.fire{right:35px; top:50%; transform:translateY(-50%)}
-.leaf{bottom:28px; left:50%; transform:translateX(-50%)}
-.water{left:35px; top:50%; transform:translateY(-50%)}
+.fire{ top:20px; left:50%; transform:translateX(-50%) }
+.leaf{ right:22px; top:50%; transform:translateY(-50%) }
+.water{ bottom:20px; left:50%; transform:translateX(-50%) }
+.skull{ left:22px; top:50%; transform:translateY(-50%) }
 
 /* CENTER */
 .center{
@@ -84,7 +77,7 @@ body{
 }
 
 /* INFO */
-.info{margin-top:10px;font-size:18px}
+.info{margin-top:8px;font-size:18px}
 
 /* BET */
 .bet-row{
@@ -105,7 +98,7 @@ body{
 
 /* BUTTONS */
 .btn{
-  margin:18px auto;
+  margin:16px auto;
   width:85%;
   padding:16px;
   font-size:18px;
@@ -120,7 +113,7 @@ body{
 .popup{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.7);
+  background:rgba(0,0,0,.75);
   display:none;
   align-items:center;
   justify-content:center;
@@ -155,13 +148,13 @@ body{
 <div class="wheel-wrap">
   <div class="wheel" id="wheel">
     <div class="seg">
-      <span class="skull">💀</span>
       <span class="fire">🔥</span>
       <span class="leaf">🍀</span>
       <span class="water">🌊</span>
+      <span class="skull">💀</span>
     </div>
   </div>
-  <div class="center" id="centerEmoji">🌀</div>
+  <div class="center" id="center">🌀</div>
 </div>
 
 <div class="info">Multiplier: <b><span id="mult">1.00</span>x</b></div>
@@ -191,12 +184,12 @@ let mult=Number(localStorage.vm)||1;
 let angle=Number(localStorage.va)||0;
 let spinning=false;
 
-const wheel=w("wheel"),walletUI=w("wallet"),betUI=w("bet"),
-multUI=w("mult"),center=w("centerEmoji"),
-cashBtn=w("cashBtn"),popup=w("popup"),
-pTitle=w("pTitle"),pText=w("pText"),pBtn=w("pBtn");
+const wheel=id("wheel"),walletUI=id("wallet"),betUI=id("bet"),
+multUI=id("mult"),center=id("center"),
+cashBtn=id("cashBtn"),popup=id("popup"),
+pTitle=id("pTitle"),pText=id("pText"),pBtn=id("pBtn");
 
-function w(i){return document.getElementById(i)}
+function id(x){return document.getElementById(x)}
 function save(){localStorage.vw=wallet;localStorage.vb=bet;localStorage.vm=mult;localStorage.va=angle}
 function render(){
   walletUI.innerText=wallet;
@@ -212,28 +205,34 @@ function chgBet(v){
   save();render();
 }
 
+/* 🎯 HOUSE EDGE LOGIC
+   💀 40%
+   🔥 25% (3.9x)
+   🍀 20% (2.5x)
+   🌊 15% (1.55x)
+*/
 function spin(){
   if(spinning||bet>wallet) return;
   spinning=true;
   wallet-=bet;
 
   const r=Math.random();
-  let result,emoji,add,deg;
+  let res,emoji,add,deg;
 
-  if(r<0.40){result="SKULL";emoji="💀";deg=0}
-  else if(r<0.70){result="FIRE";emoji="🔥";add=3.9;deg=180}
-  else if(r<0.85){result="LEAF";emoji="🍀";add=2.5;deg=270}
-  else{result="WATER";emoji="🌊";add=1.55;deg=315}
+  if(r<0.40){res="SKULL";emoji="💀";deg=315}
+  else if(r<0.65){res="FIRE";emoji="🔥";add=3.9;deg=45}
+  else if(r<0.85){res="LEAF";emoji="🍀";add=2.5;deg=135}
+  else{res="WATER";emoji="🌊";add=1.55;deg=225}
 
   angle+=1440+deg;
   wheel.style.transform=`rotate(${angle}deg)`;
 
   setTimeout(()=>{
     center.innerText=emoji;
-    if(result==="SKULL"){
+    if(res==="SKULL"){
       mult=1;
-      showPop("💀 YOU LOST","Try again","lose");
       cashBtn.style.display="none";
+      showPop("💀 YOU LOST","Better luck next time","lose");
     }else{
       mult*=add;
       cashBtn.style.display="block";
@@ -246,9 +245,9 @@ function spin(){
 function cashout(){
   const win=Math.floor(bet*mult);
   wallet+=win;
-  showPop("🎉 WIN","You won ₹"+win,"win");
   mult=1;
   cashBtn.style.display="none";
+  showPop("🎉 YOU WIN","You won ₹"+win,"win");
   save();render();
 }
 
