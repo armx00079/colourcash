@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Treasure Game</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:#1b0f08;
+  color:#fff;
+}
+
+/* ===== HEADER ===== */
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:12px;
+  background:#2a160c;
+}
+.wallet{
+  background:#3b220f;
+  padding:6px 12px;
+  border-radius:16px;
+  font-weight:bold;
+}
+
+/* ===== BOARD ===== */
+.board{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+  padding:20px;
+}
+.chest{
+  background:#5a2d12;
+  border-radius:12px;
+  height:70px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:bold;
+  cursor:pointer;
+  position:relative;
+  transition:.2s;
+}
+.chest.disabled{
+  pointer-events:none;
+  opacity:.5;
+}
+.chest.open{
+  background:#8a4a1d;
+}
+
+/* ===== CONTROLS ===== */
+.controls{
+  padding:15px;
+  background:#2a160c;
+}
+.bet-row{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:10px;
+}
+.bet-row button{
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  border:none;
+  font-size:18px;
+}
+.bet{
+  background:#3b220f;
+  padding:8px 18px;
+  border-radius:16px;
+}
+.start{
+  margin-top:12px;
+  width:100%;
+  padding:14px;
+  background:#ffb43b;
+  color:#000;
+  border:none;
+  border-radius:18px;
+  font-weight:bold;
+  font-size:16px;
+}
+
+/* ===== RESULT ===== */
+.result{
+  text-align:center;
+  margin:10px;
+  font-weight:bold;
+}
+.win{color:#00ff9c;}
+.loss{color:#ff4b4b;}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <div>TREASURE</div>
+  <div class="wallet">₹ <span id="wallet">500</span></div>
+</div>
+
+<div class="board" id="board"></div>
+
+<div class="result" id="result"></div>
+
+<div class="controls">
+  <div class="bet-row">
+    <button onclick="changeBet(-10)">−</button>
+    <div class="bet">Bet ₹ <span id="bet">10</span></div>
+    <button onclick="changeBet(10)">+</button>
+  </div>
+  <button class="start" onclick="startGame()">START GAME</button>
+</div>
+
+<script>
+let wallet = 500;
+let bet = 10;
+let gameActive = false;
+let chestData = [];
+
+const board = document.getElementById("board");
+const walletUI = document.getElementById("wallet");
+const betUI = document.getElementById("bet");
+const resultUI = document.getElementById("result");
+
+/* ===== INIT BOARD ===== */
+function initBoard(){
+  board.innerHTML = "";
+  for(let i=0;i<20;i++){
+    const c = document.createElement("div");
+    c.className = "chest";
+    c.innerText = "🧰";
+    c.onclick = ()=>openChest(i,c);
+    board.appendChild(c);
+  }
+}
+
+/* ===== START GAME ===== */
+function startGame(){
+  if(bet>wallet){alert("Not enough balance");return;}
+  wallet -= bet;
+  updateWallet();
+  resultUI.innerText = "";
+  gameActive = true;
+
+  chestData = [];
+  for(let i=0;i<20;i++){
+    const r = Math.random();
+    if(r < 0.25) chestData.push("BOOM");      // 💣
+    else if(r < 0.55) chestData.push("EMPTY"); // 📦
+    else chestData.push("2X");                // ✨
+  }
+  initBoard();
+}
+
+/* ===== OPEN CHEST ===== */
+function openChest(index,el){
+  if(!gameActive) return;
+
+  el.classList.add("open","disabled");
+  const type = chestData[index];
+
+  if(type==="BOOM"){
+    el.innerText = "💣 BOOM";
+    resultUI.innerHTML = "<span class='loss'>💣 BOOM! GAME OVER</span>";
+    gameActive = false;
+    disableAll();
+    setTimeout(resetGame,2000);
+  }
+
+  if(type==="EMPTY"){
+    el.innerText = "📦 EMPTY";
+  }
+
+  if(type==="2X"){
+    el.innerText = "2×";
+    const win = bet * 2;
+    wallet += win;
+    updateWallet();
+    resultUI.innerHTML = `<span class="win">🎉 WIN ₹${win}</span>`;
+  }
+}
+
+/* ===== HELPERS ===== */
+function disableAll(){
+  document.querySelectorAll(".chest").forEach(c=>c.classList.add("disabled"));
+}
+
+function resetGame(){
+  resultUI.innerText = "";
+  initBoard();
+}
+
+function changeBet(val){
+  bet += val;
+  if(bet < 10) bet = 10;
+  if(bet > wallet) bet = wallet;
+  betUI.innerText = bet;
+}
+
+function updateWallet(){
+  walletUI.innerText = wallet;
+}
+
+initBoard();
+</script>
+
+</body>
+</html>
