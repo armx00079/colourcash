@@ -1,316 +1,287 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Treasure Game</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<!DOCTYPE html>  <html lang="en">  
+<head>  
+<meta charset="UTF-8">  
+<title>Treasure Game</title>  
+<meta name="viewport" content="width=device-width, initial-scale=1">  <style>  
+body{  
+  margin:0;  
+  font-family:Arial, sans-serif;  
+  background:#1b0f08;  
+  color:#fff;  
+}  
+  
+/* HEADER */  
+.header{  
+  display:flex;  
+  justify-content:space-between;  
+  padding:12px;  
+  background:#2a160c;  
+}  
+.wallet{  
+  background:#3b220f;  
+  padding:6px 14px;  
+  border-radius:16px;  
+  font-weight:bold;  
+}  
+  
+/* BOARD */  
+.board{  
+  display:grid;  
+  grid-template-columns:repeat(4,1fr);  
+  gap:14px;  
+  padding:20px;  
+}  
+.chest{  
+  background:#5a2d12;  
+  border-radius:14px;  
+  height:72px;  
+  display:flex;  
+  align-items:center;  
+  justify-content:center;  
+  font-size:22px;  
+  cursor:pointer;  
+}  
+.chest.disabled{  
+  pointer-events:none;  
+  opacity:.5;  
+}  
+  
+/* CONTROLS */  
+.controls{  
+  padding:15px;  
+  background:#2a160c;  
+}  
+.bet-row{  
+  display:flex;  
+  justify-content:center;  
+  gap:10px;  
+}  
+.bet-row button{  
+  width:38px;  
+  height:38px;  
+  border-radius:50%;  
+  border:none;  
+  font-size:20px;  
+}  
+.bet{  
+  background:#3b220f;  
+  padding:8px 18px;  
+  border-radius:18px;  
+}  
+.start{  
+  margin-top:12px;  
+  width:100%;  
+  padding:14px;  
+  background:#ffb43b;  
+  border:none;  
+  border-radius:18px;  
+  font-weight:bold;  
+}  
+.cashout{  
+  margin-top:10px;  
+  width:100%;  
+  padding:12px;  
+  background:#00d084;  
+  border:none;  
+  border-radius:18px;  
+  font-weight:bold;  
+  display:none;  
+}  
+  
+/* POPUP */  
+.popup{  
+  position:fixed;  
+  inset:0;  
+  background:rgba(0,0,0,.7);  
+  display:none;  
+  align-items:center;  
+  justify-content:center;  
+}  
+.popup-box{  
+  background:#2a160c;  
+  padding:25px;  
+  border-radius:18px;  
+  text-align:center;  
+}  
+</style>  </head>  <body>  <div class="header">  
+  <div>TREASURE</div>  
+  <div class="wallet">₹ <span id="wallet">10</span></div>  
+</div>  <div class="board" id="board"></div>  <div class="controls">  
+  <div class="bet-row">  
+    <button id="minus">−</button>  
+    <div class="bet">Bet ₹ <span id="bet">10</span></div>  
+    <button id="plus">+</button>  
+  </div>  <button class="start" id="startBtn">START GAME</button>
+<button class="cashout" id="cashoutBtn">CASH OUT</button>
 
-<style>
-body{
-  margin:0;
-  font-family:Arial, sans-serif;
-  background:#1b0f08;
-  color:#fff;
-}
-
-/* HEADER */
-.header{
-  display:flex;
-  justify-content:space-between;
-  padding:12px;
-  background:#2a160c;
-}
-.wallet{
-  background:#3b220f;
-  padding:6px 14px;
-  border-radius:16px;
-  font-weight:bold;
-}
-
-/* BOARD */
-.board{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:14px;
-  padding:20px;
-}
-.chest{
-  background:#5a2d12;
-  border-radius:14px;
-  height:72px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:22px;
-  cursor:pointer;
-}
-.chest.disabled{
-  pointer-events:none;
-  opacity:.5;
-}
-
-/* CONTROLS */
-.controls{
-  padding:15px;
-  background:#2a160c;
-}
-.bet-row{
-  display:flex;
-  justify-content:center;
-  gap:10px;
-}
-.bet-row button{
-  width:38px;
-  height:38px;
-  border-radius:50%;
-  border:none;
-  font-size:20px;
-}
-.bet{
-  background:#3b220f;
-  padding:8px 18px;
-  border-radius:18px;
-}
-.start{
-  margin-top:12px;
-  width:100%;
-  padding:14px;
-  background:#ffb43b;
-  border:none;
-  border-radius:18px;
-  font-weight:bold;
-}
-.cashout{
-  margin-top:10px;
-  width:100%;
-  padding:12px;
-  background:#00d084;
-  border:none;
-  border-radius:18px;
-  font-weight:bold;
-  display:none;
-}
-
-/* POPUP */
-.popup{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.7);
-  display:none;
-  align-items:center;
-  justify-content:center;
-}
-.popup-box{
-  background:#2a160c;
-  padding:25px;
-  border-radius:18px;
-  text-align:center;
-}
-</style>
-</head>
-
-<body>
-
-<div class="header">
-  <div>TREASURE</div>
-  <div class="wallet">₹ <span id="wallet">10</span></div>
-</div>
-
-<div class="board" id="board"></div>
-
-<div class="controls">
-  <div class="bet-row">
-    <button id="minus">−</button>
-    <div class="bet">Bet ₹ <span id="bet">10</span></div>
-    <button id="plus">+</button>
-  </div>
-
-  <button class="start" id="startBtn">START GAME</button>
-  <button class="cashout" id="cashoutBtn">CASH OUT</button>
-</div>
-
-<div class="popup" id="popup">
-  <div class="popup-box">
-    <h2>🎉 CASHED OUT</h2>
-    <div>Won ₹ <span id="winAmt"></span></div>
-    <button onclick="closePopup()">OK</button>
-  </div>
-</div>
-
-<script>
-/* ===== STATE ===== */
-let wallet = Number(localStorage.wallet) || 10;
-let bet = Number(localStorage.bet) || 10;
-let gameActive = localStorage.gameActive === "true";
-let currentWin = Number(localStorage.currentWin) || 0;
-let chestData = JSON.parse(localStorage.chestData || "[]");
-
-/* UI */
-const board = document.getElementById("board");
-const walletUI = document.getElementById("wallet");
-const betUI = document.getElementById("bet");
-const startBtn = document.getElementById("startBtn");
-const cashoutBtn = document.getElementById("cashoutBtn");
-const popup = document.getElementById("popup");
-const winAmt = document.getElementById("winAmt");
-
-/* SAVE */
-function save(){
-  localStorage.wallet = wallet;
-  localStorage.bet = bet;
-  localStorage.gameActive = gameActive;
-  localStorage.currentWin = currentWin;
-  localStorage.chestData = JSON.stringify(chestData);
-}
-
-/* INIT BOARD */
-function initBoard(){
-  board.innerHTML="";
-  for(let i=0;i<20;i++){
-    const c=document.createElement("div");
-    c.className="chest"+(gameActive?"":" disabled");
-    c.innerText="🧰";
-    c.onclick=()=>openChest(i,c);
-    board.appendChild(c);
-  }
-}
-
-/* START GAME */
-startBtn.onclick=()=>{
-  if(gameActive) return;
-  if(bet>wallet) return alert("Low balance");
-
-  wallet-=bet;
-  currentWin=bet;
-  gameActive=true;
-
-chestData=[];
-for(let i=0;i<20;i++){
-  const r = Math.random();
-  if(r < 0.40){
-    chestData.push("BOOM");     // 💣 40%
-  }
-  else if(r < 0.70){
-    chestData.push("EMPTY");    // 📦 30%
-  }
-  else{
-    chestData.push("2X");       // ✖️ 30%
-  }
-  startBtn.innerText="₹ "+currentWin;
-  startBtn.disabled=true;
-  cashoutBtn.style.display="block";
-  save();
-  render();
-};
-
-/* OPEN CHEST */
-function openChest(i,el){
-  if(!gameActive) return;
-  el.classList.add("disabled");
-
-  const type=chestData[i];
-  if(type==="BOOM"){
-    el.innerText="💣";
-    setTimeout(()=>{ endGame(false); },600);
-  }
-  if(type==="EMPTY"){
-    el.innerText="📦";
-  }
-  if(type==="2X"){
-    el.innerText="2×";
-    currentWin*=2;
-    startBtn.innerText="₹ "+currentWin;
-    save();
-  }
-}
-
-/* CASHOUT */
-cashoutBtn.onclick=()=>{
-  wallet+=currentWin;
-  winAmt.innerText=currentWin;
-  popup.style.display="flex";
-  endGame(true);
-};
-
-/* END */
-function endGame(){
-  gameActive=false;
-  startBtn.disabled=false;
-  startBtn.innerText="START GAME";
-  cashoutBtn.style.display="none";
-  chestData=[];
-  save();
-  render();
-}
-
-/* BET */
-document.getElementById("plus").onclick=()=>{
-  if(gameActive) return;
-  if(bet+10<=wallet) bet+=10;
-  save(); render();
-};
-document.getElementById("minus").onclick=()=>{
-  if(gameActive) return;
-  if(bet>10) bet-=10;
-  save(); render();
-};
-
-/* RENDER */
-function render(){
-  walletUI.innerText=wallet;
-  betUI.innerText=bet;
-  initBoard();
-}
-render();
-
-function closePopup(){
-  popup.style.display="none";
-}
-</script>
-
-<!-- ================= FIREBASE WALLET CONNECT ================= -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, query, where, getDocs, doc, updateDoc } 
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-const app = initializeApp({
-  apiKey: "AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
-  authDomain: "colourcash-ea60e.firebaseapp.com",
-  projectId: "colourcash-ea60e"
-});
-const db = getFirestore(app);
-
-const email = localStorage.getItem("userEmail");
-let uid = "";
-let lastWallet = wallet;
-
-/* LOAD WALLET */
-async function loadWallet(){
-  if(!email) return;
-  const q = query(collection(db,"users"), where("email","==",email));
-  const snap = await getDocs(q);
-  snap.forEach(d=>{
-    uid = d.id;
-    wallet = d.data().balance || wallet;
-    document.getElementById("wallet").innerText = wallet;
-    save();
-  });
-}
-loadWallet();
-
-/* AUTO SYNC */
-setInterval(async ()=>{
-  if(!uid) return;
-  if(wallet !== lastWallet){
-    lastWallet = wallet;
-    await updateDoc(doc(db,"users",uid), {
-      balance: wallet
-    });
-  }
-},800);
-</script>
-<!-- =========================================================== -->
-
-</body>
+</div>  <div class="popup" id="popup">  
+  <div class="popup-box">  
+    <h2>🎉 CASHED OUT</h2>  
+    <div>Won ₹ <span id="winAmt"></span></div>  
+    <button onclick="closePopup()">OK</button>  
+  </div>  
+</div>  <script>  
+/* ===== STATE ===== */  
+let wallet = Number(localStorage.wallet) || 10;  
+let bet = Number(localStorage.bet) || 10;  
+let gameActive = localStorage.gameActive === "true";  
+let currentWin = Number(localStorage.currentWin) || 0;  
+let chestData = JSON.parse(localStorage.chestData || "[]");  
+  
+/* UI */  
+const board = document.getElementById("board");  
+const walletUI = document.getElementById("wallet");  
+const betUI = document.getElementById("bet");  
+const startBtn = document.getElementById("startBtn");  
+const cashoutBtn = document.getElementById("cashoutBtn");  
+const popup = document.getElementById("popup");  
+const winAmt = document.getElementById("winAmt");  
+  
+/* SAVE */  
+function save(){  
+  localStorage.wallet = wallet;  
+  localStorage.bet = bet;  
+  localStorage.gameActive = gameActive;  
+  localStorage.currentWin = currentWin;  
+  localStorage.chestData = JSON.stringify(chestData);  
+}  
+  
+/* INIT BOARD */  
+function initBoard(){  
+  board.innerHTML="";  
+  for(let i=0;i<20;i++){  
+    const c=document.createElement("div");  
+    c.className="chest"+(gameActive?"":" disabled");  
+    c.innerText="🧰";  
+    c.onclick=()=>openChest(i,c);  
+    board.appendChild(c);  
+  }  
+}  
+  
+/* START GAME */  
+startBtn.onclick=()=>{  
+  if(gameActive) return;  
+  if(bet>wallet) return alert("Low balance");  
+  
+  wallet-=bet;  
+  currentWin=bet;  
+  gameActive=true;  
+  
+  chestData=[];  
+  for(let i=0;i<20;i++){  
+    const r=Math.random();  
+    chestData.push(r<0.3?"BOOM":r<0.6?"EMPTY":"2X");  
+  }  
+  
+  startBtn.innerText="₹ "+currentWin;  
+  startBtn.disabled=true;  
+  cashoutBtn.style.display="block";  
+  save();  
+  render();  
+};  
+  
+/* OPEN CHEST */  
+function openChest(i,el){  
+  if(!gameActive) return;  
+  el.classList.add("disabled");  
+  
+  const type=chestData[i];  
+  if(type==="BOOM"){  
+    el.innerText="💣";  
+    setTimeout(()=>{ endGame(false); },600);  
+  }  
+  if(type==="EMPTY"){  
+    el.innerText="📦";  
+  }  
+  if(type==="2X"){  
+    el.innerText="2×";  
+    currentWin*=2;  
+    startBtn.innerText="₹ "+currentWin;  
+    save();  
+  }  
+}  
+  
+/* CASHOUT */  
+cashoutBtn.onclick=()=>{  
+  wallet+=currentWin;  
+  winAmt.innerText=currentWin;  
+  popup.style.display="flex";  
+  endGame(true);  
+};  
+  
+/* END */  
+function endGame(){  
+  gameActive=false;  
+  startBtn.disabled=false;  
+  startBtn.innerText="START GAME";  
+  cashoutBtn.style.display="none";  
+  chestData=[];  
+  save();  
+  render();  
+}  
+  
+/* BET */  
+document.getElementById("plus").onclick=()=>{  
+  if(gameActive) return;  
+  if(bet+10<=wallet) bet+=10;  
+  save(); render();  
+};  
+document.getElementById("minus").onclick=()=>{  
+  if(gameActive) return;  
+  if(bet>10) bet-=10;  
+  save(); render();  
+};  
+  
+/* RENDER */  
+function render(){  
+  walletUI.innerText=wallet;  
+  betUI.innerText=bet;  
+  initBoard();  
+}  
+render();  
+  
+function closePopup(){  
+  popup.style.display="none";  
+}  
+</script>  <!-- ================= FIREBASE WALLET CONNECT ================= -->  <script type="module">  
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";  
+import { getFirestore, collection, query, where, getDocs, doc, updateDoc }   
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";  
+  
+const app = initializeApp({  
+  apiKey: "AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",  
+  authDomain: "colourcash-ea60e.firebaseapp.com",  
+  projectId: "colourcash-ea60e"  
+});  
+const db = getFirestore(app);  
+  
+const email = localStorage.getItem("userEmail");  
+let uid = "";  
+let lastWallet = wallet;  
+  
+/* LOAD WALLET */  
+async function loadWallet(){  
+  if(!email) return;  
+  const q = query(collection(db,"users"), where("email","==",email));  
+  const snap = await getDocs(q);  
+  snap.forEach(d=>{  
+    uid = d.id;  
+    wallet = d.data().balance || wallet;  
+    document.getElementById("wallet").innerText = wallet;  
+    save();  
+  });  
+}  
+loadWallet();  
+  
+/* AUTO SYNC */  
+setInterval(async ()=>{  
+  if(!uid) return;  
+  if(wallet !== lastWallet){  
+    lastWallet = wallet;  
+    await updateDoc(doc(db,"users",uid), {  
+      balance: wallet  
+    });  
+  }  
+},800);  
+</script>  <!-- =========================================================== -->  </body>  
 </html>
