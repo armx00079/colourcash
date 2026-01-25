@@ -186,9 +186,12 @@ function openChest(i,el){
   el.classList.add("disabled");  
   
   const type=chestData[i];  
-  if(type==="BOOM"){  
-    el.innerText="💣";  
-    endGame(false);  
+  if(type==="BOOM"){
+  el.innerText="💣";
+
+  setTimeout(()=>{
+    endGame(false);
+  }, 600); // 👈 thoda delay, taaki boom dikhe
   }  
   if(type==="EMPTY"){  
     el.innerText="📦";  
