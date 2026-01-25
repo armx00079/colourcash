@@ -9,10 +9,12 @@
 body{
   margin:0;
   font-family:Arial, sans-serif;
-  background:radial-gradient(circle at top,#1a1f36,#0a0d1a);
+  background:radial-gradient(circle at top,#1b1f3a,#090b18);
   color:#fff;
   text-align:center;
 }
+
+/* HEADER */
 .header{
   display:flex;
   justify-content:space-between;
@@ -20,28 +22,32 @@ body{
   font-weight:bold;
 }
 .wallet{
-  background:#111;
+  background:#000;
   padding:6px 14px;
   border-radius:20px;
 }
 
 /* WHEEL */
 .wheel-wrap{
-  margin:20px auto;
-  width:280px;
-  height:280px;
+  margin:24px auto;
+  width:300px;
+  height:300px;
   border-radius:50%;
-  background:conic-gradient(
-    #222 0deg 144deg,
-    #ff4757 144deg 216deg,
-    #2ecc71 216deg 288deg,
-    #3498db 288deg 360deg
-  );
+  background:
+    conic-gradient(
+      from 0deg,
+      linear-gradient(135deg,#ff6a6a,#ff2e2e) 0deg 72deg,        /* FIRE */
+      linear-gradient(135deg,#42d77d,#1ea85a) 72deg 144deg,    /* LEAF */
+      linear-gradient(135deg,#4fb6ff,#1e88e5) 144deg 216deg,   /* WATER */
+      linear-gradient(135deg,#3a3a3a,#000000) 216deg 360deg    /* SKULL */
+    );
   display:flex;
   align-items:center;
   justify-content:center;
   transition:transform 3s cubic-bezier(.17,.67,.12,.99);
+  box-shadow:0 0 30px rgba(0,0,0,.6);
 }
+
 .center{
   width:90px;
   height:90px;
@@ -61,7 +67,8 @@ body{
 }
 .result{
   margin-top:6px;
-  font-size:16px;
+  font-size:15px;
+  opacity:.9;
 }
 
 /* BET */
@@ -70,7 +77,7 @@ body{
   display:flex;
   justify-content:center;
   align-items:center;
-  gap:12px;
+  gap:14px;
 }
 .bet-row button{
   width:38px;
@@ -81,27 +88,27 @@ body{
 }
 .bet{
   padding:8px 18px;
-  background:#111;
+  background:#000;
   border-radius:20px;
 }
 
 /* BUTTONS */
 .spin{
-  margin:14px;
+  margin:16px;
   padding:16px;
   background:linear-gradient(135deg,#8e2de2,#4a00e0);
   border-radius:30px;
   font-weight:bold;
-  user-select:none;
 }
 .cashout{
   margin:10px;
   padding:14px;
-  background:#00d084;
+  background:linear-gradient(135deg,#00e676,#00c853);
   border-radius:30px;
   font-weight:bold;
   display:none;
 }
+
 .spin:active,.cashout:active{opacity:.7}
 </style>
 </head>
@@ -183,23 +190,23 @@ function spin(){
   setTimeout(()=>{
     if(outcome==="SKULL"){
       symbolUI.innerText="💀";
-      result.innerText="BOOM! ROUND LOST";
+      result.innerText="BOOM! YOU LOST";
       resetGame();
     }
     if(outcome==="FIRE"){
       symbolUI.innerText="🔥";
       multiplier*=3.9;
-      result.innerText="Fire Hit!";
+      result.innerText="FIRE HIT!";
     }
     if(outcome==="LEAF"){
       symbolUI.innerText="🍀";
       multiplier*=2.5;
-      result.innerText="Leaf Hit!";
+      result.innerText="LEAF HIT!";
     }
     if(outcome==="WATER"){
       symbolUI.innerText="🌊";
       multiplier*=1.55;
-      result.innerText="Water Hit!";
+      result.innerText="WATER HIT!";
     }
 
     multiUI.innerText=multiplier.toFixed(2)+"x";
