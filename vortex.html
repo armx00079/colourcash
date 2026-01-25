@@ -9,60 +9,40 @@
 body{
   margin:0;
   font-family:Arial, sans-serif;
-  background:radial-gradient(circle at top,#1b1f2a,#0b0e16);
+  background:radial-gradient(circle at top,#1b1f3a,#090b16);
   color:#fff;
-  overflow:hidden;
+  text-align:center;
 }
-
-/* HEADER */
 .header{
   display:flex;
   justify-content:space-between;
-  align-items:center;
-  padding:12px 16px;
-  background:#121520;
-}
-.logo{
-  font-size:22px;
+  padding:14px;
   font-weight:bold;
-  color:#9b5cff;
 }
 .wallet{
-  background:#1e2235;
+  background:#111;
   padding:6px 14px;
   border-radius:20px;
-  font-weight:bold;
 }
 
-/* WHEEL AREA */
-.game{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  margin-top:20px;
-}
+/* WHEEL */
 .wheel-wrap{
-  position:relative;
-  width:280px;
-  height:280px;
-}
-.wheel{
-  width:100%;
-  height:100%;
+  margin:30px auto;
+  width:260px;
+  height:260px;
   border-radius:50%;
-  border:8px solid #1e2235;
   background:conic-gradient(
-    #ff3b3b 0deg 144deg,
-    #4caf50 144deg 240deg,
-    #2196f3 240deg 300deg,
-    #9c27b0 300deg 360deg
+    #ff3b3b 0deg 144deg,     /* BOOM 40% */
+    #2ecc71 144deg 252deg,  /* WIN */
+    #3498db 252deg 324deg,  /* WIN */
+    #9b59b6 324deg 360deg   /* WIN */
   );
-  transition:transform 3s cubic-bezier(.1,.7,.1,1);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:transform 3s cubic-bezier(.17,.67,.12,.99);
 }
 .center{
-  position:absolute;
-  inset:0;
-  margin:auto;
   width:80px;
   height:80px;
   border-radius:50%;
@@ -70,52 +50,7 @@ body{
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:34px;
-  box-shadow:0 0 20px rgba(255,0,0,.6);
-}
-
-/* BET CONTROLS */
-.controls{
-  margin-top:25px;
-  width:100%;
-  padding:0 20px;
-}
-.bet-row{
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  gap:12px;
-}
-.bet-btn{
-  width:36px;
-  height:36px;
-  border-radius:50%;
-  border:none;
-  background:#1e2235;
-  color:#fff;
-  font-size:20px;
-}
-.bet-amt{
-  background:#1e2235;
-  padding:8px 20px;
-  border-radius:20px;
-  font-weight:bold;
-}
-
-/* HOLD TO SPIN */
-.spin-btn{
-  margin-top:20px;
-  width:100%;
-  padding:16px;
-  border-radius:28px;
-  background:radial-gradient(circle,#a855ff,#6a00ff);
-  text-align:center;
-  font-weight:bold;
-  letter-spacing:1px;
-  user-select:none;
-}
-.spin-btn:active{
-  transform:scale(.97);
+  font-size:36px;
 }
 
 /* RESULT */
@@ -125,145 +60,125 @@ body{
   font-weight:bold;
 }
 
-/* CASHOUT */
-.cashout{
-  margin-top:10px;
-  width:100%;
-  padding:14px;
-  border-radius:22px;
-  background:#00d084;
-  border:none;
-  font-weight:bold;
-  display:none;
+/* BET */
+.bet-row{
+  margin:20px auto;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:12px;
 }
+.bet-row button{
+  width:38px;
+  height:38px;
+  border-radius:50%;
+  border:none;
+  font-size:20px;
+}
+.bet{
+  padding:8px 18px;
+  background:#111;
+  border-radius:20px;
+}
+
+/* HOLD BUTTON */
+.spin{
+  margin:20px;
+  padding:16px;
+  background:linear-gradient(135deg,#8e2de2,#4a00e0);
+  border-radius:30px;
+  font-weight:bold;
+  user-select:none;
+}
+.spin:active{opacity:.7}
 </style>
 </head>
 
 <body>
 
 <div class="header">
-  <div class="logo">VORTEX</div>
-  <div class="wallet">₹ <span id="wallet">100</span></div>
+  <div>VORTEX</div>
+  <div class="wallet">₹ <span id="wallet">0</span></div>
 </div>
 
-<div class="game">
-  <div class="wheel-wrap">
-    <div class="wheel" id="wheel"></div>
-    <div class="center">💀</div>
-  </div>
-
-  <div class="result" id="result">Hold to Spin</div>
-
-  <div class="controls">
-    <div class="bet-row">
-      <button class="bet-btn" id="minus">−</button>
-      <div class="bet-amt">Bet ₹ <span id="bet">10</span></div>
-      <button class="bet-btn" id="plus">+</button>
-    </div>
-
-    <div class="spin-btn" id="spinBtn">HOLD TO SPIN</div>
-    <button class="cashout" id="cashoutBtn">CASH OUT</button>
-  </div>
+<div class="wheel-wrap" id="wheel">
+  <div class="center">💀</div>
 </div>
+
+<div class="result" id="result">HOLD TO SPIN</div>
+
+<div class="bet-row">
+  <button id="minus">−</button>
+  <div class="bet">Bet ₹ <span id="bet">10</span></div>
+  <button id="plus">+</button>
+</div>
+
+<div class="spin" id="spinBtn">HOLD TO SPIN</div>
 
 <script>
-/* ===== STATE ===== */
-let wallet = Number(localStorage.wallet) || 100;
-let bet = Number(localStorage.bet) || 10;
-let spinning = false;
-let currentWin = 0;
+/* STATE */
+let wallet = Number(localStorage.wallet)||1000;
+let bet = 10;
+let spinning=false;
 
-const walletUI = document.getElementById("wallet");
-const betUI = document.getElementById("bet");
-const wheel = document.getElementById("wheel");
-const resultUI = document.getElementById("result");
-const cashoutBtn = document.getElementById("cashoutBtn");
+const wheel=document.getElementById("wheel");
+const walletUI=document.getElementById("wallet");
+const betUI=document.getElementById("bet");
+const result=document.getElementById("result");
 
-/* SAVE */
-function save(){
-  localStorage.wallet = wallet;
-  localStorage.bet = bet;
-}
-
-/* HOUSE EDGE 40% */
-function spinResult(){
-  const r = Math.random();
-
-  if(r < 0.40){
-    return { type:"LOSE", multiplier:0 };
-  }
-  if(r < 0.70) return { type:"WIN", multiplier:2 };
-  if(r < 0.88) return { type:"WIN", multiplier:5 };
-  if(r < 0.96) return { type:"WIN", multiplier:20 };
-  return { type:"WIN", multiplier:100 };
-}
-
-/* SPIN */
-function spin(){
-  if(spinning) return;
-  if(bet > wallet) return alert("Low balance");
-
-  spinning = true;
-  wallet -= bet;
-  currentWin = bet;
-  updateUI();
-
-  const res = spinResult();
-  const deg = 1080 + Math.random()*360;
-  wheel.style.transform = `rotate(${deg}deg)`;
-
-  setTimeout(()=>{
-    if(res.type === "LOSE"){
-      resultUI.innerText = "💀 BOOM! YOU LOST";
-      currentWin = 0;
-      cashoutBtn.style.display="none";
-    }else{
-      currentWin *= res.multiplier;
-      resultUI.innerText = "🔥 WIN x"+res.multiplier;
-      cashoutBtn.style.display="block";
-    }
-    spinning = false;
-  },3000);
-}
-
-/* CASHOUT */
-cashoutBtn.onclick=()=>{
-  wallet += currentWin;
-  currentWin = 0;
-  cashoutBtn.style.display="none";
-  resultUI.innerText="CASHED OUT";
-  save();
-  updateUI();
-};
+walletUI.innerText=wallet;
 
 /* BET */
-document.getElementById("plus").onclick=()=>{
-  if(spinning) return;
-  if(bet+10 <= wallet) bet+=10;
-  save(); updateUI();
-};
-document.getElementById("minus").onclick=()=>{
+minus.onclick=()=>{
   if(spinning) return;
   if(bet>10) bet-=10;
-  save(); updateUI();
+  betUI.innerText=bet;
+};
+plus.onclick=()=>{
+  if(spinning) return;
+  if(bet+10<=wallet) bet+=10;
+  betUI.innerText=bet;
 };
 
 /* HOLD TO SPIN */
-let hold;
-document.getElementById("spinBtn").addEventListener("touchstart",()=>{
-  hold = setTimeout(spin,300);
-});
-document.getElementById("spinBtn").addEventListener("touchend",()=>{
-  clearTimeout(hold);
-});
+let holdTimer;
+spinBtn.onmousedown=()=>{
+  holdTimer=setTimeout(spin,600);
+};
+spinBtn.onmouseup=()=>clearTimeout(holdTimer);
+spinBtn.ontouchstart=()=>holdTimer=setTimeout(spin,600);
+spinBtn.ontouchend=()=>clearTimeout(holdTimer);
 
-/* UI */
-function updateUI(){
-  walletUI.innerText = wallet;
-  betUI.innerText = bet;
+function spin(){
+  if(spinning) return;
+  if(bet>wallet) return alert("Low balance");
+
+  spinning=true;
+  wallet-=bet;
+  walletUI.innerText=wallet;
+
+  const r=Math.random(); // HOUSE EDGE
+  let win=false;
+
+  if(r>0.4) win=true; // 40% boom
+
+  const deg=1440+Math.random()*360;
+  wheel.style.transform=`rotate(${deg}deg)`;
+
+  setTimeout(()=>{
+    if(win){
+      const winAmt=bet*2;
+      wallet+=winAmt;
+      result.innerText="🎉 YOU WIN ₹"+winAmt;
+    }else{
+      result.innerText="💀 BOOM! YOU LOST";
+    }
+    walletUI.innerText=wallet;
+    localStorage.wallet=wallet;
+    spinning=false;
+  },3000);
 }
-updateUI();
 </script>
 
 </body>
-  </html>
+</html>
