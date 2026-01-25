@@ -41,14 +41,11 @@ body{
   border-radius:50%;
   background:
     conic-gradient(
-      #111 0deg 144deg,
-      #ff3b3b 144deg 234deg,
-      #2ecc71 234deg 324deg,
-      #3498db 324deg 360deg
+      #000000 0deg 144deg,        /* SKULL 40% */
+      #ff3b3b 144deg 234deg,      /* FIRE */
+      #2ecc71 234deg 324deg,      /* LEAF */
+      #3498db 324deg 360deg       /* WATER */
     );
-  display:flex;
-  align-items:center;
-  justify-content:center;
   transition:transform 3.5s cubic-bezier(.25,.1,.25,1);
 }
 .center{
@@ -61,21 +58,10 @@ body{
   justify-content:center;
   font-size:34px;
   position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
 }
-
-/* EMOJIS */
-.segment-icons{
-  position:absolute;
-  inset:0;
-}
-.segment-icons div{
-  position:absolute;
-  font-size:22px;
-}
-.icon-skull{top:18px; left:50%; transform:translateX(-50%);}
-.icon-fire{right:20px; top:50%; transform:translateY(-50%);}
-.icon-leaf{bottom:18px; left:50%; transform:translateX(-50%);}
-.icon-water{left:20px; top:50%; transform:translateY(-50%);}
 
 /* INFO */
 .info{
@@ -117,6 +103,34 @@ body{
   font-weight:bold;
 }
 .spin:disabled{opacity:.6}
+
+/* POPUP */
+.popup{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.7);
+  display:none;
+  align-items:center;
+  justify-content:center;
+}
+.popup-box{
+  background:#111;
+  padding:26px;
+  border-radius:18px;
+  width:80%;
+  max-width:280px;
+}
+.popup-box h2{margin:0 0 10px}
+.popup-box button{
+  margin-top:14px;
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:20px;
+  font-weight:bold;
+}
+.win{background:#00d084}
+.lose{background:#ff3b3b}
 </style>
 </head>
 
@@ -128,16 +142,8 @@ body{
 </div>
 
 <div class="wheel-wrap">
-  <div class="wheel" id="wheel">
-    <div class="center">🌀</div>
-  </div>
-
-  <div class="segment-icons">
-    <div class="icon-skull">💀</div>
-    <div class="icon-fire">🔥</div>
-    <div class="icon-leaf">🍀</div>
-    <div class="icon-water">🌊</div>
-  </div>
+  <div class="wheel" id="wheel"></div>
+  <div class="center" id="centerEmoji">🌀</div>
 </div>
 
 <div class="info">
@@ -152,6 +158,15 @@ body{
 
 <button class="spin" id="spinBtn" onclick="spin()">HOLD TO SPIN</button>
 
+<!-- POPUP -->
+<div class="popup" id="popup">
+  <div class="popup-box">
+    <h2 id="popTitle"></h2>
+    <div id="popText"></div>
+    <button id="popBtn" onclick="closePop()">OK</button>
+  </div>
+</div>
+
 <script>
 let wallet = Number(localStorage.v_wallet) || 1000;
 let bet = Number(localStorage.v_bet) || 10;
@@ -159,7 +174,9 @@ let multiplier = Number(localStorage.v_mult) || 1;
 let angle = Number(localStorage.v_angle) || 0;
 let spinning=false;
 
-const walletUI=w("wallet"), betUI=w("bet"), multUI=w("mult"), wheel=w("wheel");
+const wheel=w("wheel"), walletUI=w("wallet"), betUI=w("bet"),
+multUI=w("mult"), center=w("centerEmoji"),
+popup=w("popup"), pTitle=w("popTitle"), pText=w("popText"), pBtn=w("popBtn");
 
 function w(id){return document.getElementById(id)}
 
@@ -191,28 +208,39 @@ function spin(){
   spinning=true;
   wallet-=bet;
 
-  // 40% BOOM | 30% FIRE | 15% LEAF | 15% WATER
   const r=Math.random();
-  let result,add;
+  let result,add,emoji,deg;
 
-  if(r<0.40){result="SKULL";add=0;}
-  else if(r<0.70){result="FIRE";add=3.9;}
-  else if(r<0.85){result="LEAF";add=2.5;}
-  else{result="WATER";add=1.55;}
+  if(r<0.40){result="SKULL";emoji="💀";deg=0}
+  else if(r<0.70){result="FIRE";emoji="🔥";add=3.9;deg=180}
+  else if(r<0.85){result="LEAF";emoji="🍀";add=2.5;deg=270}
+  else{result="WATER";emoji="🌊";add=1.55;deg=315}
 
-  angle+=1440 + (result==="SKULL"?0:result==="FIRE"?90:result==="LEAF"?180:270);
+  angle+=1440+deg;
   wheel.style.transform=`rotate(${angle}deg)`;
 
   setTimeout(()=>{
+    center.innerText=emoji;
+
     if(result==="SKULL"){
       multiplier=1;
+      showPop("💀 YOU LOST","Better luck next time","lose");
     }else{
       multiplier*=add;
+      showPop("🎉 WIN","Multiplier: "+multiplier.toFixed(2)+"x","win");
     }
     spinning=false;
     save();render();
   },3500);
 }
+
+function showPop(t,txt,type){
+  pTitle.innerText=t;
+  pText.innerText=txt;
+  pBtn.className=type;
+  popup.style.display="flex";
+}
+function closePop(){popup.style.display="none";}
 </script>
 
 </body>
