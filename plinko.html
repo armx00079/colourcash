@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PLINKO</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:linear-gradient(135deg,#1aa7a1,#0b6f7a);
+  color:#fff;
+  text-align:center;
+}
+
+/* HEADER */
+.header{
+  padding:14px;
+  font-size:22px;
+  font-weight:bold;
+}
+
+/* HISTORY BAR */
+.history{
+  margin:10px;
+  background:rgba(0,0,0,.25);
+  padding:8px;
+  border-radius:10px;
+  font-size:12px;
+  overflow-x:auto;
+  white-space:nowrap;
+}
+
+/* BOARD */
+.board{
+  position:relative;
+  width:320px;
+  height:360px;
+  margin:0 auto;
+}
+
+/* PINS */
+.pin{
+  width:10px;
+  height:10px;
+  background:#fff;
+  border-radius:50%;
+  position:absolute;
+}
+
+/* BALL */
+.ball{
+  width:14px;
+  height:14px;
+  background:#fff;
+  border-radius:50%;
+  position:absolute;
+  top:0;
+  left:50%;
+  transform:translateX(-50%);
+  transition:top .3s linear,left .3s linear;
+}
+
+/* MULTIPLIERS */
+.slots{
+  display:grid;
+  grid-template-columns:repeat(9,1fr);
+  gap:4px;
+  margin:10px;
+}
+.slot{
+  padding:6px 0;
+  font-size:12px;
+  border-radius:6px;
+}
+.green{background:#4caf50}
+.yellow{background:#ff9800}
+.red{background:#f44336}
+
+/* CONTROLS */
+.controls{
+  margin:12px;
+}
+.bet-row{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:10px;
+}
+.bet{
+  background:#000;
+  padding:6px 16px;
+  border-radius:20px;
+}
+button{
+  border:none;
+  border-radius:50%;
+  width:36px;
+  height:36px;
+  font-size:18px;
+}
+.drop{
+  width:90%;
+  padding:14px;
+  margin-top:10px;
+  border-radius:30px;
+  background:#00c853;
+  color:#000;
+  font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">PLINKO</div>
+
+<div class="history" id="history">
+Encrypted Result:
+</div>
+
+<div class="board" id="board"></div>
+
+<div class="slots">
+  <div class="slot green">5.4</div>
+  <div class="slot yellow">1.8</div>
+  <div class="slot green">1.1</div>
+  <div class="slot yellow">1</div>
+  <div class="slot red">0.5</div>
+  <div class="slot yellow">1</div>
+  <div class="slot green">1.1</div>
+  <div class="slot yellow">1.8</div>
+  <div class="slot green">5.4</div>
+</div>
+
+<div class="controls">
+  <div class="bet-row">
+    <button onclick="bet-=10;update()">−</button>
+    <div class="bet">Bet ₹ <span id="bet">10</span></div>
+    <button onclick="bet+=10;update()">+</button>
+  </div>
+  <button class="drop" onclick="dropBall()">DROP BALL</button>
+</div>
+
+<script>
+const board=document.getElementById("board");
+const historyBar=document.getElementById("history");
+
+let bet=10;
+let multipliers=[5.4,1.8,1.1,1,0.5,1,1.1,1.8,5.4];
+
+/* UPDATE BET */
+function update(){
+  document.getElementById("bet").innerText=bet;
+}
+
+/* CREATE PINS */
+let rows=8;
+let spacingX=35, spacingY=35;
+
+for(let r=0;r<rows;r++){
+  for(let c=0;c<=r;c++){
+    const p=document.createElement("div");
+    p.className="pin";
+    p.style.top=40+r*spacingY+"px";
+    p.style.left=160-r*spacingX/2+c*spacingX+"px";
+    board.appendChild(p);
+  }
+}
+
+/* DROP BALL */
+function dropBall(){
+  const ball=document.createElement("div");
+  ball.className="ball";
+  board.appendChild(ball);
+
+  let col=4;
+  let step=0;
+
+  function fall(){
+    if(step<rows){
+      col += Math.random()<0.5?-1:1;
+      col=Math.max(0,Math.min(col,8));
+      ball.style.top=40+step*spacingY+"px";
+      ball.style.left=col*spacingX+20+"px";
+      step++;
+      setTimeout(fall,300);
+    }else{
+      finish(col);
+    }
+  }
+  fall();
+}
+
+/* FINISH */
+function finish(col){
+  const mul=multipliers[col];
+  const hash=Math.random().toString(16).substring(2,10);
+  historyBar.innerHTML += ` | ${hash} → ${mul}x`;
+}
+</script>
+
+</body>
+</html>
