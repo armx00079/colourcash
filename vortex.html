@@ -9,43 +9,43 @@
 body{
   margin:0;
   font-family:Arial, sans-serif;
-  background:radial-gradient(circle at top,#1b1f3a,#090b18);
+  background:radial-gradient(circle at top,#1b2140,#070b18);
   color:#fff;
   text-align:center;
 }
 
-/* HEADER */
 .header{
   display:flex;
   justify-content:space-between;
-  padding:14px;
+  align-items:center;
+  padding:14px 16px;
+  font-size:22px;
   font-weight:bold;
 }
+
 .wallet{
   background:#000;
   padding:6px 14px;
   border-radius:20px;
 }
 
-/* WHEEL */
 .wheel-wrap{
-  margin:24px auto;
-  width:300px;
-  height:300px;
+  margin:40px auto 20px;
+  width:280px;
+  height:280px;
   border-radius:50%;
   background:
     conic-gradient(
-      from 0deg,
-      linear-gradient(135deg,#ff6a6a,#ff2e2e) 0deg 72deg,        /* FIRE */
-      linear-gradient(135deg,#42d77d,#1ea85a) 72deg 144deg,    /* LEAF */
-      linear-gradient(135deg,#4fb6ff,#1e88e5) 144deg 216deg,   /* WATER */
-      linear-gradient(135deg,#3a3a3a,#000000) 216deg 360deg    /* SKULL */
+      #ff3b3b 0deg 90deg,     /* 🔥 FIRE */
+      #2ecc71 90deg 180deg,  /* 🍀 LEAF */
+      #3498db 180deg 270deg, /* 🌊 WATER */
+      #111111 270deg 360deg  /* 💀 SKULL */
     );
   display:flex;
   align-items:center;
   justify-content:center;
-  transition:transform 3s cubic-bezier(.17,.67,.12,.99);
-  box-shadow:0 0 30px rgba(0,0,0,.6);
+  box-shadow:0 0 40px rgba(0,0,0,.8);
+  transition:transform 3s cubic-bezier(.17,.67,.23,1);
 }
 
 .center{
@@ -56,60 +56,48 @@ body{
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:42px;
+  font-size:40px;
 }
 
-/* INFO */
-.multiplier{
-  margin-top:10px;
-  font-size:18px;
+.result{
+  margin-top:18px;
+  font-size:20px;
   font-weight:bold;
 }
-.result{
-  margin-top:6px;
-  font-size:15px;
-  opacity:.9;
-}
 
-/* BET */
 .bet-row{
-  margin:18px auto;
   display:flex;
   justify-content:center;
   align-items:center;
   gap:14px;
+  margin-top:16px;
 }
+
 .bet-row button{
-  width:38px;
-  height:38px;
+  width:40px;
+  height:40px;
   border-radius:50%;
   border:none;
-  font-size:20px;
+  font-size:22px;
 }
+
 .bet{
-  padding:8px 18px;
   background:#000;
-  border-radius:20px;
+  padding:10px 20px;
+  border-radius:22px;
 }
 
-/* BUTTONS */
 .spin{
-  margin:16px;
+  margin:26px auto;
+  width:80%;
   padding:16px;
+  border-radius:30px;
   background:linear-gradient(135deg,#8e2de2,#4a00e0);
-  border-radius:30px;
+  font-size:18px;
   font-weight:bold;
+  border:none;
+  color:#fff;
 }
-.cashout{
-  margin:10px;
-  padding:14px;
-  background:linear-gradient(135deg,#00e676,#00c853);
-  border-radius:30px;
-  font-weight:bold;
-  display:none;
-}
-
-.spin:active,.cashout:active{opacity:.7}
 </style>
 </head>
 
@@ -121,115 +109,76 @@ body{
 </div>
 
 <div class="wheel-wrap" id="wheel">
-  <div class="center" id="symbol">💀</div>
+  <div class="center" id="icon">💀</div>
 </div>
 
-<div class="multiplier">Multiplier: <span id="multi">1.00x</span></div>
-<div class="result" id="result">HOLD TO SPIN</div>
+<div class="result" id="result">
+  Multiplier: <span id="multi">1.00x</span>
+</div>
 
 <div class="bet-row">
-  <button id="minus">−</button>
+  <button onclick="changeBet(-10)">−</button>
   <div class="bet">Bet ₹ <span id="bet">10</span></div>
-  <button id="plus">+</button>
+  <button onclick="changeBet(10)">+</button>
 </div>
 
-<div class="spin" id="spinBtn">HOLD TO SPIN</div>
-<div class="cashout" id="cashoutBtn">CASH OUT</div>
+<button class="spin" id="spinBtn">HOLD TO SPIN</button>
 
 <script>
-let wallet = Number(localStorage.wallet)||1000;
+let wallet = 1000;
 let bet = 10;
 let multiplier = 1;
-let active = false;
-let spinning=false;
+let spinning = false;
 
 const wheel = document.getElementById("wheel");
-const walletUI = document.getElementById("wallet");
-const betUI = document.getElementById("bet");
-const result = document.getElementById("result");
-const multiUI = document.getElementById("multi");
-const symbolUI = document.getElementById("symbol");
-const cashoutBtn = document.getElementById("cashoutBtn");
+const icon = document.getElementById("icon");
+const result = document.getElementById("multi");
 
-walletUI.innerText = wallet;
-
-/* BET */
-minus.onclick=()=>{ if(!active && bet>10) bet-=10; betUI.innerText=bet; };
-plus.onclick=()=>{ if(!active && bet+10<=wallet) bet+=10; betUI.innerText=bet; };
-
-/* HOLD TO SPIN */
-let hold;
-spinBtn.onmousedown=()=>hold=setTimeout(spin,600);
-spinBtn.onmouseup=()=>clearTimeout(hold);
-spinBtn.ontouchstart=()=>hold=setTimeout(spin,600);
-spinBtn.ontouchend=()=>clearTimeout(hold);
-
-function spin(){
+function changeBet(v){
   if(spinning) return;
-  if(!active){
-    if(bet>wallet) return alert("Low balance");
-    wallet-=bet;
-    walletUI.innerText=wallet;
-    multiplier=1;
-    active=true;
-    cashoutBtn.style.display="block";
-  }
+  if(bet+v>=10 && bet+v<=wallet) bet+=v;
+  document.getElementById("bet").innerText=bet;
+}
+
+document.getElementById("spinBtn").onclick=()=>{
+  if(spinning) return;
+  if(bet>wallet) return alert("Low balance");
 
   spinning=true;
-  result.innerText="Spinning...";
-  const r=Math.random();
+  wallet-=bet;
+  document.getElementById("wallet").innerText=wallet;
 
-  let outcome;
-  if(r<0.40) outcome="SKULL";
-  else if(r<0.65) outcome="FIRE";
-  else if(r<0.85) outcome="LEAF";
-  else outcome="WATER";
-
-  wheel.style.transform=`rotate(${1440+Math.random()*360}deg)`;
+  const deg = 360*4 + Math.floor(Math.random()*360);
+  wheel.style.transform = `rotate(${deg}deg)`;
 
   setTimeout(()=>{
-    if(outcome==="SKULL"){
-      symbolUI.innerText="💀";
-      result.innerText="BOOM! YOU LOST";
-      resetGame();
+    const r = Math.random();
+
+    if(r < 0.4){ // 💀 40%
+      icon.innerText="💀";
+      multiplier=1;
+      result.innerText="1.00x";
+      alert("💀 BOOM! YOU LOST");
     }
-    if(outcome==="FIRE"){
-      symbolUI.innerText="🔥";
+    else if(r < 0.6){ // 🔥
+      icon.innerText="🔥";
       multiplier*=3.9;
-      result.innerText="FIRE HIT!";
+      result.innerText=multiplier.toFixed(2)+"x";
     }
-    if(outcome==="LEAF"){
-      symbolUI.innerText="🍀";
-      multiplier*=2.5;
-      result.innerText="LEAF HIT!";
+    else if(r < 0.8){ // 🍀
+      icon.innerText="🍀";
+      multiplier*=2;
+      result.innerText=multiplier.toFixed(2)+"x";
     }
-    if(outcome==="WATER"){
-      symbolUI.innerText="🌊";
-      multiplier*=1.55;
-      result.innerText="WATER HIT!";
+    else{ // 🌊
+      icon.innerText="🌊";
+      multiplier*=1.5;
+      result.innerText=multiplier.toFixed(2)+"x";
     }
 
-    multiUI.innerText=multiplier.toFixed(2)+"x";
     spinning=false;
   },3000);
-}
-
-/* CASHOUT */
-cashoutBtn.onclick=()=>{
-  const win = Math.floor(bet * multiplier);
-  wallet+=win;
-  walletUI.innerText=wallet;
-  result.innerText="CASHED OUT ₹"+win;
-  resetGame();
 };
-
-function resetGame(){
-  active=false;
-  multiplier=1;
-  multiUI.innerText="1.00x";
-  cashoutBtn.style.display="none";
-  localStorage.wallet=wallet;
-}
 </script>
 
 </body>
