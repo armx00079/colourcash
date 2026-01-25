@@ -9,95 +9,114 @@
 body{
   margin:0;
   font-family:Arial, sans-serif;
-  background:radial-gradient(circle at top,#1b2140,#070b18);
+  background:radial-gradient(circle at top,#1b1f3b,#05070f);
   color:#fff;
   text-align:center;
 }
 
+/* HEADER */
 .header{
   display:flex;
   justify-content:space-between;
   align-items:center;
   padding:14px 16px;
-  font-size:22px;
   font-weight:bold;
 }
-
 .wallet{
   background:#000;
   padding:6px 14px;
   border-radius:20px;
 }
 
+/* WHEEL */
 .wheel-wrap{
-  margin:40px auto 20px;
-  width:280px;
-  height:280px;
+  margin:30px auto;
+  width:260px;
+  height:260px;
+  position:relative;
+}
+.wheel{
+  width:100%;
+  height:100%;
   border-radius:50%;
   background:
     conic-gradient(
-      #ff3b3b 0deg 90deg,     /* 🔥 FIRE */
-      #2ecc71 90deg 180deg,  /* 🍀 LEAF */
-      #3498db 180deg 270deg, /* 🌊 WATER */
-      #111111 270deg 360deg  /* 💀 SKULL */
+      #111 0deg 144deg,
+      #ff3b3b 144deg 234deg,
+      #2ecc71 234deg 324deg,
+      #3498db 324deg 360deg
     );
   display:flex;
   align-items:center;
   justify-content:center;
-  box-shadow:0 0 40px rgba(0,0,0,.8);
-  transition:transform 3s cubic-bezier(.17,.67,.23,1);
+  transition:transform 3.5s cubic-bezier(.25,.1,.25,1);
 }
-
 .center{
-  width:90px;
-  height:90px;
-  border-radius:50%;
+  width:70px;
+  height:70px;
   background:#000;
+  border-radius:50%;
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:40px;
+  font-size:34px;
+  position:absolute;
 }
 
-.result{
-  margin-top:18px;
-  font-size:20px;
-  font-weight:bold;
+/* EMOJIS */
+.segment-icons{
+  position:absolute;
+  inset:0;
+}
+.segment-icons div{
+  position:absolute;
+  font-size:22px;
+}
+.icon-skull{top:18px; left:50%; transform:translateX(-50%);}
+.icon-fire{right:20px; top:50%; transform:translateY(-50%);}
+.icon-leaf{bottom:18px; left:50%; transform:translateX(-50%);}
+.icon-water{left:20px; top:50%; transform:translateY(-50%);}
+
+/* INFO */
+.info{
+  margin-top:10px;
+  font-size:18px;
 }
 
+/* BET */
 .bet-row{
+  margin-top:16px;
   display:flex;
   justify-content:center;
   align-items:center;
   gap:14px;
-  margin-top:16px;
 }
-
 .bet-row button{
-  width:40px;
-  height:40px;
+  width:38px;
+  height:38px;
   border-radius:50%;
   border:none;
-  font-size:22px;
+  font-size:20px;
 }
-
 .bet{
   background:#000;
-  padding:10px 20px;
-  border-radius:22px;
+  padding:8px 18px;
+  border-radius:20px;
 }
 
+/* SPIN */
 .spin{
-  margin:26px auto;
-  width:80%;
+  margin:22px auto;
+  width:85%;
   padding:16px;
+  font-size:18px;
+  border:none;
   border-radius:30px;
   background:linear-gradient(135deg,#8e2de2,#4a00e0);
-  font-size:18px;
-  font-weight:bold;
-  border:none;
   color:#fff;
+  font-weight:bold;
 }
+.spin:disabled{opacity:.6}
 </style>
 </head>
 
@@ -108,77 +127,92 @@ body{
   <div class="wallet">₹ <span id="wallet">1000</span></div>
 </div>
 
-<div class="wheel-wrap" id="wheel">
-  <div class="center" id="icon">💀</div>
+<div class="wheel-wrap">
+  <div class="wheel" id="wheel">
+    <div class="center">🌀</div>
+  </div>
+
+  <div class="segment-icons">
+    <div class="icon-skull">💀</div>
+    <div class="icon-fire">🔥</div>
+    <div class="icon-leaf">🍀</div>
+    <div class="icon-water">🌊</div>
+  </div>
 </div>
 
-<div class="result" id="result">
-  Multiplier: <span id="multi">1.00x</span>
+<div class="info">
+  Multiplier: <b><span id="mult">1.00</span>x</b>
 </div>
 
 <div class="bet-row">
-  <button onclick="changeBet(-10)">−</button>
+  <button onclick="chgBet(-10)">−</button>
   <div class="bet">Bet ₹ <span id="bet">10</span></div>
-  <button onclick="changeBet(10)">+</button>
+  <button onclick="chgBet(10)">+</button>
 </div>
 
-<button class="spin" id="spinBtn">HOLD TO SPIN</button>
+<button class="spin" id="spinBtn" onclick="spin()">HOLD TO SPIN</button>
 
 <script>
-let wallet = 1000;
-let bet = 10;
-let multiplier = 1;
-let spinning = false;
+let wallet = Number(localStorage.v_wallet) || 1000;
+let bet = Number(localStorage.v_bet) || 10;
+let multiplier = Number(localStorage.v_mult) || 1;
+let angle = Number(localStorage.v_angle) || 0;
+let spinning=false;
 
-const wheel = document.getElementById("wheel");
-const icon = document.getElementById("icon");
-const result = document.getElementById("multi");
+const walletUI=w("wallet"), betUI=w("bet"), multUI=w("mult"), wheel=w("wheel");
 
-function changeBet(v){
-  if(spinning) return;
-  if(bet+v>=10 && bet+v<=wallet) bet+=v;
-  document.getElementById("bet").innerText=bet;
+function w(id){return document.getElementById(id)}
+
+function save(){
+  localStorage.v_wallet=wallet;
+  localStorage.v_bet=bet;
+  localStorage.v_mult=multiplier;
+  localStorage.v_angle=angle;
 }
 
-document.getElementById("spinBtn").onclick=()=>{
+function render(){
+  walletUI.innerText=wallet;
+  betUI.innerText=bet;
+  multUI.innerText=multiplier.toFixed(2);
+  wheel.style.transform=`rotate(${angle}deg)`;
+}
+render();
+
+function chgBet(v){
+  if(spinning) return;
+  bet=Math.max(10,bet+v);
+  save();render();
+}
+
+function spin(){
   if(spinning) return;
   if(bet>wallet) return alert("Low balance");
 
   spinning=true;
   wallet-=bet;
-  document.getElementById("wallet").innerText=wallet;
 
-  const deg = 360*4 + Math.floor(Math.random()*360);
-  wheel.style.transform = `rotate(${deg}deg)`;
+  // 40% BOOM | 30% FIRE | 15% LEAF | 15% WATER
+  const r=Math.random();
+  let result,add;
+
+  if(r<0.40){result="SKULL";add=0;}
+  else if(r<0.70){result="FIRE";add=3.9;}
+  else if(r<0.85){result="LEAF";add=2.5;}
+  else{result="WATER";add=1.55;}
+
+  angle+=1440 + (result==="SKULL"?0:result==="FIRE"?90:result==="LEAF"?180:270);
+  wheel.style.transform=`rotate(${angle}deg)`;
 
   setTimeout(()=>{
-    const r = Math.random();
-
-    if(r < 0.4){ // 💀 40%
-      icon.innerText="💀";
+    if(result==="SKULL"){
       multiplier=1;
-      result.innerText="1.00x";
-      alert("💀 BOOM! YOU LOST");
+    }else{
+      multiplier*=add;
     }
-    else if(r < 0.6){ // 🔥
-      icon.innerText="🔥";
-      multiplier*=3.9;
-      result.innerText=multiplier.toFixed(2)+"x";
-    }
-    else if(r < 0.8){ // 🍀
-      icon.innerText="🍀";
-      multiplier*=2;
-      result.innerText=multiplier.toFixed(2)+"x";
-    }
-    else{ // 🌊
-      icon.innerText="🌊";
-      multiplier*=1.5;
-      result.innerText=multiplier.toFixed(2)+"x";
-    }
-
     spinning=false;
-  },3000);
-};
+    save();render();
+  },3500);
+}
 </script>
 
 </body>
