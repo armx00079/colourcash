@@ -184,12 +184,18 @@ startBtn.onclick=()=>{
   currentWin=bet;
   gameActive=true;
 
-  chestData=[];
-  for(let i=0;i<20;i++){
-    const r=Math.random();
-    chestData.push(r<0.3?"BOOM":r<0.6?"EMPTY":"2X");
+chestData=[];
+for(let i=0;i<20;i++){
+  const r = Math.random();
+  if(r < 0.40){
+    chestData.push("BOOM");     // 💣 40%
   }
-
+  else if(r < 0.70){
+    chestData.push("EMPTY");    // 📦 30%
+  }
+  else{
+    chestData.push("2X");       // ✖️ 30%
+  }
   startBtn.innerText="₹ "+currentWin;
   startBtn.disabled=true;
   cashoutBtn.style.display="block";
