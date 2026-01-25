@@ -1,184 +1,134 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>VORTEX</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<style>
-body{
-  margin:0;
-  font-family:Arial, sans-serif;
-  background:radial-gradient(circle at top,#1b1f3a,#090b16);
-  color:#fff;
-  text-align:center;
-}
-.header{
-  display:flex;
-  justify-content:space-between;
-  padding:14px;
-  font-weight:bold;
-}
-.wallet{
-  background:#111;
-  padding:6px 14px;
-  border-radius:20px;
-}
-
-/* WHEEL */
-.wheel-wrap{
-  margin:30px auto;
-  width:260px;
-  height:260px;
-  border-radius:50%;
-  background:conic-gradient(
-    #ff3b3b 0deg 144deg,     /* BOOM 40% */
-    #2ecc71 144deg 252deg,  /* WIN */
-    #3498db 252deg 324deg,  /* WIN */
-    #9b59b6 324deg 360deg   /* WIN */
-  );
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  transition:transform 3s cubic-bezier(.17,.67,.12,.99);
-}
-.center{
-  width:80px;
-  height:80px;
-  border-radius:50%;
-  background:#000;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:36px;
-}
-
-/* RESULT */
-.result{
-  margin-top:15px;
-  font-size:18px;
-  font-weight:bold;
-}
-
-/* BET */
-.bet-row{
-  margin:20px auto;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  gap:12px;
-}
-.bet-row button{
-  width:38px;
-  height:38px;
-  border-radius:50%;
-  border:none;
-  font-size:20px;
-}
-.bet{
-  padding:8px 18px;
-  background:#111;
-  border-radius:20px;
-}
-
-/* HOLD BUTTON */
-.spin{
-  margin:20px;
-  padding:16px;
-  background:linear-gradient(135deg,#8e2de2,#4a00e0);
-  border-radius:30px;
-  font-weight:bold;
-  user-select:none;
-}
-.spin:active{opacity:.7}
-</style>
+  <meta charset="UTF-8" />
+  <title>Vortex-Like Game - 40% House Edge Version</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; background: #111; color: #fff; }
+    #game { margin: 20px auto; width: 400px; height: 400px; border: 2px solid #444; border-radius: 50%; background: #222; position: relative; overflow: hidden; }
+    .symbol { position: absolute; width: 50px; height: 50px; border-radius: 50%; font-size: 30px; line-height: 50px; text-align: center; }
+    #bars { margin: 20px; }
+    .bar { height: 20px; background: #333; margin: 10px; position: relative; }
+    .fill { height: 100%; background: linear-gradient(to right, #00f, #0f0); width: 0%; transition: width 0.3s; }
+    #multiplier { font-size: 40px; color: gold; }
+    #log { margin: 20px; height: 150px; overflow-y: auto; background: #000; padding: 10px; border: 1px solid #555; }
+  </style>
 </head>
-
 <body>
+  <h1>Vortex Style Game (Custom - 40% House Edge)</h1>
+  <div id="game"></div>
+  <div id="bars">
+    <div>Water Bar: <div class="bar"><div id="water" class="fill"></div></div></div>
+    <div>Earth Bar: <div class="bar"><div id="earth" class="fill"></div></div></div>
+    <div>Fire Bar:  <div class="bar"><div id="fire" class="fill"></div></div></div>
+  </div>
+  <div>Current Multiplier: <span id="multiplier">1.00x</span></div>
+  <button onclick="startRound()" style="padding:15px 30px; font-size:20px; margin:20px;">Spin / New Round</button>
+  <div id="log"></div>
 
-<div class="header">
-  <div>VORTEX</div>
-  <div class="wallet">₹ <span id="wallet">0</span></div>
-</div>
+  <script>
+    const elements = [
+      { type: 'Water', emoji: '💧', mult: [1.55, 2, 3, 5, 10] },     // safe
+      { type: 'Earth', emoji: '🌍', mult: [2.5, 5, 10, 50, 200] },   // medium
+      { type: 'Fire',  emoji: '🔥', mult: [10, 20, 52, 100, 500] },  // high risk + bonus trigger
+      { type: 'Wind',  emoji: '🌬️', mult: [] },                      // nothing
+      { type: 'Skull', emoji: '💀', mult: [] }                       // reset
+    ];
 
-<div class="wheel-wrap" id="wheel">
-  <div class="center">💀</div>
-</div>
+    // For 40% house edge → RTP 60% → symbols ko biased banao (Skull & Wind zyada aaye)
+    // Original ~ equal chance, yahan Skull/Wind ~55-60% chance, good symbols kam
+    const symbolWeights = [8, 8, 6, 30, 48]; // Water, Earth, Fire, Wind, Skull (total 100)
 
-<div class="result" id="result">HOLD TO SPIN</div>
+    let waterProgress = 0, earthProgress = 0, fireProgress = 0;
+    let currentMult = 1.0;
+    let interval;
 
-<div class="bet-row">
-  <button id="minus">−</button>
-  <div class="bet">Bet ₹ <span id="bet">10</span></div>
-  <button id="plus">+</button>
-</div>
-
-<div class="spin" id="spinBtn">HOLD TO SPIN</div>
-
-<script>
-/* STATE */
-let wallet = Number(localStorage.wallet)||1000;
-let bet = 10;
-let spinning=false;
-
-const wheel=document.getElementById("wheel");
-const walletUI=document.getElementById("wallet");
-const betUI=document.getElementById("bet");
-const result=document.getElementById("result");
-
-walletUI.innerText=wallet;
-
-/* BET */
-minus.onclick=()=>{
-  if(spinning) return;
-  if(bet>10) bet-=10;
-  betUI.innerText=bet;
-};
-plus.onclick=()=>{
-  if(spinning) return;
-  if(bet+10<=wallet) bet+=10;
-  betUI.innerText=bet;
-};
-
-/* HOLD TO SPIN */
-let holdTimer;
-spinBtn.onmousedown=()=>{
-  holdTimer=setTimeout(spin,600);
-};
-spinBtn.onmouseup=()=>clearTimeout(holdTimer);
-spinBtn.ontouchstart=()=>holdTimer=setTimeout(spin,600);
-spinBtn.ontouchend=()=>clearTimeout(holdTimer);
-
-function spin(){
-  if(spinning) return;
-  if(bet>wallet) return alert("Low balance");
-
-  spinning=true;
-  wallet-=bet;
-  walletUI.innerText=wallet;
-
-  const r=Math.random(); // HOUSE EDGE
-  let win=false;
-
-  if(r>0.4) win=true; // 40% boom
-
-  const deg=1440+Math.random()*360;
-  wheel.style.transform=`rotate(${deg}deg)`;
-
-  setTimeout(()=>{
-    if(win){
-      const winAmt=bet*2;
-      wallet+=winAmt;
-      result.innerText="🎉 YOU WIN ₹"+winAmt;
-    }else{
-      result.innerText="💀 BOOM! YOU LOST";
+    function weightedRandom() {
+      let sum = symbolWeights.reduce((a,b)=>a+b,0);
+      let r = Math.random() * sum;
+      let current = 0;
+      for(let i=0; i<symbolWeights.length; i++){
+        current += symbolWeights[i];
+        if(r <= current) return elements[i];
+      }
     }
-    walletUI.innerText=wallet;
-    localStorage.wallet=wallet;
-    spinning=false;
-  },3000);
-}
-</script>
 
+    function log(msg) {
+      document.getElementById('log').innerHTML += msg + '<br>';
+      document.getElementById('log').scrollTop = document.getElementById('log').scrollHeight;
+    }
+
+    function startRound() {
+      // Reset
+      waterProgress = earthProgress = fireProgress = 0;
+      currentMult = 1.0;
+      document.getElementById('multiplier').innerText = '1.00x';
+      document.getElementById('water').style.width = '0%';
+      document.getElementById('earth').style.width = '0%';
+      document.getElementById('fire').style.width = '0%';
+      document.getElementById('game').innerHTML = '';
+      document.getElementById('log').innerHTML = '';
+
+      log('Round started! Bet lagao mentally...');
+
+      let drops = 0;
+      interval = setInterval(() => {
+        drops++;
+        const sym = weightedRandom();
+
+        // Drop symbol in circle
+        const angle = Math.random() * 360;
+        const dist = 120 + Math.random() * 100;
+        const x = 200 + Math.cos(angle * Math.PI/180) * dist - 25;
+        const y = 200 + Math.sin(angle * Math.PI/180) * dist - 25;
+
+        const div = document.createElement('div');
+        div.className = 'symbol';
+        div.innerText = sym.emoji;
+        div.style.left = x + 'px';
+        div.style.top = y + 'px';
+        div.style.background = sym.type === 'Skull' ? 'red' : sym.type === 'Fire' ? 'orange' : '#444';
+        document.getElementById('game').appendChild(div);
+
+        // Progress logic
+        if (sym.type === 'Skull') {
+          waterProgress = earthProgress = fireProgress = 0;
+          log('💀 Skull! All progress reset!');
+        } else if (sym.type === 'Wind') {
+          log('🌬️ Wind - Nothing happens');
+        } else {
+          let added = 0;
+          if (sym.type === 'Water') { waterProgress += 1; added = waterProgress; document.getElementById('water').style.width = (waterProgress * 10) + '%'; }
+          if (sym.type === 'Earth') { earthProgress += 1; added = earthProgress; document.getElementById('earth').style.width = (earthProgress * 10) + '%'; }
+          if (sym.type === 'Fire')  { fireProgress += 1;  added = fireProgress;  document.getElementById('fire').style.width = (fireProgress * 10) + '%'; }
+
+          // Random multiplier from range
+          const mults = sym.mult;
+          const thisMult = mults[Math.floor(Math.random() * mults.length)];
+          currentMult = Math.max(currentMult, thisMult); // progressive
+          document.getElementById('multiplier').innerText = currentMult.toFixed(2) + 'x';
+
+          log(`${sym.emoji} ${sym.type} added! Bar: ${added}/10 | Mult now: ${currentMult.toFixed(2)}x`);
+        }
+
+        // Check win conditions
+        if (waterProgress >= 10 || earthProgress >= 10 || fireProgress >= 10) {
+          clearInterval(interval);
+          let bonus = '';
+          if (fireProgress >= 10) {
+            bonus = ' 🔥 FIRE FULL! Bonus x' + (100 + Math.floor(Math.random()*400)) + ' to x700 possible!';
+          }
+          log(`Vortex hit! Final Mult: ${currentMult.toFixed(2)}x ${bonus}`);
+          log('Round over. House edge heavy hai bhai – 40% designed!');
+          return;
+        }
+
+        if (drops > 200) { // safety
+          clearInterval(interval);
+          log('Round timeout – no Vortex this time!');
+        }
+      }, 800); // speed adjust kar sakta hai
+    }
+  </script>
 </body>
 </html>
