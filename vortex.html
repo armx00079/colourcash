@@ -47,7 +47,27 @@ body{
       #3498db 324deg 360deg       /* WATER */
     );
   transition:transform 3.5s cubic-bezier(.25,.1,.25,1);
+  position:relative;
 }
+
+/* SEGMENT EMOJIS */
+.seg{
+  position:absolute;
+  width:100%;
+  height:100%;
+  top:0; left:0;
+  pointer-events:none;
+}
+.seg span{
+  position:absolute;
+  font-size:26px;
+}
+.skull{top:18px; left:50%; transform:translateX(-50%)}
+.fire{right:35px; top:50%; transform:translateY(-50%)}
+.leaf{bottom:28px; left:50%; transform:translateX(-50%)}
+.water{left:35px; top:50%; transform:translateY(-50%)}
+
+/* CENTER */
 .center{
   width:70px;
   height:70px;
@@ -64,10 +84,7 @@ body{
 }
 
 /* INFO */
-.info{
-  margin-top:10px;
-  font-size:18px;
-}
+.info{margin-top:10px;font-size:18px}
 
 /* BET */
 .bet-row{
@@ -78,11 +95,7 @@ body{
   gap:14px;
 }
 .bet-row button{
-  width:38px;
-  height:38px;
-  border-radius:50%;
-  border:none;
-  font-size:20px;
+  width:38px;height:38px;border-radius:50%;border:none;font-size:20px;
 }
 .bet{
   background:#000;
@@ -90,19 +103,18 @@ body{
   border-radius:20px;
 }
 
-/* SPIN */
-.spin{
-  margin:22px auto;
+/* BUTTONS */
+.btn{
+  margin:18px auto;
   width:85%;
   padding:16px;
   font-size:18px;
   border:none;
   border-radius:30px;
-  background:linear-gradient(135deg,#8e2de2,#4a00e0);
-  color:#fff;
   font-weight:bold;
 }
-.spin:disabled{opacity:.6}
+.spin{background:linear-gradient(135deg,#8e2de2,#4a00e0);color:#fff}
+.cashout{background:#00d084;color:#000;display:none}
 
 /* POPUP */
 .popup{
@@ -120,7 +132,6 @@ body{
   width:80%;
   max-width:280px;
 }
-.popup-box h2{margin:0 0 10px}
 .popup-box button{
   margin-top:14px;
   width:100%;
@@ -142,13 +153,18 @@ body{
 </div>
 
 <div class="wheel-wrap">
-  <div class="wheel" id="wheel"></div>
+  <div class="wheel" id="wheel">
+    <div class="seg">
+      <span class="skull">💀</span>
+      <span class="fire">🔥</span>
+      <span class="leaf">🍀</span>
+      <span class="water">🌊</span>
+    </div>
+  </div>
   <div class="center" id="centerEmoji">🌀</div>
 </div>
 
-<div class="info">
-  Multiplier: <b><span id="mult">1.00</span>x</b>
-</div>
+<div class="info">Multiplier: <b><span id="mult">1.00</span>x</b></div>
 
 <div class="bet-row">
   <button onclick="chgBet(-10)">−</button>
@@ -156,41 +172,36 @@ body{
   <button onclick="chgBet(10)">+</button>
 </div>
 
-<button class="spin" id="spinBtn" onclick="spin()">HOLD TO SPIN</button>
+<button class="btn spin" onclick="spin()">HOLD TO SPIN</button>
+<button class="btn cashout" id="cashBtn" onclick="cashout()">CASH OUT</button>
 
 <!-- POPUP -->
 <div class="popup" id="popup">
   <div class="popup-box">
-    <h2 id="popTitle"></h2>
-    <div id="popText"></div>
-    <button id="popBtn" onclick="closePop()">OK</button>
+    <h2 id="pTitle"></h2>
+    <div id="pText"></div>
+    <button id="pBtn" onclick="closePop()">OK</button>
   </div>
 </div>
 
 <script>
-let wallet = Number(localStorage.v_wallet) || 1000;
-let bet = Number(localStorage.v_bet) || 10;
-let multiplier = Number(localStorage.v_mult) || 1;
-let angle = Number(localStorage.v_angle) || 0;
+let wallet=Number(localStorage.vw)||1000;
+let bet=Number(localStorage.vb)||10;
+let mult=Number(localStorage.vm)||1;
+let angle=Number(localStorage.va)||0;
 let spinning=false;
 
-const wheel=w("wheel"), walletUI=w("wallet"), betUI=w("bet"),
-multUI=w("mult"), center=w("centerEmoji"),
-popup=w("popup"), pTitle=w("popTitle"), pText=w("popText"), pBtn=w("popBtn");
+const wheel=w("wheel"),walletUI=w("wallet"),betUI=w("bet"),
+multUI=w("mult"),center=w("centerEmoji"),
+cashBtn=w("cashBtn"),popup=w("popup"),
+pTitle=w("pTitle"),pText=w("pText"),pBtn=w("pBtn");
 
-function w(id){return document.getElementById(id)}
-
-function save(){
-  localStorage.v_wallet=wallet;
-  localStorage.v_bet=bet;
-  localStorage.v_mult=multiplier;
-  localStorage.v_angle=angle;
-}
-
+function w(i){return document.getElementById(i)}
+function save(){localStorage.vw=wallet;localStorage.vb=bet;localStorage.vm=mult;localStorage.va=angle}
 function render(){
   walletUI.innerText=wallet;
   betUI.innerText=bet;
-  multUI.innerText=multiplier.toFixed(2);
+  multUI.innerText=mult.toFixed(2);
   wheel.style.transform=`rotate(${angle}deg)`;
 }
 render();
@@ -202,14 +213,12 @@ function chgBet(v){
 }
 
 function spin(){
-  if(spinning) return;
-  if(bet>wallet) return alert("Low balance");
-
+  if(spinning||bet>wallet) return;
   spinning=true;
   wallet-=bet;
 
   const r=Math.random();
-  let result,add,emoji,deg;
+  let result,emoji,add,deg;
 
   if(r<0.40){result="SKULL";emoji="💀";deg=0}
   else if(r<0.70){result="FIRE";emoji="🔥";add=3.9;deg=180}
@@ -221,17 +230,26 @@ function spin(){
 
   setTimeout(()=>{
     center.innerText=emoji;
-
     if(result==="SKULL"){
-      multiplier=1;
-      showPop("💀 YOU LOST","Better luck next time","lose");
+      mult=1;
+      showPop("💀 YOU LOST","Try again","lose");
+      cashBtn.style.display="none";
     }else{
-      multiplier*=add;
-      showPop("🎉 WIN","Multiplier: "+multiplier.toFixed(2)+"x","win");
+      mult*=add;
+      cashBtn.style.display="block";
     }
     spinning=false;
     save();render();
   },3500);
+}
+
+function cashout(){
+  const win=Math.floor(bet*mult);
+  wallet+=win;
+  showPop("🎉 WIN","You won ₹"+win,"win");
+  mult=1;
+  cashBtn.style.display="none";
+  save();render();
 }
 
 function showPop(t,txt,type){
