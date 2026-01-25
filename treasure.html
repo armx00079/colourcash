@@ -13,11 +13,10 @@ body{
   color:#fff;
 }
 
-/* ===== HEADER ===== */
+/* HEADER */
 .header{
   display:flex;
   justify-content:space-between;
-  align-items:center;
   padding:12px;
   background:#2a160c;
 }
@@ -28,7 +27,7 @@ body{
   font-weight:bold;
 }
 
-/* ===== BOARD ===== */
+/* BOARD */
 .board{
   display:grid;
   grid-template-columns:repeat(4,1fr);
@@ -44,17 +43,13 @@ body{
   justify-content:center;
   font-size:22px;
   cursor:pointer;
-  transition:.2s;
 }
 .chest.disabled{
   pointer-events:none;
   opacity:.5;
 }
-.chest.open{
-  background:#8a4a1d;
-}
 
-/* ===== CONTROLS ===== */
+/* CONTROLS */
 .controls{
   padding:15px;
   background:#2a160c;
@@ -62,7 +57,6 @@ body{
 .bet-row{
   display:flex;
   justify-content:center;
-  align-items:center;
   gap:10px;
 }
 .bet-row button{
@@ -82,25 +76,22 @@ body{
   width:100%;
   padding:14px;
   background:#ffb43b;
-  color:#000;
   border:none;
   border-radius:18px;
   font-weight:bold;
-  font-size:16px;
 }
 .cashout{
   margin-top:10px;
   width:100%;
   padding:12px;
   background:#00d084;
-  color:#000;
   border:none;
   border-radius:18px;
   font-weight:bold;
   display:none;
 }
 
-/* ===== RESULT POPUP ===== */
+/* POPUP */
 .popup{
   position:fixed;
   inset:0;
@@ -108,25 +99,12 @@ body{
   display:none;
   align-items:center;
   justify-content:center;
-  z-index:999;
 }
 .popup-box{
   background:#2a160c;
   padding:25px;
   border-radius:18px;
   text-align:center;
-}
-.popup-box h2{
-  margin:0 0 10px;
-  color:#00ff9c;
-}
-.popup-box button{
-  margin-top:12px;
-  padding:10px 20px;
-  border:none;
-  border-radius:14px;
-  background:#ffb43b;
-  font-weight:bold;
 }
 </style>
 </head>
@@ -135,90 +113,99 @@ body{
 
 <div class="header">
   <div>TREASURE</div>
-  <div class="wallet">₹ <span id="wallet">680</span></div>
+  <div class="wallet">₹ <span id="wallet">10</span></div>
 </div>
 
 <div class="board" id="board"></div>
 
 <div class="controls">
   <div class="bet-row">
-    <button onclick="changeBet(-10)">−</button>
-    <div class="bet">Bet ₹ <span id="bet">90</span></div>
-    <button onclick="changeBet(10)">+</button>
+    <button id="minus">−</button>
+    <div class="bet">Bet ₹ <span id="bet">10</span></div>
+    <button id="plus">+</button>
   </div>
 
-  <button class="start" id="startBtn" onclick="startGame()">START GAME</button>
-  <button class="cashout" id="cashoutBtn" onclick="cashOut()">CASH OUT</button>
+  <button class="start" id="startBtn">START GAME</button>
+  <button class="cashout" id="cashoutBtn">CASH OUT</button>
 </div>
 
-<!-- POPUP -->
 <div class="popup" id="popup">
   <div class="popup-box">
     <h2>🎉 CASHED OUT</h2>
-    <div>You won ₹ <span id="popupAmount"></span></div>
+    <div>Won ₹ <span id="winAmt"></span></div>
     <button onclick="closePopup()">OK</button>
   </div>
 </div>
 
 <script>
-let wallet = 500;
-let bet = 10;
-let gameActive = false;
-let currentWin = 0;
-let chestData = [];
+/* ===== STATE ===== */
+let wallet = Number(localStorage.wallet) || 10;
+let bet = Number(localStorage.bet) || 10;
+let gameActive = localStorage.gameActive === "true";
+let currentWin = Number(localStorage.currentWin) || 0;
+let chestData = JSON.parse(localStorage.chestData || "[]");
 
+/* UI */
 const board = document.getElementById("board");
 const walletUI = document.getElementById("wallet");
 const betUI = document.getElementById("bet");
 const startBtn = document.getElementById("startBtn");
 const cashoutBtn = document.getElementById("cashoutBtn");
 const popup = document.getElementById("popup");
-const popupAmount = document.getElementById("popupAmount");
+const winAmt = document.getElementById("winAmt");
 
-/* ===== INIT ===== */
+/* SAVE */
+function save(){
+  localStorage.wallet = wallet;
+  localStorage.bet = bet;
+  localStorage.gameActive = gameActive;
+  localStorage.currentWin = currentWin;
+  localStorage.chestData = JSON.stringify(chestData);
+}
+
+/* INIT BOARD */
 function initBoard(){
   board.innerHTML="";
   for(let i=0;i<20;i++){
     const c=document.createElement("div");
-    c.className="chest";
+    c.className="chest"+(gameActive?"":" disabled");
     c.innerText="🧰";
     c.onclick=()=>openChest(i,c);
     board.appendChild(c);
   }
 }
-initBoard();
 
-/* ===== START ===== */
-function startGame(){
+/* START GAME */
+startBtn.onclick=()=>{
+  if(gameActive) return;
   if(bet>wallet) return alert("Low balance");
+
   wallet-=bet;
   currentWin=bet;
-  updateUI();
-
   gameActive=true;
-  startBtn.innerText="₹ "+currentWin;
-  cashoutBtn.style.display="block";
 
   chestData=[];
   for(let i=0;i<20;i++){
     const r=Math.random();
-    if(r<0.3) chestData.push("BOOM");
-    else if(r<0.6) chestData.push("EMPTY");
-    else chestData.push("2X");
+    chestData.push(r<0.3?"BOOM":r<0.6?"EMPTY":"2X");
   }
-  initBoard();
-}
 
-/* ===== OPEN CHEST ===== */
+  startBtn.innerText="₹ "+currentWin;
+  startBtn.disabled=true;
+  cashoutBtn.style.display="block";
+  save();
+  render();
+};
+
+/* OPEN CHEST */
 function openChest(i,el){
   if(!gameActive) return;
-  el.classList.add("open","disabled");
+  el.classList.add("disabled");
 
   const type=chestData[i];
-
   if(type==="BOOM"){
     el.innerText="💣";
-    gameOver();
+    endGame(false);
   }
   if(type==="EMPTY"){
     el.innerText="📦";
@@ -227,46 +214,49 @@ function openChest(i,el){
     el.innerText="2×";
     currentWin*=2;
     startBtn.innerText="₹ "+currentWin;
+    save();
   }
 }
 
-/* ===== CASHOUT ===== */
-function cashOut(){
-  if(!gameActive) return;
+/* CASHOUT */
+cashoutBtn.onclick=()=>{
   wallet+=currentWin;
-  popupAmount.innerText=currentWin;
+  winAmt.innerText=currentWin;
   popup.style.display="flex";
-  resetGame();
+  endGame(true);
+};
+
+/* END */
+function endGame(win){
+  gameActive=false;
+  startBtn.disabled=false;
+  startBtn.innerText="START GAME";
+  cashoutBtn.style.display="none";
+  chestData=[];
+  save();
+  render();
 }
 
-/* ===== GAME OVER ===== */
-function gameOver(){
-  gameActive=false;
-  cashoutBtn.style.display="none";
-  startBtn.innerText="START GAME";
-  document.querySelectorAll(".chest").forEach(c=>c.classList.add("disabled"));
-  setTimeout(initBoard,1500);
-}
+/* BET CHANGE (LOCKED DURING GAME) */
+document.getElementById("plus").onclick=()=>{
+  if(gameActive) return;
+  if(bet+10<=wallet) bet+=10;
+  save(); render();
+};
+document.getElementById("minus").onclick=()=>{
+  if(gameActive) return;
+  if(bet>10) bet-=10;
+  save(); render();
+};
 
-/* ===== RESET ===== */
-function resetGame(){
-  gameActive=false;
-  cashoutBtn.style.display="none";
-  startBtn.innerText="START GAME";
-  updateUI();
+/* RENDER */
+function render(){
+  walletUI.innerText=wallet;
+  betUI.innerText=bet;
   initBoard();
 }
+render();
 
-/* ===== HELPERS ===== */
-function changeBet(v){
-  bet+=v;
-  if(bet<10) bet=10;
-  if(bet>wallet) bet=wallet;
-  betUI.innerText=bet;
-}
-function updateUI(){
-  walletUI.innerText=wallet;
-}
 function closePopup(){
   popup.style.display="none";
 }
