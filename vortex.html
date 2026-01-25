@@ -18,7 +18,6 @@ body{
 .header{
   display:flex;
   justify-content:space-between;
-  align-items:center;
   padding:14px;
   font-weight:bold;
 }
@@ -30,51 +29,35 @@ body{
 
 /* WHEEL */
 .wheel-wrap{
-  margin:30px auto;
   width:260px;
   height:260px;
+  margin:30px auto;
   position:relative;
 }
 .wheel{
   width:100%;
   height:100%;
   border-radius:50%;
-  position:relative;
-  overflow:hidden;
+  background:
+    conic-gradient(
+      #ff3b3b 0deg 90deg,      /* FIRE */
+      #34d26a 90deg 180deg,   /* LEAF */
+      #3fa9f5 180deg 270deg,  /* WATER */
+      #000000 270deg 360deg  /* SKULL */
+    );
   transition:transform 3s cubic-bezier(.25,.8,.25,1);
+  position:relative;
 }
 
-/* SLICES */
-.slice{
+/* EMOJIS ON WHEEL */
+.slice-emoji{
   position:absolute;
-  width:50%;
-  height:50%;
-  top:50%;
-  left:50%;
-  transform-origin:0% 0%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:30px;
+  font-size:28px;
 }
-
-/* COLORS + ROTATION */
-.fire{
-  background:linear-gradient(135deg,#ff4d4d,#ff0000);
-  transform:rotate(0deg) skewY(-45deg);
-}
-.leaf{
-  background:linear-gradient(135deg,#2ecc71,#1eaa5b);
-  transform:rotate(90deg) skewY(-45deg);
-}
-.water{
-  background:linear-gradient(135deg,#4aa3ff,#1e88e5);
-  transform:rotate(180deg) skewY(-45deg);
-}
-.skull{
-  background:linear-gradient(135deg,#111,#000);
-  transform:rotate(270deg) skewY(-45deg);
-}
+.fire{ top:18%; left:50%; transform:translateX(-50%); }
+.leaf{ right:18%; top:50%; transform:translateY(-50%); }
+.water{ bottom:18%; left:50%; transform:translateX(-50%); }
+.skull{ left:18%; top:50%; transform:translateY(-50%); }
 
 /* CENTER */
 .center{
@@ -90,7 +73,7 @@ body{
   align-items:center;
   justify-content:center;
   font-size:32px;
-  z-index:5;
+  z-index:2;
 }
 
 /* INFO */
@@ -120,11 +103,10 @@ button{
   font-size:20px;
 }
 
-/* ACTION BUTTONS */
+/* ACTION */
 .spin{
   width:80%;
   padding:14px;
-  margin:10px auto;
   border-radius:30px;
   background:linear-gradient(135deg,#9b4dff,#6a00ff);
   color:#fff;
@@ -134,7 +116,7 @@ button{
   display:none;
   width:80%;
   padding:14px;
-  margin:10px auto;
+  margin-top:10px;
   border-radius:30px;
   background:#00d084;
   color:#000;
@@ -167,10 +149,10 @@ button{
 
 <div class="wheel-wrap">
   <div class="wheel" id="wheel">
-    <div class="slice fire">🔥</div>
-    <div class="slice leaf">🍀</div>
-    <div class="slice water">🌊</div>
-    <div class="slice skull">💀</div>
+    <div class="slice-emoji fire">🔥</div>
+    <div class="slice-emoji leaf">🍀</div>
+    <div class="slice-emoji water">🌊</div>
+    <div class="slice-emoji skull">💀</div>
   </div>
   <div class="center" id="center">🌀</div>
 </div>
@@ -180,9 +162,9 @@ button{
 </div>
 
 <div class="bet-row">
-  <button onclick="changeBet(-10)">−</button>
+  <button onclick="betChange(-10)">−</button>
   <div class="bet">Bet ₹ <span id="bet">10</span></div>
-  <button onclick="changeBet(10)">+</button>
+  <button onclick="betChange(10)">+</button>
 </div>
 
 <button class="spin" onclick="spin()">HOLD TO SPIN</button>
@@ -196,12 +178,9 @@ button{
 </div>
 
 <script>
-let wallet=1000;
-let bet=10;
-let multiplier=1;
-let spinning=false;
+let wallet=1000, bet=10, multiplier=1, spinning=false;
 
-function changeBet(v){
+function betChange(v){
   if(spinning) return;
   if(bet+v>=10 && bet+v<=wallet) bet+=v;
   document.getElementById("bet").innerText=bet;
@@ -209,37 +188,36 @@ function changeBet(v){
 
 function spin(){
   if(spinning) return;
-  if(wallet<bet) return alert("Low Balance");
+  if(wallet<bet) return alert("Low balance");
 
   spinning=true;
   wallet-=bet;
   document.getElementById("wallet").innerText=wallet;
 
   const r=Math.random();
-  let result,angle,emoji,multi;
+  let angle=0, emoji="", multi=0;
 
-  if(r<0.40){ result="SKULL"; angle=270; emoji="💀"; multi=0; }
-  else if(r<0.60){ result="FIRE"; angle=0; emoji="🔥"; multi=3.9; }
-  else if(r<0.80){ result="LEAF"; angle=90; emoji="🍀"; multi=2.5; }
-  else{ result="WATER"; angle=180; emoji="🌊"; multi=1.5; }
+  if(r<0.40){ angle=315; emoji="💀"; multi=0; }       // 40%
+  else if(r<0.60){ angle=45; emoji="🔥"; multi=3.9; }
+  else if(r<0.80){ angle=135; emoji="🍀"; multi=2.5; }
+  else{ angle=225; emoji="🌊"; multi=1.5; }
 
-  document.getElementById("wheel").style.transform=
+  document.getElementById("wheel").style.transform =
     `rotate(${1080+angle}deg)`;
 
   setTimeout(()=>{
     document.getElementById("center").innerText=emoji;
-    if(result==="SKULL"){
+    if(multi===0){
       showPop("💀 YOU LOST");
       multiplier=1;
       document.getElementById("multi").innerText="1.00x";
       document.getElementById("cashout").style.display="none";
-      spinning=false;
     }else{
       multiplier*=multi;
       document.getElementById("multi").innerText=multiplier.toFixed(2)+"x";
       document.getElementById("cashout").style.display="block";
-      spinning=false;
     }
+    spinning=false;
   },3000);
 }
 
