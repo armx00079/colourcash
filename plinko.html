@@ -69,7 +69,7 @@ body{
 
 /* MULTIPLIERS */
 .rows{
-  margin-top:-6px; /* FIXED – dots touching boxes */
+  margin-top:-5px; /* FIXED – dots touching boxes */
   margin-left:10px;
   margin-right:10px;
 }
@@ -217,7 +217,7 @@ for(let r=0;r<rows;r++){
   for(let c=0;c<dots;c++){
     const p=document.createElement("div");
     p.className="pin";
-    p.style.top=55+r*sy+"px";
+    p.style.top=50+r*sy+"px";
     p.style.left=160-((dots-1)*sx)/2+c*sx+"px";
     board.appendChild(p);
   }
