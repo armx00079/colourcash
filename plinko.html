@@ -228,10 +228,24 @@ $("plus").onclick=()=>{if(bet+10<=wallet) bet+=10; render();}
 $("minus").onclick=()=>{if(bet>10) bet-=10; render();}
 
 /* COLOR */
-$("r").onclick=()=>color="red";
-$("y").onclick=()=>color="yellow";
-$("g").onclick=()=>color="green";
+/* COLOR + HIGHLIGHT FIX */
+function setColor(c){
+  color = c;
 
+  // remove old highlight
+  document.querySelectorAll(".box").forEach(b=>{
+    b.classList.remove("active");
+  });
+
+  // add highlight to selected color
+  document.querySelectorAll("." + c).forEach(b=>{
+    b.classList.add("active");
+  });
+}
+
+$("r").onclick = () => setColor("red");
+$("y").onclick = () => setColor("yellow");
+$("g").onclick = () => setColor("green");
 /* BOARD */
 const board=$("board");
 const rows=8,sx=34,sy=32,start=3;
