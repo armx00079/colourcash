@@ -18,25 +18,42 @@ body{
   background:linear-gradient(180deg,#2b1c3a,#1a1025);
   padding:14px 10px 10px;
 }
-
 .header-arena{
   display:flex;
   align-items:center;
   justify-content:space-between;
 }
-
 .header-arena img{height:80px}
-
-.center-cards{
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
+.center-cards{display:flex;align-items:center;gap:10px}
 
 .play-card{
   width:46px;height:62px;
+  perspective:800px;
+}
+.play-card .inner{
+  width:100%;height:100%;
+  position:relative;
+  transform-style:preserve-3d;
+  transition:.6s;
+}
+.play-card.flip .inner{transform:rotateY(180deg)}
+.play-card .front,
+.play-card .back{
+  position:absolute;inset:0;
+  backface-visibility:hidden;
   border-radius:8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:bold;
+}
+.play-card .front{
   background:linear-gradient(135deg,#ffb85c,#ff8c1a);
+}
+.play-card .back{
+  background:#fff;
+  color:#000;
+  transform:rotateY(180deg);
 }
 
 .vs-text{font-size:20px;color:#ffd56a}
@@ -55,20 +72,13 @@ body{
 
 /* ===== TABLE ===== */
 .table-wrap{display:flex;justify-content:center;margin-top:20px}
-
 .table{
   width:360px;
   background:linear-gradient(#1a2f4a,#0b1c2d);
   border-radius:18px;
   padding:18px;
 }
-
-.cards{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-
+.cards{display:flex;justify-content:space-between;align-items:center}
 .card{
   width:135px;height:95px;
   border-radius:16px;
@@ -77,10 +87,8 @@ body{
   justify-content:center;
   font-weight:bold;
 }
-
 .dragon{background:#4a5fe0}
 .tiger{background:#ff8c1a}
-
 .tie{
   margin:14px auto 0;
   width:200px;height:70px;
@@ -93,13 +101,7 @@ body{
 }
 
 /* ===== CHIPS ===== */
-.chips{
-  display:flex;
-  justify-content:center;
-  gap:10px;
-  margin:18px auto;
-}
-
+.chips{display:flex;justify-content:center;gap:10px;margin:18px auto}
 .chip{
   width:46px;height:46px;
   border-radius:50%;
@@ -113,6 +115,30 @@ body{
 }
 .chip.active{outline:3px solid #fff}
 .locked{pointer-events:none;opacity:.4}
+
+/* ===== RESULT POPUP ===== */
+.popup{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.6);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+}
+.popup-box{
+  background:linear-gradient(135deg,#ffd56a,#ff9f1a);
+  color:#000;
+  padding:30px 50px;
+  border-radius:20px;
+  font-size:26px;
+  font-weight:bold;
+  animation:pop .4s ease;
+}
+@keyframes pop{
+  from{transform:scale(.5);opacity:0}
+  to{transform:scale(1);opacity:1}
+}
 </style>
 </head>
 
@@ -121,11 +147,25 @@ body{
 <div class="game-header">
   <div class="header-arena">
     <img src="images/dragon.png">
+
     <div class="center-cards">
-      <div class="play-card"></div>
+      <div class="play-card" id="topDragon">
+        <div class="inner">
+          <div class="front"></div>
+          <div class="back" id="dVal"></div>
+        </div>
+      </div>
+
       <div class="vs-text">VS</div>
-      <div class="play-card"></div>
+
+      <div class="play-card" id="topTiger">
+        <div class="inner">
+          <div class="front"></div>
+          <div class="back" id="tVal"></div>
+        </div>
+      </div>
     </div>
+
     <img src="images/tiger.png">
   </div>
 
@@ -151,58 +191,58 @@ body{
   <div class="chip">1000</div>
 </div>
 
+<div class="popup" id="popup">
+  <div class="popup-box" id="popupText"></div>
+</div>
+
 <script>
-/* ================= TIMER + BET LOGIC ================= */
+let wallet=5000,selectedChip=0,selectedBet=null,timer=15,phase="bet";
 
-let wallet = 5000;
-let selectedChip = 0;
-let selectedBet = null;
-let timer = 15;
-let phase = "bet";
+const betStatus=document.getElementById("betStatus");
+const chips=document.querySelectorAll(".chip");
+const dragon=document.getElementById("dragon");
+const tiger=document.getElementById("tiger");
+const tie=document.getElementById("tie");
 
-const betStatus = document.getElementById("betStatus");
-const chips = document.querySelectorAll(".chip");
-const dragon = document.getElementById("dragon");
-const tiger = document.getElementById("tiger");
-const tie = document.getElementById("tie");
+const topDragon=document.getElementById("topDragon");
+const topTiger=document.getElementById("topTiger");
+const dVal=document.getElementById("dVal");
+const tVal=document.getElementById("tVal");
 
-/* CHIP SELECT */
+const popup=document.getElementById("popup");
+const popupText=document.getElementById("popupText");
+
+/* CHIP */
 chips.forEach(c=>{
   c.onclick=()=>{
-    if(phase!=="bet") return;
+    if(phase!=="bet")return;
     chips.forEach(x=>x.classList.remove("active"));
     c.classList.add("active");
     selectedChip=parseInt(c.innerText);
   };
 });
 
-/* BET SELECT */
+/* BET */
 [dragon,tiger,tie].forEach(b=>{
   b.onclick=()=>{
-    if(phase!=="bet"||!selectedChip) return;
+    if(phase!=="bet"||!selectedChip)return;
     selectedBet=b.id.toUpperCase();
     [dragon,tiger,tie].forEach(x=>x.style.boxShadow="none");
     b.style.boxShadow="0 0 15px gold";
   };
 });
 
-/* ROUND TIMER */
+/* TIMER */
 function startTimer(){
-  timer=15;
-  phase="bet";
-
+  timer=15;phase="bet";
   const loop=setInterval(()=>{
     timer--;
-
-    if(timer>5){
-      betStatus.innerText="START BETTING "+(timer-5);
-    }
+    if(timer>5) betStatus.innerText="START BETTING "+(timer-5);
     else if(timer>0){
       betStatus.innerText="BET LOCK "+timer;
       phase="lock";
-      document.querySelectorAll(".chip").forEach(c=>c.classList.add("locked"));
-    }
-    else{
+      chips.forEach(c=>c.classList.add("locked"));
+    }else{
       clearInterval(loop);
       betStatus.innerText="RESULT";
       showResult();
@@ -215,32 +255,38 @@ function showResult(){
   const d=Math.floor(Math.random()*13)+1;
   const t=Math.floor(Math.random()*13)+1;
 
+  dVal.innerText=d;
+  tVal.innerText=t;
+  topDragon.classList.add("flip");
+  topTiger.classList.add("flip");
+
   let win="TIE";
   if(d>t) win="DRAGON";
   if(t>d) win="TIGER";
 
-  if(selectedBet && selectedChip){
-    wallet-=selectedChip;
-    if(selectedBet===win){
-      wallet+= selectedBet==="TIE" ? selectedChip*9 : selectedChip*2;
-    }
-  }
+  setTimeout(()=>{
+    popupText.innerText=win+" WINS";
+    popup.style.display="flex";
+  },600);
 
-  setTimeout(resetRound,2000);
+  setTimeout(()=>{
+    popup.style.display="none";
+    resetRound();
+  },2600);
 }
 
 /* RESET */
 function resetRound(){
-  selectedBet=null;
-  selectedChip=0;
-  phase="bet";
-  betStatus.innerText="START BETTING";
+  selectedBet=null;selectedChip=0;phase="bet";
   chips.forEach(c=>c.classList.remove("active","locked"));
   [dragon,tiger,tie].forEach(x=>x.style.boxShadow="none");
+  topDragon.classList.remove("flip");
+  topTiger.classList.remove("flip");
+  dVal.innerText="";tVal.innerText="";
   startTimer();
 }
 
-/* START FIRST ROUND */
+/* START */
 startTimer();
 </script>
 
