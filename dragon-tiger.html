@@ -12,8 +12,6 @@ body{
   background:radial-gradient(circle at top,#0b1c2d,#030b14);
   color:#fff;
 }
-
-/* ===== TOP HEADER ===== */
 .game-header{
   background:linear-gradient(180deg,#2b1c3a,#1a1025);
   padding:14px 10px 10px;
@@ -47,10 +45,8 @@ body{
 .play-card .front{background:linear-gradient(135deg,#ffb85c,#ff8c1a)}
 .play-card .back{background:#fff;color:#000;transform:rotateY(180deg)}
 
-.vs-text{font-size:20px;color:#ffd56a}
-
 .bet-btn{
-  margin:10px auto 6px;
+  margin:10px auto;
   width:190px;
   padding:10px 0;
   text-align:center;
@@ -60,7 +56,6 @@ body{
   font-weight:bold;
 }
 
-/* ===== LAST HISTORY ===== */
 .last-history{
   display:flex;
   justify-content:center;
@@ -73,7 +68,6 @@ body{
   font-size:14px;font-weight:bold;color:#fff;
 }
 
-/* ===== TABLE ===== */
 .table-wrap{display:flex;justify-content:center;margin-top:20px}
 .table{
   width:360px;
@@ -83,39 +77,26 @@ body{
 }
 .cards{display:flex;justify-content:space-between;align-items:center}
 
-.card,.tie{
-  position:relative;
-  font-weight:bold;
-}
-
+.card,.tie{position:relative;font-weight:bold}
 .card{
-  width:135px;height:95px;
-  border-radius:16px;
+  width:135px;height:95px;border-radius:16px;
   display:flex;align-items:center;justify-content:center;
 }
 .dragon{background:#4a5fe0}
 .tiger{background:#ff8c1a}
 .tie{
-  margin:14px auto 0;
-  width:200px;height:70px;
-  border-radius:16px;
-  background:#2ecc71;
+  margin:14px auto 0;width:200px;height:70px;
+  border-radius:16px;background:#2ecc71;
   display:flex;align-items:center;justify-content:center;
 }
 
-/* ===== BET AMOUNT BADGE ===== */
 .bet-amt{
-  position:absolute;
-  top:6px;
-  right:8px;
+  position:absolute;top:6px;right:8px;
   background:rgba(0,0,0,.6);
-  padding:3px 8px;
-  border-radius:12px;
-  font-size:13px;
-  display:none;
+  padding:3px 8px;border-radius:12px;
+  font-size:13px;display:none;
 }
 
-/* ===== CHIPS ===== */
 .chips{display:flex;justify-content:center;gap:10px;margin:18px auto}
 .chip{
   width:46px;height:46px;border-radius:50%;
@@ -126,31 +107,21 @@ body{
 .chip.active{outline:3px solid #fff}
 .locked{pointer-events:none;opacity:.4}
 
-/* ===== RESULT POPUP ===== */
 .popup{
-  position:fixed;inset:0;
-  background:rgba(0,0,0,.6);
+  position:fixed;inset:0;background:rgba(0,0,0,.6);
   display:none;align-items:center;justify-content:center;
   z-index:9999;
 }
 .popup-box{
   background:linear-gradient(135deg,#ffd56a,#ff9f1a);
-  color:#000;
-  padding:30px 50px;
-  border-radius:20px;
+  color:#000;padding:30px 50px;border-radius:20px;
   font-size:26px;font-weight:bold;
 }
 
-/* ===== WALLET ===== */
 #walletBox{
-  position:fixed;
-  bottom:12px;
-  right:12px;
-  background:#000;
-  padding:8px 14px;
-  border-radius:20px;
-  font-weight:bold;
-  z-index:9999;
+  position:fixed;bottom:12px;right:12px;
+  background:#000;padding:8px 14px;
+  border-radius:20px;font-weight:bold;
 }
 </style>
 </head>
@@ -169,7 +140,7 @@ body{
           <div class="back" id="dVal"></div>
         </div>
       </div>
-      <div class="vs-text">VS</div>
+      <div>VS</div>
       <div class="play-card" id="topTiger">
         <div class="inner">
           <div class="front"></div>
@@ -208,11 +179,17 @@ body{
 </div>
 
 <script>
-let wallet = 5000;
+let wallet=5000;
 let selectedChip=0, timer=15, phase="bet";
 let bets={DRAGON:0,TIGER:0,TIE:0};
 
 const MULTI={DRAGON:2,TIGER:2,TIE:13};
+
+const CARDS=[
+ {n:"A",v:14},{n:"K",v:13},{n:"Q",v:12},{n:"J",v:11},
+ {n:"10",v:10},{n:"9",v:9},{n:"8",v:8},{n:"7",v:7},
+ {n:"6",v:6},{n:"5",v:5},{n:"4",v:4},{n:"3",v:3},{n:"2",v:2}
+];
 
 const betStatus=document.getElementById("betStatus");
 const chips=document.querySelectorAll(".chip");
@@ -247,7 +224,6 @@ chips.forEach(c=>{
     const type=b.id.toUpperCase();
     wallet-=selectedChip;
     walletAmt.innerText=wallet;
-
     bets[type]+=selectedChip;
     const el=document.getElementById("bet-"+type.toLowerCase());
     el.innerText="₹"+bets[type];
@@ -256,16 +232,16 @@ chips.forEach(c=>{
   };
 });
 
-/* HOUSE EDGE DECISION */
+/* HOUSE EDGE (UNCHANGED) */
 function decideWinner(){
   let total=bets.DRAGON+bets.TIGER+bets.TIE;
   let risk=0.6;
-  if(total>=1000) risk=0.85;
   if(total>=500) risk=0.75;
+  if(total>=1000) risk=0.85;
   if(Math.random()>risk){
     return Object.keys(bets).reduce((a,b)=>bets[a]>bets[b]?a:b);
   }
-  return ["DRAGON","TIGER","TIE"][Math.floor(Math.random()*3)];
+  return null; // real card decide
 }
 
 /* TIMER */
@@ -288,11 +264,17 @@ function startTimer(){
 
 /* RESULT */
 function showResult(){
-  const win=decideWinner();
-  dVal.innerText=Math.floor(Math.random()*13)+1;
-  tVal.innerText=Math.floor(Math.random()*13)+1;
+  const d=CARDS[Math.floor(Math.random()*CARDS.length)];
+  const t=CARDS[Math.floor(Math.random()*CARDS.length)];
+
+  dVal.innerText=d.n;
+  tVal.innerText=t.n;
   topDragon.classList.add("flip");
   topTiger.classList.add("flip");
+
+  let win="TIE";
+  if(d.v>t.v) win="DRAGON";
+  else if(t.v>d.v) win="TIGER";
 
   if(bets[win]>0){
     wallet+=bets[win]*MULTI[win];
