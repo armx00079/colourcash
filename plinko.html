@@ -1,146 +1,274 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>PLINKO</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<style>
-body{margin:0;font-family:Arial;background:linear-gradient(135deg,#1aa7a1,#0b6f7a);color:#fff;text-align:center}
-.header{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;font-size:20px;font-weight:bold}
-.wallet{background:rgba(0,0,0,.35);padding:6px 14px;border-radius:20px;font-size:14px}
-.history{margin:6px 10px;background:rgba(0,0,0,.25);padding:8px;border-radius:10px;font-size:12px;white-space:nowrap;overflow-x:auto}
-.board{position:relative;width:320px;height:320px;margin:6px auto}
-.pin{width:10px;height:10px;background:#fff;border-radius:50%;position:absolute}
-.ball{width:14px;height:14px;background:#fff;border-radius:50%;position:absolute;top:20px;left:50%;transform:translateX(-50%);transition:.22s linear}
-.rows{margin:0 10px}
-.row{display:grid;grid-template-columns:repeat(9,1fr);gap:4px;margin-bottom:6px}
-.box{padding:6px 0;font-size:12px;border-radius:6px;opacity:.35}
-.box.active{opacity:1;box-shadow:0 0 6px #fff}
-.red{background:#f44336}.yellow{background:#ff9800}.green{background:#4caf50}
-.select{display:flex;justify-content:center;gap:10px;margin-top:6px}
-.select button{flex:1;max-width:110px;padding:8px;border:none;border-radius:20px;font-weight:bold}
-.controls{margin:10px}
-.bet-row{display:flex;justify-content:center;align-items:center;gap:10px}
-.bet{background:#000;padding:6px 18px;border-radius:20px}
-.ctrl-btn{width:36px;height:36px;border-radius:50%;border:none;font-size:18px}
-.drop{width:92%;padding:14px;margin-top:10px;border-radius:30px;background:#00c853;color:#000;font-weight:bold;font-size:16px}
-</style>
-
-<!-- 🔥 FIREBASE -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
-  authDomain: "colourcash-ea60e.firebaseapp.com",
-  projectId: "colourcash-ea60e",
-  storageBucket: "colourcash-ea60e.appspot.com",
-  messagingSenderId: "403688058646",
-  appId: "1:403688058646:web:f1753360471528f275ea37"
+<!DOCTYPE html>  <html lang="en">    <head>    
+<meta charset="UTF-8">    
+<title>PLINKO</title>    
+<meta name="viewport" content="width=device-width, initial-scale=1">  <style>    
+body{    
+  margin:0;    
+  font-family:Arial, sans-serif;    
+  background:linear-gradient(135deg,#1aa7a1,#0b6f7a);    
+  color:#fff;    
+  text-align:center;    
+}    
+.header{    
+  display:flex;    
+  justify-content:space-between;    
+  align-items:center;    
+  padding:12px 14px;    
+  font-size:20px;    
+  font-weight:bold;    
+}    
+.wallet{    
+  background:rgba(0,0,0,.35);    
+  padding:6px 14px;    
+  border-radius:20px;    
+  font-size:14px;    
+}    
+.history{    
+  margin:6px 10px;    
+  background:rgba(0,0,0,.25);    
+  padding:8px;    
+  border-radius:10px;    
+  font-size:12px;    
+  overflow-x:auto;    
+  white-space:nowrap;    
+}    
+.board{    
+  position:relative;    
+  width:320px;    
+  height:320px;    
+  margin:6px auto 0;    
+}    
+.pin{    
+  width:10px;    
+  height:10px;    
+  background:#fff;    
+  border-radius:50%;    
+  position:absolute;    
+}    
+.ball{    
+  width:14px;    
+  height:14px;    
+  background:#fff;    
+  border-radius:50%;    
+  position:absolute;    
+  top:20px;    
+  left:50%;    
+  transform:translateX(-50%);    
+  transition:top .22s linear,left .22s linear;    
+}    
+.rows{margin:0 10px;}    
+.row{    
+  display:grid;    
+  grid-template-columns:repeat(9,1fr);    
+  gap:4px;    
+  margin-bottom:6px;    
+}    
+.box{    
+  padding:6px 0;    
+  font-size:12px;    
+  border-radius:6px;    
+  opacity:.35;    
+}    
+.box.active{opacity:1;box-shadow:0 0 6px #fff;}    
+.red{background:#f44336}    
+.yellow{background:#ff9800}    
+.green{background:#4caf50}    
+.select{    
+  display:flex;    
+  justify-content:center;    
+  gap:10px;    
+  margin-top:6px;    
+}    
+.select button{    
+  flex:1;    
+  max-width:110px;    
+  padding:8px 0;    
+  border:none;    
+  border-radius:20px;    
+  font-weight:bold;    
+  color:#000;    
+}    
+.controls{margin:10px;}    
+.bet-row{    
+  display:flex;    
+  justify-content:center;    
+  align-items:center;    
+  gap:10px;    
+}    
+.bet{    
+  background:#000;    
+  padding:6px 18px;    
+  border-radius:20px;    
+}    
+.ctrl-btn{    
+  width:36px;    
+  height:36px;    
+  border-radius:50%;    
+  border:none;    
+  font-size:18px;    
+}    
+.drop{    
+  width:92%;    
+  padding:14px;    
+  margin-top:10px;    
+  border-radius:30px;    
+  background:#00c853;    
+  color:#000;    
+  font-weight:bold;    
+  font-size:16px;    
+}    
+</style>  <!-- 🔥 FIREBASE WALLET CONNECT (ADD IN HEAD) -->  <script type="module">    
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";    
+import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";    const firebaseConfig = {
+apiKey: AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms
+authDomain: "colourcash-ea60e.firebaseapp.com",
+projectId: "colourcash-ea60e",
+storageBucket: "colourcash-ea60e.firebasestorage.app",
+messagingSenderId: "403688058646",
+appId: "1:403688058646:web:f1753360471528f275ea37"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-if(!localStorage.getItem("user_id")){
-  alert("User not logged in");
-}
-
+// demo user (login baad me laga sakte ho)
+window.userId = "demo_user_001";
 window.db = db;
-window.userId = localStorage.getItem("user_id");
 window.doc = doc;
 window.getDoc = getDoc;
+window.setDoc = setDoc;
 window.updateDoc = updateDoc;
+</script>  </head>  <body>  <div class="header">
 
-window.addEventListener("load",()=>{
-  if(window.loadWallet) window.loadWallet();
-});
-</script>
-</head>
-
-<body>
-
-<div class="header">
-  <div>PLINKO</div>
-  <div class="wallet">₹ <span id="wallet">0</span></div>
-</div>
-
-<div class="history" id="history">Encrypted Result:</div>
-<div class="board" id="board"></div>
-
-<div class="rows">
-  <div class="row">
-    <div class="box red">26.3</div><div class="box red">4</div><div class="box red">1.5</div>
-    <div class="box red">0.3</div><div class="box red">0.2</div>
-    <div class="box red">0.3</div><div class="box red">1.5</div><div class="box red">4</div><div class="box red">26.3</div>
-  </div>
-</div>
-
-<div class="select">
-  <button class="red" onclick="selectColor('red')">RED</button>
-  <button class="yellow" onclick="selectColor('yellow')">YELLOW</button>
-  <button class="green" onclick="selectColor('green')">GREEN</button>
-</div>
-
-<div class="controls">
-  <div class="bet-row">
-    <button class="ctrl-btn" onclick="bet=Math.max(10,bet-10);update()">−</button>
-    <div class="bet">Bet ₹ <span id="bet">100</span></div>
-    <button class="ctrl-btn" onclick="bet+=10;update()">+</button>
-  </div>
-  <button class="drop" onclick="dropBall()">DROP BALL</button>
-</div>
-
-<script>
-const board=document.getElementById("board");
-const walletUI=document.getElementById("wallet");
-const historyBar=document.getElementById("history");
-
-let wallet=0,bet=100,activeColor="red";
+  <div>PLINKO</div>    
+  <div class="wallet">₹ <span id="wallet">0</span></div>    
+</div>  <div class="history" id="history">Encrypted Result:</div>    
+<div class="board" id="board"></div>  <div class="rows">    
+  <div class="row">    
+    <div class="box red">26.3</div><div class="box red">4</div><div class="box red">1.5</div>    
+    <div class="box red">0.3</div><div class="box red">0.2</div>    
+    <div class="box red">0.3</div><div class="box red">1.5</div><div class="box red">4</div><div class="box red">26.3</div>    
+  </div>    
+  <div class="row">    
+    <div class="box yellow">10.5</div><div class="box yellow">3</div><div class="box yellow">1.3</div>    
+    <div class="box yellow">0.7</div><div class="box yellow">0.4</div>    
+    <div class="box yellow">0.7</div><div class="box yellow">1.3</div><div class="box yellow">3</div><div class="box yellow">10.5</div>    
+  </div>    
+  <div class="row">    
+    <div class="box green">5.4</div><div class="box green">1.8</div><div class="box green">1.1</div>    
+    <div class="box green">1</div><div class="box green">0.5</div>    
+    <div class="box green">1</div><div class="box green">1.1</div><div class="box green">1.8</div><div class="box green">5.4</div>    
+  </div>    
+</div>  <div class="select">    
+  <button class="red" onclick="selectColor('red')">RED</button>    
+  <button class="yellow" onclick="selectColor('yellow')">YELLOW</button>    
+  <button class="green" onclick="selectColor('green')">GREEN</button>    
+</div>  <div class="controls">    
+  <div class="bet-row">    
+    <button class="ctrl-btn" onclick="bet-=10;update()">−</button>    
+    <div class="bet">Bet ₹ <span id="bet">100</span></div>    
+    <button class="ctrl-btn" onclick="bet+=10;update()">+</button>    
+  </div>    
+  <button class="drop" onclick="dropBall()">DROP BALL</button>    
+</div>  <script>    
+const board=document.getElementById("board");    
+const historyBar=document.getElementById("history");    
+const walletUI=document.getElementById("wallet");    let wallet=0;
+let bet=100;
+let activeColor="green";
 
 const multipliers={
-  red:[26.3,4,1.5,0.3,0.2,0.3,1.5,4,26.3]
+red:[26.3,4,1.5,0.3,0.2,0.3,1.5,4,26.3],
+yellow:[10.5,3,1.3,0.7,0.4,0.7,1.3,3,10.5],
+green:[5.4,1.8,1.1,1,0.5,1,1.1,1.8,5.4]
 };
 
-window.loadWallet = async function(){
-  const ref = doc(db,"users",userId);
-  const snap = await getDoc(ref);
-  wallet = snap.data().wallet || 0;
-  update();
+/* LOAD WALLET FROM FIREBASE */
+async function loadWallet(){
+const ref = doc(db,"users",userId);
+const snap = await getDoc(ref);
+if(!snap.exists()){
+await setDoc(ref,{wallet:1000});
+wallet=1000;
+}else{
+wallet=snap.data().wallet;
+}
+update();
 }
 
+/* SAVE WALLET */
 async function saveWallet(){
-  await updateDoc(doc(db,"users",userId),{ wallet });
+const ref = doc(db,"users",userId);
+await updateDoc(ref,{wallet});
+}
+
+/* PINS /
+const rows=8,startDots=3,sx=34,sy=32;
+for(let r=0;r<rows;r++){
+const dots=startDots+r;
+for(let c=0;c<dots;c++){
+const p=document.createElement("div");
+p.className="pin";
+p.style.top=50+rsy+"px";
+p.style.left=160-((dots-1)sx)/2+csx+"px";
+board.appendChild(p);
+}
 }
 
 function update(){
-  walletUI.innerText = wallet;
-  document.getElementById("bet").innerText = bet;
+document.getElementById("bet").innerText=bet;
+walletUI.innerText=wallet;
 }
 
-function selectColor(c){
-  activeColor=c;
+function selectColor(color){
+activeColor=color;
+document.querySelectorAll(".box").forEach(b=>b.classList.remove("active"));
+document.querySelectorAll("."+color).forEach(b=>b.classList.add("active"));
 }
 
 function dropBall(){
-  if(bet>wallet) return alert("Low balance");
+if(bet>wallet) return alert("Low balance");
 
-  wallet -= bet;
-  saveWallet(); update();
+wallet-=bet;
+update();
+saveWallet();
 
-  let col=Math.floor(Math.random()*9);
-  let mul=multipliers[activeColor][col];
-  let win=Math.round(bet*mul*0.6);
+const ball=document.createElement("div");
+ball.className="ball";
+board.appendChild(ball);
 
-  setTimeout(()=>{
-    wallet+=win;
-    saveWallet(); update();
-    historyBar.innerHTML+=` | WIN ${win}`;
-  },1000);
+let col=4,step=0;
+function fall(){
+if(step<rows){
+col+=Math.random()<0.5?-1:1;
+col=Math.max(0,Math.min(col,8));
+ball.style.top=40+stepsy+"px";
+ball.style.left=colsx+20+"px";
+step++;
+setTimeout(fall,220);
+}else{
+finish(col);
+setTimeout(()=>ball.remove(),400);
 }
-</script>
+}
+fall();
+}
 
-</body>
+function finish(col){
+const HOUSE_EDGE=0.40;
+const PAYOUT=1-HOUSE_EDGE;
+const mul=multipliers[activeColor][col];
+const win=Math.round(betmulPAYOUT);
+
+wallet+=win;
+update();
+saveWallet();
+
+const hash=Math.random().toString(16).substring(2,10);
+historyBar.innerHTML+= | ${activeColor.toUpperCase()} ${mul}x (${hash});
+}
+
+loadWallet();
+</script>  </body>
+
 </html>
