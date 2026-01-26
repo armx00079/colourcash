@@ -60,7 +60,7 @@ body{
 
 /* ===== BET BUTTON ===== */
 .bet-btn{
-  margin:10px auto;
+  margin:10px auto 6px;
   width:190px;
   padding:10px 0;
   text-align:center;
@@ -68,6 +68,25 @@ body{
   background:linear-gradient(135deg,#ffcf6a,#ff9f1a);
   color:#000;
   font-weight:bold;
+}
+
+/* ===== LAST HISTORY ===== */
+.last-history{
+  display:flex;
+  justify-content:center;
+  gap:6px;
+  margin-bottom:6px;
+}
+.last-history span{
+  width:26px;
+  height:26px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:14px;
+  font-weight:bold;
+  color:#fff;
 }
 
 /* ===== TABLE ===== */
@@ -170,6 +189,7 @@ body{
   </div>
 
   <div class="bet-btn" id="betStatus">START BETTING</div>
+  <div class="last-history" id="lastHistory"></div>
 </div>
 
 <div class="table-wrap">
@@ -211,6 +231,7 @@ const tVal=document.getElementById("tVal");
 
 const popup=document.getElementById("popup");
 const popupText=document.getElementById("popupText");
+const lastHistory=document.getElementById("lastHistory");
 
 /* CHIP */
 chips.forEach(c=>{
@@ -263,6 +284,13 @@ function showResult(){
   let win="TIE";
   if(d>t) win="DRAGON";
   if(t>d) win="TIGER";
+
+  const h=document.createElement("span");
+  if(win==="DRAGON"){h.innerText="D";h.style.background="#4a5fe0";}
+  else if(win==="TIGER"){h.innerText="T";h.style.background="#ff8c1a";}
+  else{h.innerText="T";h.style.background="#2ecc71";}
+  lastHistory.prepend(h);
+  if(lastHistory.children.length>15) lastHistory.removeChild(lastHistory.lastChild);
 
   setTimeout(()=>{
     popupText.innerText=win+" WINS";
