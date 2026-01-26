@@ -264,7 +264,10 @@ function dropBall(){
 
 function finish(col){
   const mul=multipliers[activeColor][col];
-  const win=Math.round(bet*mul);
+ const HOUSE_EDGE = 0.40;   // 40% house edge
+const PAYOUT_RATE = 1 - HOUSE_EDGE; // 0.60 player payout
+
+const win = Math.round(bet * mul * PAYOUT_RATE);
   wallet+=win;
   update();
 
