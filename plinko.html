@@ -33,7 +33,6 @@ body{
   padding:8px;
   border-radius:10px;
   font-size:12px;
-  overflow-x:auto;
   white-space:nowrap;
 }
 .board{
@@ -59,19 +58,7 @@ body{
   left:50%;
   transform:translateX(-50%);
 }
-
-/* 🔥 FIX START */
-.rows{
-  margin:0 10px;
-  pointer-events:none;
-}
-.select,
-.controls{
-  position:relative;
-  z-index:5;
-}
-/* 🔥 FIX END */
-
+.rows{margin:0 10px;}
 .row{
   display:grid;
   grid-template-columns:repeat(9,1fr);
@@ -84,14 +71,10 @@ body{
   border-radius:6px;
   opacity:.35;
 }
-.box.active{
-  opacity:1;
-  box-shadow:0 0 6px #fff;
-}
+.box.active{opacity:1;box-shadow:0 0 6px #fff;}
 .red{background:#f44336}
 .yellow{background:#ff9800}
 .green{background:#4caf50}
-
 .select{
   display:flex;
   justify-content:center;
@@ -107,7 +90,6 @@ body{
   font-weight:bold;
   color:#000;
 }
-
 .controls{margin:10px;}
 .bet-row{
   display:flex;
@@ -139,7 +121,7 @@ body{
 }
 </style>
 
-<!-- 🔥 FIREBASE -->
+<!-- FIREBASE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -148,20 +130,15 @@ const firebaseConfig = {
   apiKey: "AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
   authDomain: "colourcash-ea60e.firebaseapp.com",
   projectId: "colourcash-ea60e",
-  storageBucket: "colourcash-ea60e.firebasestorage.app",
-  messagingSenderId: "403688058646",
-  appId: "1:403688058646:web:f1753360471528f275ea37"
 };
 
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-window.db=db;
-window.doc=doc;
-window.getDoc=getDoc;
-window.setDoc=setDoc;
-window.updateDoc=updateDoc;
-window.userId="demo_user_001";
+window.db = getFirestore(app);
+window.doc = doc;
+window.getDoc = getDoc;
+window.setDoc = setDoc;
+window.updateDoc = updateDoc;
+window.userId = "demo_user_001";
 </script>
 </head>
 
@@ -201,7 +178,7 @@ window.userId="demo_user_001";
 
 <div class="controls">
   <div class="bet-row">
-    <button class="ctrl-btn" onclick="bet-=10;update()">−</button>
+    <button class="ctrl-btn" onclick="bet=Math.max(10,bet-10);update()">−</button>
     <div class="bet">Bet ₹ <span id="bet">100</span></div>
     <button class="ctrl-btn" onclick="bet+=10;update()">+</button>
   </div>
@@ -223,15 +200,16 @@ const multipliers={
   green:[5.4,1.8,1.1,1,0.5,1,1.1,1.8,5.4]
 };
 
+const LOW_INDEXES=[2,3,4,5,6];
+const HIGH_INDEXES=[0,1,7,8];
+
 async function loadWallet(){
   const ref=doc(db,"users",userId);
   const snap=await getDoc(ref);
   if(!snap.exists()){
     await setDoc(ref,{wallet:1000});
     wallet=1000;
-  }else{
-    wallet=snap.data().wallet;
-  }
+  }else wallet=snap.data().wallet;
   update();
 }
 async function saveWallet(){
@@ -271,33 +249,33 @@ function dropBall(){
   ball.className="ball";
   board.appendChild(ball);
 
-  let col=4,step=0;
+  let step=0;
   function fall(){
     if(step<rows){
-      col+=Math.random()<0.5?-1:1;
-      col=Math.max(0,Math.min(col,8));
       ball.style.top=40+step*sy+"px";
-      ball.style.left=col*sx+20+"px";
       step++;
       setTimeout(fall,220);
     }else{
-      finish(col);
+      finish();
       setTimeout(()=>ball.remove(),400);
     }
   }
   fall();
 }
 
-function finish(col){
-  const HOUSE_EDGE=0.40;
+function finish(){
+  const isLow=Math.random()<0.5;
+  const pool=isLow?LOW_INDEXES:HIGH_INDEXES;
+  const col=pool[Math.floor(Math.random()*pool.length)];
   const mul=multipliers[activeColor][col];
-  const win=Math.round(bet*mul*(1-HOUSE_EDGE));
+  const win=Math.round(bet*mul);
+
   wallet+=win;
   update();
   saveWallet();
 
-  const hash=Math.random().toString(16).substring(2,10);
-  historyBar.innerHTML+=` | ${activeColor.toUpperCase()} ${mul}x (${hash})`;
+  historyBar.innerHTML=
+    `Encrypted Result : | ${activeColor.toUpperCase()} ${mul}x`;
 }
 
 loadWallet();
