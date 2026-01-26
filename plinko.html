@@ -55,6 +55,7 @@ body{
   top:20px;  
   left:50%;  
   transform:translateX(-50%);  
+  transition:top .22s linear,left .22s linear;  
 }  
 .rows{margin:0 10px;}  
 .row{  
@@ -117,12 +118,12 @@ body{
   font-weight:bold;  
   font-size:16px;  
 }  
-</style>  <!-- 🔥 FIREBASE WALLET CONNECT -->  <script type="module">  
+</style>  <!-- 🔥 FIREBASE WALLET CONNECT (ADD IN HEAD) -->  <script type="module">  
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";  
 import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";  
   
 const firebaseConfig = {  
-  apiKey: "AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",  
+  apiKey: AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms  
   authDomain: "colourcash-ea60e.firebaseapp.com",  
   projectId: "colourcash-ea60e",  
   storageBucket: "colourcash-ea60e.firebasestorage.app",  
@@ -133,12 +134,13 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);  
 const db = getFirestore(app);  
   
+// demo user (login baad me laga sakte ho)  
+window.userId = "demo_user_001";  
 window.db = db;  
 window.doc = doc;  
 window.getDoc = getDoc;  
 window.setDoc = setDoc;  
 window.updateDoc = updateDoc;  
-window.userId = "demo_user_001";  
 </script>  </head>  <body>  <div class="header">  
   <div>PLINKO</div>  
   <div class="wallet">₹ <span id="wallet">0</span></div>  
@@ -185,6 +187,7 @@ const multipliers={
   green:[5.4,1.8,1.1,1,0.5,1,1.1,1.8,5.4]  
 };  
   
+/* LOAD WALLET FROM FIREBASE */  
 async function loadWallet(){  
   const ref = doc(db,"users",userId);  
   const snap = await getDoc(ref);  
@@ -196,10 +199,14 @@ async function loadWallet(){
   }  
   update();  
 }  
+  
+/* SAVE WALLET */  
 async function saveWallet(){  
-  await updateDoc(doc(db,"users",userId),{wallet});  
+  const ref = doc(db,"users",userId);  
+  await updateDoc(ref,{wallet});  
 }  
   
+/* PINS */  
 const rows=8,startDots=3,sx=34,sy=32;  
 for(let r=0;r<rows;r++){  
   const dots=startDots+r;  
@@ -225,6 +232,7 @@ function selectColor(color){
   
 function dropBall(){  
   if(bet>wallet) return alert("Low balance");  
+  
   wallet-=bet;  
   update();  
   saveWallet();  
@@ -252,8 +260,10 @@ function dropBall(){
   
 function finish(col){  
   const HOUSE_EDGE=0.40;  
+  const PAYOUT=1-HOUSE_EDGE;  
   const mul=multipliers[activeColor][col];  
-  const win=Math.round(bet*mul*(1-HOUSE_EDGE));  
+  const win=Math.round(bet*mul*PAYOUT);  
+  
   wallet+=win;  
   update();  
   saveWallet();  
@@ -264,4 +274,4 @@ function finish(col){
   
 loadWallet();  
 </script>  </body>  
-</html>
+</html> 
