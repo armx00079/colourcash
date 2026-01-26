@@ -14,14 +14,25 @@ body{
   text-align:center;
 }
 
+/* HEADER */
 .header{
-  padding:14px;
-  font-size:22px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:12px 14px;
+  font-size:20px;
   font-weight:bold;
 }
+.wallet{
+  background:rgba(0,0,0,.35);
+  padding:6px 14px;
+  border-radius:20px;
+  font-size:14px;
+}
 
+/* HISTORY */
 .history{
-  margin:10px;
+  margin:6px 10px;
   background:rgba(0,0,0,.25);
   padding:8px;
   border-radius:10px;
@@ -34,10 +45,9 @@ body{
 .board{
   position:relative;
   width:320px;
-  height:340px;
-  margin:0 auto;
+  height:360px;
+  margin:10px auto;
 }
-
 .pin{
   width:10px;
   height:10px;
@@ -45,22 +55,21 @@ body{
   border-radius:50%;
   position:absolute;
 }
-
 .ball{
   width:14px;
   height:14px;
   background:#fff;
   border-radius:50%;
   position:absolute;
-  top:0;
+  top:20px;
   left:50%;
   transform:translateX(-50%);
-  transition:top .25s linear,left .25s linear;
+  transition:top .22s linear,left .22s linear;
 }
 
 /* MULTIPLIERS */
 .rows{
-  margin:10px;
+  margin:8px 10px;
 }
 .row{
   display:grid;
@@ -72,20 +81,36 @@ body{
   padding:6px 0;
   font-size:12px;
   border-radius:6px;
-  opacity:.4;
+  opacity:.35;
 }
 .box.active{
   opacity:1;
   box-shadow:0 0 6px #fff;
 }
-
 .red{background:#f44336}
 .yellow{background:#ff9800}
 .green{background:#4caf50}
 
+/* COLOR SELECT */
+.select{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin-top:6px;
+}
+.select button{
+  flex:1;
+  max-width:110px;
+  padding:8px 0;
+  border:none;
+  border-radius:20px;
+  font-weight:bold;
+  color:#000;
+}
+
 /* CONTROLS */
 .controls{
-  margin:12px;
+  margin:10px;
 }
 .bet-row{
   display:flex;
@@ -95,45 +120,35 @@ body{
 }
 .bet{
   background:#000;
-  padding:6px 16px;
+  padding:6px 18px;
   border-radius:20px;
 }
-button{
-  border:none;
-  border-radius:50%;
+.ctrl-btn{
   width:36px;
   height:36px;
+  border-radius:50%;
+  border:none;
   font-size:18px;
 }
 .drop{
-  width:90%;
+  width:92%;
   padding:14px;
   margin-top:10px;
   border-radius:30px;
   background:#00c853;
   color:#000;
   font-weight:bold;
-}
-
-/* COLOR SELECT */
-.select{
-  display:flex;
-  justify-content:center;
-  gap:10px;
-  margin-top:10px;
-}
-.select button{
-  border-radius:20px;
-  padding:8px 18px;
-  font-weight:bold;
-  color:#000;
+  font-size:16px;
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">PLINKO</div>
+<div class="header">
+  <div>PLINKO</div>
+  <div class="wallet">₹ <span id="wallet">1000</span></div>
+</div>
 
 <div class="history" id="history">Encrypted Result:</div>
 
@@ -168,9 +183,9 @@ button{
 
 <div class="controls">
   <div class="bet-row">
-    <button onclick="bet-=10;update()">−</button>
+    <button class="ctrl-btn" onclick="bet-=10;update()">−</button>
     <div class="bet">Bet ₹ <span id="bet">100</span></div>
-    <button onclick="bet+=10;update()">+</button>
+    <button class="ctrl-btn" onclick="bet+=10;update()">+</button>
   </div>
   <button class="drop" onclick="dropBall()">DROP BALL</button>
 </div>
@@ -178,11 +193,12 @@ button{
 <script>
 const board=document.getElementById("board");
 const historyBar=document.getElementById("history");
+const walletUI=document.getElementById("wallet");
 
+let wallet=1000;
 let bet=100;
 let activeColor="green";
 
-/* MULTIPLIERS */
 const multipliers={
   red:[26.3,4,1.5,0.3,0.2,0.3,1.5,4,26.3],
   yellow:[10.5,3,1.3,0.7,0.4,0.7,1.3,3,10.5],
@@ -190,30 +206,34 @@ const multipliers={
 };
 
 /* PINS */
-let rows=8, spacingX=35, spacingY=35;
+const rows=8, sx=36, sy=36;
 for(let r=0;r<rows;r++){
   for(let c=0;c<=r;c++){
     const p=document.createElement("div");
     p.className="pin";
-    p.style.top=40+r*spacingY+"px";
-    p.style.left=160-r*spacingX/2+c*spacingX+"px";
+    p.style.top=40+r*sy+"px";
+    p.style.left=160-r*sx/2+c*sx+"px";
     board.appendChild(p);
   }
 }
 
 function update(){
   document.getElementById("bet").innerText=bet;
+  walletUI.innerText=wallet;
 }
 
-/* SELECT COLOR */
 function selectColor(color){
   activeColor=color;
   document.querySelectorAll(".box").forEach(b=>b.classList.remove("active"));
   document.querySelectorAll("."+color).forEach(b=>b.classList.add("active"));
 }
 
-/* DROP BALL */
 function dropBall(){
+  if(bet>wallet) return alert("Low balance");
+
+  wallet-=bet;
+  update();
+
   const ball=document.createElement("div");
   ball.className="ball";
   board.appendChild(ball);
@@ -224,23 +244,29 @@ function dropBall(){
     if(step<rows){
       col += Math.random()<0.5?-1:1;
       col=Math.max(0,Math.min(col,8));
-      ball.style.top=40+step*spacingY+"px";
-      ball.style.left=col*spacingX+20+"px";
+      ball.style.top=40+step*sy+"px";
+      ball.style.left=col*sx+20+"px";
       step++;
-      setTimeout(fall,250);
+      setTimeout(fall,220);
     }else{
       finish(col);
+      setTimeout(()=>ball.remove(),400);
     }
   }
   fall();
 }
 
-/* FINISH */
 function finish(col){
   const mul=multipliers[activeColor][col];
+  const win=Math.round(bet*mul);
+  wallet+=win;
+  update();
+
   const hash=Math.random().toString(16).substring(2,10);
   historyBar.innerHTML+=` | ${activeColor.toUpperCase()} ${mul}x (${hash})`;
 }
+
+update();
 </script>
 
 </body>
