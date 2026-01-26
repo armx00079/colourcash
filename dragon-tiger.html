@@ -228,7 +228,16 @@ document.querySelectorAll(".chip").forEach(c=>{
 function startTimer(){  
   timer=15; phase="bet";  
   const t=setInterval(()=>{  
-    timer--;  
+    timer--;
+    if(timer > 5){
+  phase = "bet";
+}
+else if(timer > 0){
+  phase = "lock";
+  document.querySelectorAll(".chip").forEach(c=>{
+    c.classList.add("locked");
+  });
+}
     document.getElementById("betStatus").innerText=timer>5?"START BETTING "+(timer-5):timer>0?"BET LOCK "+timer:"RESULT";  
     if(timer<=0){clearInterval(t); showResult();}  
   },1000);  
@@ -264,6 +273,13 @@ function resetRound(){
   bets={DRAGON:0,TIGER:0,TIE:0};  
   document.querySelectorAll(".bet-amt").forEach(b=>b.style.display="none");  
   document.querySelectorAll(".chip").forEach(c=>c.classList.remove("active"));  
+  document.querySelectorAll(".chip").forEach(c=>c.classList.remove("locked"));
+
+dragon.classList.remove("locked");
+tiger.classList.remove("locked");
+tie.classList.remove("locked");
+
+phase = "bet";
   topDragon.classList.remove("flip"); topTiger.classList.remove("flip");  
   dVal.innerText=""; tVal.innerText="";  
   startTimer();  
