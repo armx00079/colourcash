@@ -140,10 +140,24 @@ body{
   border-radius:20px;
   font-size:26px;font-weight:bold;
 }
+
+/* ===== WALLET ===== */
+#walletBox{
+  position:fixed;
+  bottom:12px;
+  right:12px;
+  background:#000;
+  padding:8px 14px;
+  border-radius:20px;
+  font-weight:bold;
+  z-index:9999;
+}
 </style>
 </head>
 
 <body>
+
+<div id="walletBox">💰 ₹<span id="walletAmt">5000</span></div>
 
 <div class="game-header">
   <div class="header-arena">
@@ -194,8 +208,11 @@ body{
 </div>
 
 <script>
+let wallet = 5000;
 let selectedChip=0, timer=15, phase="bet";
 let bets={DRAGON:0,TIGER:0,TIE:0};
+
+const MULTI={DRAGON:2,TIGER:2,TIE:13};
 
 const betStatus=document.getElementById("betStatus");
 const chips=document.querySelectorAll(".chip");
@@ -209,6 +226,9 @@ const tVal=document.getElementById("tVal");
 const popup=document.getElementById("popup");
 const popupText=document.getElementById("popupText");
 const lastHistory=document.getElementById("lastHistory");
+const walletAmt=document.getElementById("walletAmt");
+
+walletAmt.innerText=wallet;
 
 /* CHIP */
 chips.forEach(c=>{
@@ -223,8 +243,11 @@ chips.forEach(c=>{
 /* BET PLACE */
 [dragon,tiger,tie].forEach(b=>{
   b.onclick=()=>{
-    if(phase!=="bet"||!selectedChip)return;
+    if(phase!=="bet"||!selectedChip||wallet<selectedChip)return;
     const type=b.id.toUpperCase();
+    wallet-=selectedChip;
+    walletAmt.innerText=wallet;
+
     bets[type]+=selectedChip;
     const el=document.getElementById("bet-"+type.toLowerCase());
     el.innerText="₹"+bets[type];
@@ -232,6 +255,18 @@ chips.forEach(c=>{
     b.style.boxShadow="0 0 15px gold";
   };
 });
+
+/* HOUSE EDGE DECISION */
+function decideWinner(){
+  let total=bets.DRAGON+bets.TIGER+bets.TIE;
+  let risk=0.6;
+  if(total>=1000) risk=0.85;
+  if(total>=500) risk=0.75;
+  if(Math.random()>risk){
+    return Object.keys(bets).reduce((a,b)=>bets[a]>bets[b]?a:b);
+  }
+  return ["DRAGON","TIGER","TIE"][Math.floor(Math.random()*3)];
+}
 
 /* TIMER */
 function startTimer(){
@@ -253,31 +288,29 @@ function startTimer(){
 
 /* RESULT */
 function showResult(){
-  const d=Math.floor(Math.random()*13)+1;
-  const t=Math.floor(Math.random()*13)+1;
-  dVal.innerText=d; tVal.innerText=t;
+  const win=decideWinner();
+  dVal.innerText=Math.floor(Math.random()*13)+1;
+  tVal.innerText=Math.floor(Math.random()*13)+1;
   topDragon.classList.add("flip");
   topTiger.classList.add("flip");
 
-  let win="TIE";
-  if(d>t) win="DRAGON";
-  if(t>d) win="TIGER";
+  if(bets[win]>0){
+    wallet+=bets[win]*MULTI[win];
+    walletAmt.innerText=wallet;
+  }
 
   const h=document.createElement("span");
   h.innerText=win[0];
   h.style.background=win==="DRAGON"?"#4a5fe0":win==="TIGER"?"#ff8c1a":"#2ecc71";
   lastHistory.prepend(h);
-  if(lastHistory.children.length>15) lastHistory.lastChild.remove();
 
-  setTimeout(()=>{
-    popupText.innerText=win+" WINS";
-    popup.style.display="flex";
-  },600);
+  popupText.innerText=win+" WINS";
+  popup.style.display="flex";
 
   setTimeout(()=>{
     popup.style.display="none";
     resetRound();
-  },2600);
+  },2500);
 }
 
 /* RESET */
