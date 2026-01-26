@@ -12,8 +12,6 @@ body{
   background:radial-gradient(circle at top,#0b1c2d,#030b14);
   color:#fff;
 }
-
-/* ===== HEADER ===== */
 .game-header{
   background:linear-gradient(180deg,#2b1c3a,#1a1025);
   padding:14px 10px 10px;
@@ -26,7 +24,6 @@ body{
 .header-arena img{height:80px}
 .center-cards{display:flex;align-items:center;gap:10px}
 
-/* ===== TOP CARDS ===== */
 .play-card{width:46px;height:62px;perspective:800px}
 .play-card .inner{
   width:100%;height:100%;
@@ -71,7 +68,6 @@ body{
   font-weight:bold;
 }
 
-/* ===== TABLE ===== */
 .table-wrap{display:flex;justify-content:center;margin-top:20px}
 .table{
   width:360px;
@@ -97,7 +93,6 @@ body{
   display:flex;align-items:center;justify-content:center;
 }
 
-/* ===== BET AMOUNT ===== */
 .bet-amt{
   position:absolute;
   top:6px;right:8px;
@@ -108,14 +103,6 @@ body{
   display:none;
 }
 
-/* ===== SELECTION HIGHLIGHT ===== */
-.card.active,
-.tie.active{
-  box-shadow:0 0 18px gold;
-  transform:scale(1.03);
-}
-
-/* ===== CHIPS ===== */
 .chips{display:flex;justify-content:center;gap:10px;margin:18px auto}
 .chip{
   width:46px;height:46px;
@@ -126,9 +113,7 @@ body{
   cursor:pointer;
 }
 .chip.active{outline:3px solid #fff}
-.locked{pointer-events:none;opacity:.4}
 
-/* ===== POPUP ===== */
 .popup{
   position:fixed;inset:0;
   background:rgba(0,0,0,.6);
@@ -144,7 +129,6 @@ body{
   font-weight:bold;
 }
 
-/* ===== WALLET ===== */
 #walletBox{
   position:fixed;
   bottom:12px;right:12px;
@@ -154,7 +138,6 @@ body{
   font-weight:bold;
 }
 
-/* ===== LIVE FEED ===== */
 .live-feed{
   margin:15px auto;
   width:90%;
@@ -175,15 +158,25 @@ body{
 
 <body>
 
-<div id="walletBox">💰 ₹<span id="walletAmt">5000</span></div>
+<div id="walletBox">💰 ₹<span id="walletAmt">0</span></div>
 
 <div class="game-header">
   <div class="header-arena">
     <img src="images/dragon.png">
     <div class="center-cards">
-      <div class="play-card" id="topDragon"><div class="inner"><div class="front"></div><div class="back" id="dVal"></div></div></div>
+      <div class="play-card" id="topDragon">
+        <div class="inner">
+          <div class="front"></div>
+          <div class="back" id="dVal"></div>
+        </div>
+      </div>
       <div>VS</div>
-      <div class="play-card" id="topTiger"><div class="inner"><div class="front"></div><div class="back" id="tVal"></div></div></div>
+      <div class="play-card" id="topTiger">
+        <div class="inner">
+          <div class="front"></div>
+          <div class="back" id="tVal"></div>
+        </div>
+      </div>
     </div>
     <img src="images/tiger.png">
   </div>
@@ -216,16 +209,42 @@ body{
   <div class="popup-box" id="popupText"></div>
 </div>
 
-<script>
-/* ===== LOAD SAVED GAME ===== */
-const saved = JSON.parse(localStorage.getItem("DT_GAME"));
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore,collection,query,where,getDocs,doc,updateDoc }
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-let wallet = saved?.wallet ?? 5000;
-let selectedChip = 0;
-let phase = saved?.phase ?? "bet";
-let timer = saved?.timer ?? 15;
-let bets = saved?.bets ?? {DRAGON:0,TIGER:0,TIE:0};
+const app = initializeApp({
+  apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
+  authDomain:"colourcash-ea60e.firebaseapp.com",
+  projectId:"colourcash-ea60e"
+});
+const db = getFirestore(app);
 
+const userEmail = localStorage.getItem("userEmail");
+let userDocId="";
+let wallet=0;
+
+const walletAmt=document.getElementById("walletAmt");
+
+async function loadWallet(){
+  const snap=await getDocs(query(collection(db,"users"),where("email","==",userEmail)));
+  snap.forEach(d=>{
+    userDocId=d.id;
+    wallet=d.data().balance||0;
+  });
+  walletAmt.innerText=wallet;
+}
+loadWallet();
+
+function syncWallet(){
+  walletAmt.innerText=wallet;
+  updateDoc(doc(db,"users",userDocId),{balance:wallet});
+}
+
+/* ===== GAME LOGIC ===== */
+let selectedChip=0,phase="bet",timer=15;
+let bets={DRAGON:0,TIGER:0,TIE:0};
 const MULTI={DRAGON:2,TIGER:2,TIE:13};
 
 const CARDS=[
@@ -234,17 +253,6 @@ const CARDS=[
  {n:"6",v:6},{n:"5",v:5},{n:"4",v:4},{n:"3",v:3},{n:"2",v:2}
 ];
 
-const walletAmt=document.getElementById("walletAmt");
-walletAmt.innerText=wallet;
-
-/* SAVE GAME */
-function saveGame(){
-  localStorage.setItem("DT_GAME", JSON.stringify({
-    wallet, phase, timer, bets
-  }));
-}
-
-/* CHIP */
 document.querySelectorAll(".chip").forEach(c=>{
   c.onclick=()=>{
     if(phase!=="bet")return;
@@ -254,45 +262,33 @@ document.querySelectorAll(".chip").forEach(c=>{
   };
 });
 
-/* BET + HIGHLIGHT */
 ["dragon","tiger","tie"].forEach(id=>{
-  const el=document.getElementById(id);
-  el.onclick=()=>{
+  document.getElementById(id).onclick=()=>{
     if(phase!=="bet"||!selectedChip||wallet<selectedChip)return;
-
-    document.querySelectorAll(".card,.tie").forEach(x=>x.classList.remove("active"));
-    el.classList.add("active");
-
     wallet-=selectedChip;
-    walletAmt.innerText=wallet;
+    syncWallet();
     bets[id.toUpperCase()]+=selectedChip;
-
     const b=document.getElementById("bet-"+id);
     b.innerText="₹"+bets[id.toUpperCase()];
     b.style.display="block";
-
-    saveGame();
   };
 });
 
-/* TIMER */
 function startTimer(){
+  timer=15; phase="bet";
   const t=setInterval(()=>{
     timer--;
-    if(timer>5){phase="bet";}
-    else if(timer>0){phase="lock";document.querySelectorAll(".chip").forEach(c=>c.classList.add("locked"));}
     betStatus.innerText=timer>5?"START BETTING "+(timer-5):timer>0?"BET LOCK "+timer:"RESULT";
-    saveGame();
-    if(timer<=0){clearInterval(t); showResult();}
+    if(timer<=0){clearInterval(t);showResult();}
   },1000);
 }
 
-/* RESULT */
 function showResult(){
   const d=CARDS[Math.floor(Math.random()*CARDS.length)];
   const t=CARDS[Math.floor(Math.random()*CARDS.length)];
   dVal.innerText=d.n; tVal.innerText=t.n;
-  topDragon.classList.add("flip"); topTiger.classList.add("flip");
+  topDragon.classList.add("flip");
+  topTiger.classList.add("flip");
 
   let win="TIE";
   if(d.v>t.v) win="DRAGON";
@@ -300,31 +296,26 @@ function showResult(){
 
   if(bets[win]>0){
     wallet+=bets[win]*MULTI[win];
-    walletAmt.innerText=wallet;
+    syncWallet();
   }
 
   popupText.innerText=win+" WINS";
   popup.style.display="flex";
 
-  saveGame();
-
-  setTimeout(()=>{popup.style.display="none"; resetRound();},2500);
+  setTimeout(()=>{popup.style.display="none";resetRound();},2500);
 }
 
-/* RESET */
 function resetRound(){
   bets={DRAGON:0,TIGER:0,TIE:0};
-  timer=15; phase="bet";
   document.querySelectorAll(".bet-amt").forEach(b=>b.style.display="none");
-  document.querySelectorAll(".chip").forEach(c=>c.classList.remove("active","locked"));
-  document.querySelectorAll(".card,.tie").forEach(x=>x.classList.remove("active"));
-  topDragon.classList.remove("flip"); topTiger.classList.remove("flip");
+  document.querySelectorAll(".chip").forEach(c=>c.classList.remove("active"));
+  topDragon.classList.remove("flip");
+  topTiger.classList.remove("flip");
   dVal.innerText=""; tVal.innerText="";
-  saveGame();
   startTimer();
 }
 
-/* LIVE FEED */
+/* LIVE FEED FAKE */
 setInterval(()=>{
   const amt=[15000,20000,35000,50000,80000][Math.floor(Math.random()*5)];
   const item=document.createElement("div");
