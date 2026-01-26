@@ -125,7 +125,7 @@ body{
   <div class="popup-box">
     <h2>🎉 CASHED OUT</h2>
     <div>Won ₹ <span id="winAmt"></span></div>
-    <button onclick="closePopup()">OK</button>
+    <button id="okBtn">OK</button>
   </div>
 </div>
 
@@ -274,8 +274,9 @@ function render(){
   initBoard();
 }
 
-function closePopup(){
-  popup.style.display="none";
+document.getElementById("okBtn").onclick = () => {
+  popup.style.display = "none";
+};
 }
 
 /* INIT */
