@@ -249,33 +249,37 @@ function dropBall(){
   let x = 160;   // center
 let y = 20;
 let speed = 1.2;
+const sx = 34; // column width (same jo pins me use ho raha)
+const boardHeight = 320; // board ke andar girna
 
 function fall(){
-  if(step < rows){
-    // gravity
-    speed += 0.35;
-    y += speed;
+  // gravity
+  speed += 0.35;
+  y += speed;
 
-    // pin deflection
-    const sway = (Math.random() - 0.5) * 22;
-    x += sway;
+  // pin deflection
+  const sway = (Math.random() - 0.5) * 18;
+  x += sway;
 
-    // board limit
-    x = Math.max(20, Math.min(x, 300));
+  // walls
+  x = Math.max(20, Math.min(x, 300));
 
-    ball.style.top = y + "px";
-    ball.style.left = x + "px";
+  ball.style.top = y + "px";
+  ball.style.left = x + "px";
 
-    step++;
-    setTimeout(fall, 45);
-  } else {
+  // jab ball bottom tak pahunch jaye
+  if (y >= boardHeight) {
     const col = Math.min(
       8,
       Math.max(0, Math.round((x - 20) / sx))
     );
     finish(col);
     setTimeout(() => ball.remove(), 500);
+    return;
   }
+
+  requestAnimationFrame(fall);
+}
 }
 
 fall();
