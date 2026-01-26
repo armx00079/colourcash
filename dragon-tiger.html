@@ -81,10 +81,7 @@ body{
 }
 .cards{display:flex;justify-content:space-between;align-items:center}
 
-.card,.tie{
-  position:relative;
-  font-weight:bold;
-}
+.card,.tie{position:relative;font-weight:bold}
 .card{
   width:135px;height:95px;
   border-radius:16px;
@@ -220,8 +217,15 @@ body{
 </div>
 
 <script>
-let wallet=5000, selectedChip=0, phase="bet", timer=15;
-let bets={DRAGON:0,TIGER:0,TIE:0};
+/* ===== LOAD SAVED GAME ===== */
+const saved = JSON.parse(localStorage.getItem("DT_GAME"));
+
+let wallet = saved?.wallet ?? 5000;
+let selectedChip = 0;
+let phase = saved?.phase ?? "bet";
+let timer = saved?.timer ?? 15;
+let bets = saved?.bets ?? {DRAGON:0,TIGER:0,TIE:0};
+
 const MULTI={DRAGON:2,TIGER:2,TIE:13};
 
 const CARDS=[
@@ -232,6 +236,13 @@ const CARDS=[
 
 const walletAmt=document.getElementById("walletAmt");
 walletAmt.innerText=wallet;
+
+/* SAVE GAME */
+function saveGame(){
+  localStorage.setItem("DT_GAME", JSON.stringify({
+    wallet, phase, timer, bets
+  }));
+}
 
 /* CHIP */
 document.querySelectorAll(".chip").forEach(c=>{
@@ -259,21 +270,19 @@ document.querySelectorAll(".chip").forEach(c=>{
     const b=document.getElementById("bet-"+id);
     b.innerText="₹"+bets[id.toUpperCase()];
     b.style.display="block";
+
+    saveGame();
   };
 });
 
 /* TIMER */
 function startTimer(){
-  timer=15; phase="bet";
   const t=setInterval(()=>{
     timer--;
-    if(timer>5){
-      phase="bet";
-    }else if(timer>0){
-      phase="lock";
-      document.querySelectorAll(".chip").forEach(c=>c.classList.add("locked"));
-    }
+    if(timer>5){phase="bet";}
+    else if(timer>0){phase="lock";document.querySelectorAll(".chip").forEach(c=>c.classList.add("locked"));}
     betStatus.innerText=timer>5?"START BETTING "+(timer-5):timer>0?"BET LOCK "+timer:"RESULT";
+    saveGame();
     if(timer<=0){clearInterval(t); showResult();}
   },1000);
 }
@@ -297,10 +306,7 @@ function showResult(){
   popupText.innerText=win+" WINS";
   popup.style.display="flex";
 
-  const h=document.createElement("span");
-  h.innerText=win[0];
-  h.style.background=win==="DRAGON"?"#4a5fe0":win==="TIGER"?"#ff8c1a":"#2ecc71";
-  lastHistory.prepend(h);
+  saveGame();
 
   setTimeout(()=>{popup.style.display="none"; resetRound();},2500);
 }
@@ -308,11 +314,13 @@ function showResult(){
 /* RESET */
 function resetRound(){
   bets={DRAGON:0,TIGER:0,TIE:0};
+  timer=15; phase="bet";
   document.querySelectorAll(".bet-amt").forEach(b=>b.style.display="none");
   document.querySelectorAll(".chip").forEach(c=>c.classList.remove("active","locked"));
   document.querySelectorAll(".card,.tie").forEach(x=>x.classList.remove("active"));
   topDragon.classList.remove("flip"); topTiger.classList.remove("flip");
   dVal.innerText=""; tVal.innerText="";
+  saveGame();
   startTimer();
 }
 
