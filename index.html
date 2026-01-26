@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <title>Colour Cash</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">  
-  
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
 <style>
 /* ===== TREASURE GAME CARD FIX ===== */
 
@@ -41,7 +41,14 @@
   background:linear-gradient(135deg,#7b3f00,#3b1f00);
   color:#fff;
 }
-  body{
+
+/* ✅ PLINKO COLOR */
+.game-card.plinko{
+  background:linear-gradient(135deg,#1aa7a1,#0b6f7a);
+  color:#fff;
+}
+
+body{
   margin:0;
   font-family:Arial, sans-serif;
   background:#0f0f0f;
@@ -63,28 +70,17 @@
   gap:14px;
   padding:15px;
 }
-.game-card{
-  border-radius:16px;
-  padding:24px 10px;
-  cursor:pointer;
-  transition:0.2s;
-  text-align:center;
-}
-.game-card:active{
-  transform:scale(0.97);
-}
+
 .game-card h3{
   margin:6px 0 0;
   font-size:18px;
 }
+
 .game-card p{
   font-size:13px;
   opacity:0.85;
 }
-  .game-card p{
-  font-size:13px;
-  opacity:0.85;
-}
+
 .game-card.coinflip{
   background: linear-gradient(
     135deg,
@@ -169,37 +165,44 @@
     <p>High Card Battle</p>
   </div>
 
-  <!-- ✅ ROULETTE CARD (NEW) -->
   <div class="game-card roulette" onclick="location.href='roulette.html'">
     <div class="icon">🎡</div>
     <h3>ROULETTE</h3>
     <p>Classic Casino Wheel</p>
   </div>
-  
-<div class="game-card aviator" onclick="location.href='aviator-game.html'">
-  <div class="icon">✈️💯</div>
-  <h3>AVIATOR REAL WIN</h3>
-  <p>Crash Multiplier • 1000x</p>
-</div>
- 
-<div class="game-card coinflip" onclick="location.href='coinflip.html'">
-  <div class="icon coin-icon">🪙</div>
-  <h3>COIN FLIP</h3>
-  <p>Head · Tail</p>
-</div>
-  
-<div class="game-card treasure" onclick="location.href='treasure.html'">
-  <div class="game-icon-wrap">
-    <img src="images/treasure.png" class="game-icon">
+
+  <div class="game-card aviator" onclick="location.href='aviator-game.html'">
+    <div class="icon">✈️💯</div>
+    <h3>AVIATOR REAL WIN</h3>
+    <p>Crash Multiplier • 1000x</p>
   </div>
-  <div class="game-title">TREASURE</div>
-  <div class="game-sub">High Risk • High Reward</div>
-</div>
-  
+
+  <div class="game-card coinflip" onclick="location.href='coinflip.html'">
+    <div class="icon">🪙</div>
+    <h3>COIN FLIP</h3>
+    <p>Head · Tail</p>
+  </div>
+
+  <div class="game-card treasure" onclick="location.href='treasure.html'">
+    <div class="game-icon-wrap">
+      <img src="images/treasure.png" class="game-icon">
+    </div>
+    <div class="game-title">TREASURE</div>
+    <div class="game-sub">High Risk • High Reward</div>
+  </div>
+
+  <!-- 🐔 CHICKEN ROAD -->
   <div class="game-card chicken" onclick="location.href='chicken-road.html'">
     <div class="icon">🐔</div>
     <h3>CHICKEN ROAD</h3>
     <p>High Risk • High Reward</p>
+  </div>
+
+  <!-- ✅ PLINKO ADDED (CHICKEN KE SAATH) -->
+  <div class="game-card plinko" onclick="location.href='plinko.html'">
+    <div class="icon">⚪</div>
+    <h3>PLINKO</h3>
+    <p>Low • Medium • High Risk</p>
   </div>
 
 </div>
