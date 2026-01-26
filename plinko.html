@@ -121,30 +121,6 @@ body{
   font-size:16px;
 }
 </style>
-
-<!-- 🔥 FIREBASE -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
-  authDomain: "colourcash-ea60e.firebaseapp.com",
-  projectId: "colourcash-ea60e"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-window.db = db;
-window.doc = doc;
-window.getDoc = getDoc;
-window.setDoc = setDoc;
-window.updateDoc = updateDoc;
-
-// 🔐 same user jo wallet me hai
-window.userId = localStorage.getItem("userEmail") || "demo_user";
-</script>
 </head>
 
 <body>
@@ -176,117 +152,125 @@ window.userId = localStorage.getItem("userEmail") || "demo_user";
 </div>
 
 <div class="select">
-  <button class="red" onclick="selectColor('red')">RED</button>
-  <button class="yellow" onclick="selectColor('yellow')">YELLOW</button>
-  <button class="green" onclick="selectColor('green')">GREEN</button>
+  <button class="red" id="r">RED</button>
+  <button class="yellow" id="y">YELLOW</button>
+  <button class="green" id="g">GREEN</button>
 </div>
 
 <div class="controls">
   <div class="bet-row">
-    <button class="ctrl-btn" onclick="bet-=10;update()">−</button>
+    <button class="ctrl-btn" id="minus">−</button>
     <div class="bet">Bet ₹ <span id="bet">100</span></div>
-    <button class="ctrl-btn" onclick="bet+=10;update()">+</button>
+    <button class="ctrl-btn" id="plus">+</button>
   </div>
-  <button class="drop" onclick="dropBall()">DROP BALL</button>
+  <button class="drop" id="drop">DROP BALL</button>
 </div>
 
-<script>
-const board=document.getElementById("board");
-const historyBar=document.getElementById("history");
-const walletUI=document.getElementById("wallet");
+<!-- 🔥🔥🔥 EVERYTHING IN ONE MODULE (LIKE WIN GO) 🔥🔥🔥 -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, getDocs, collection, query, where, doc, updateDoc } 
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-let wallet=0;
-let bet=100;
-let activeColor="green";
+/* FIREBASE */
+const app = initializeApp({
+  apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
+  authDomain:"colourcash-ea60e.firebaseapp.com",
+  projectId:"colourcash-ea60e"
+});
+const db = getFirestore(app);
+const userEmail = localStorage.getItem("userEmail");
 
-const multipliers={
+/* GAME STATE */
+let wallet = 0;
+let bet = 100;
+let color = "green";
+let uid = "";
+
+/* MULTIPLIERS */
+const M = {
   red:[26.3,4,1.5,0.3,0.2,0.3,1.5,4,26.3],
   yellow:[10.5,3,1.3,0.7,0.4,0.7,1.3,3,10.5],
   green:[5.4,1.8,1.1,1,0.5,1,1.1,1.8,5.4]
 };
 
-/* 🔥 FIREBASE WALLET */
-async function fbLoadWallet(){
-  const ref = doc(db,"users",userId);
-  const snap = await getDoc(ref);
-  if(!snap.exists()){
-    await setDoc(ref,{wallet:1000});
-    wallet = 1000;
-  }else{
-    wallet = snap.data().wallet;
-  }
-  update();
-}
-async function fbSaveWallet(){
-  await updateDoc(doc(db,"users",userId),{wallet});
+/* LOAD WALLET (SAME AS WINGO) */
+async function loadWallet(){
+  const q = query(collection(db,"users"),where("email","==",userEmail));
+  const snap = await getDocs(q);
+  snap.forEach(d=>{
+    uid=d.id;
+    wallet=d.data().balance||0;
+  });
+  render();
 }
 
-/* PINS */
-const rows=8,startDots=3,sx=34,sy=32;
+/* SAVE WALLET */
+async function saveWallet(){
+  if(!uid) return;
+  await updateDoc(doc(db,"users",uid),{balance:wallet});
+}
+
+/* UI */
+const $=id=>document.getElementById(id);
+function render(){
+  $("wallet").innerText=wallet;
+  $("bet").innerText=bet;
+}
+
+/* BET CONTROL */
+$("plus").onclick=()=>{if(bet+10<=wallet) bet+=10; render();}
+$("minus").onclick=()=>{if(bet>10) bet-=10; render();}
+
+/* COLOR */
+$("r").onclick=()=>color="red";
+$("y").onclick=()=>color="yellow";
+$("g").onclick=()=>color="green";
+
+/* BOARD */
+const board=$("board");
+const rows=8,sx=34,sy=32,start=3;
 for(let r=0;r<rows;r++){
-  const dots=startDots+r;
-  for(let c=0;c<dots;c++){
+  for(let c=0;c<start+r;c++){
     const p=document.createElement("div");
     p.className="pin";
     p.style.top=50+r*sy+"px";
-    p.style.left=160-((dots-1)*sx)/2+c*sx+"px";
+    p.style.left=160-((start+r-1)*sx)/2+c*sx+"px";
     board.appendChild(p);
   }
 }
 
-function update(){
-  document.getElementById("bet").innerText=bet;
-  walletUI.innerText=wallet;
-}
-
-function selectColor(color){
-  activeColor=color;
-  document.querySelectorAll(".box").forEach(b=>b.classList.remove("active"));
-  document.querySelectorAll("."+color).forEach(b=>b.classList.add("active"));
-}
-
-function dropBall(){
+/* DROP */
+$("drop").onclick=()=>{
   if(bet>wallet) return alert("Low balance");
-
-  wallet -= bet;
-  update();
-  fbSaveWallet();
+  wallet-=bet; saveWallet(); render();
 
   const ball=document.createElement("div");
-  ball.className="ball";
-  board.appendChild(ball);
-
+  ball.className="ball"; board.appendChild(ball);
   let col=4,step=0;
-  function fall(){
+
+  const fall=()=>{
     if(step<rows){
       col+=Math.random()<0.5?-1:1;
       col=Math.max(0,Math.min(col,8));
       ball.style.top=40+step*sy+"px";
       ball.style.left=col*sx+20+"px";
-      step++;
-      setTimeout(fall,220);
-    }else{
-      finish(col);
-      setTimeout(()=>ball.remove(),400);
-    }
-  }
+      step++; setTimeout(fall,220);
+    }else finish(col,ball);
+  };
   fall();
+};
+
+/* RESULT */
+function finish(col,ball){
+  const HOUSE=0.40;
+  const win=Math.round(bet*M[color][col]*(1-HOUSE));
+  wallet+=win; saveWallet(); render();
+  $("history").innerHTML+=` | ${color.toUpperCase()} ${M[color][col]}x`;
+  setTimeout(()=>ball.remove(),400);
 }
 
-function finish(col){
-  const HOUSE_EDGE=0.40;
-  const mul=multipliers[activeColor][col];
-  const win=Math.round(bet*mul*(1-HOUSE_EDGE));
-
-  wallet += win;
-  update();
-  fbSaveWallet();
-
-  const hash=Math.random().toString(16).substring(2,10);
-  historyBar.innerHTML+=` | ${activeColor.toUpperCase()} ${mul}x (${hash})`;
-}
-
-fbLoadWallet();
+loadWallet();
 </script>
 
 </body>
