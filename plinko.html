@@ -246,23 +246,21 @@ function dropBall(){
 
   let col=4, step=0;
 
-  function fall(){
-    if(step<rows){
-      let x = 160;   // center position
+  let x = 160;   // center
 let y = 20;
 let speed = 1.2;
 
 function fall(){
   if(step < rows){
-    // gravity feel
+    // gravity
     speed += 0.35;
     y += speed;
 
-    // realistic pin deflection
+    // pin deflection
     const sway = (Math.random() - 0.5) * 22;
     x += sway;
 
-    // boundary lock
+    // board limit
     x = Math.max(20, Math.min(x, 300));
 
     ball.style.top = y + "px";
@@ -270,15 +268,16 @@ function fall(){
 
     step++;
     setTimeout(fall, 45);
-  }else{
+  } else {
     const col = Math.min(
       8,
       Math.max(0, Math.round((x - 20) / sx))
     );
     finish(col);
-    setTimeout(()=>ball.remove(),500);
+    setTimeout(() => ball.remove(), 500);
   }
 }
+
 fall();
 }
 
