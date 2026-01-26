@@ -84,6 +84,8 @@ body{
   font-weight:bold;
   display:none;
 }
+
+/* 🔥 POPUP FIX 🔥 */
 .popup{
   position:fixed;
   inset:0;
@@ -91,12 +93,16 @@ body{
   display:none;
   align-items:center;
   justify-content:center;
+  z-index:9999;
 }
 .popup-box{
   background:#2a160c;
   padding:25px;
   border-radius:18px;
   text-align:center;
+}
+.popup-box button{
+  pointer-events:auto;
 }
 </style>
 </head>
@@ -129,13 +135,12 @@ body{
   </div>
 </div>
 
-<!-- 🔥🔥🔥 FIREBASE WALLET (SAME AS WIN GO) 🔥🔥🔥 -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, getDocs, collection, query, where, doc, updateDoc } 
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-/* FIREBASE CONFIG */
+/* FIREBASE */
 const app = initializeApp({
   apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
   authDomain:"colourcash-ea60e.firebaseapp.com",
@@ -161,7 +166,7 @@ const cashoutBtn = document.getElementById("cashoutBtn");
 const popup = document.getElementById("popup");
 const winAmt = document.getElementById("winAmt");
 
-/* LOAD WALLET (WIN GO STYLE) */
+/* LOAD WALLET */
 async function loadWallet(){
   const q = query(collection(db,"users"),where("email","==",userEmail));
   const snap = await getDocs(q);
@@ -178,7 +183,7 @@ async function saveWallet(){
   await updateDoc(doc(db,"users",uid),{balance:wallet});
 }
 
-/* BOARD INIT */
+/* BOARD */
 function initBoard(){
   board.innerHTML="";
   for(let i=0;i<20;i++){
@@ -190,7 +195,7 @@ function initBoard(){
   }
 }
 
-/* START GAME */
+/* START */
 startBtn.onclick=async()=>{
   if(gameActive) return;
   if(bet>wallet) return alert("Low balance");
@@ -204,9 +209,9 @@ startBtn.onclick=async()=>{
   chestData=[];
   for(let i=0;i<20;i++){
     const r=Math.random();
-    if(r<0.40) chestData.push("BOOM");     // 40%
-    else if(r<0.70) chestData.push("EMPTY"); // 30%
-    else chestData.push("2X");             // 30%
+    if(r<0.40) chestData.push("BOOM");
+    else if(r<0.70) chestData.push("EMPTY");
+    else chestData.push("2X");
   }
 
   startBtn.innerText="₹ "+currentWin;
@@ -225,9 +230,7 @@ function openChest(i,el){
     el.innerText="💣";
     setTimeout(endGame,600);
   }
-  if(type==="EMPTY"){
-    el.innerText="📦";
-  }
+  if(type==="EMPTY") el.innerText="📦";
   if(type==="2X"){
     el.innerText="2×";
     currentWin*=2;
@@ -239,13 +242,12 @@ function openChest(i,el){
 cashoutBtn.onclick=async()=>{
   wallet+=currentWin;
   await saveWallet();
-
   winAmt.innerText=currentWin;
   popup.style.display="flex";
   endGame();
 };
 
-/* END GAME */
+/* END */
 function endGame(){
   gameActive=false;
   startBtn.disabled=false;
@@ -255,7 +257,7 @@ function endGame(){
   render();
 }
 
-/* BET CONTROLS */
+/* BET */
 document.getElementById("plus").onclick=()=>{
   if(gameActive) return;
   if(bet+10<=wallet) bet+=10;
@@ -274,6 +276,7 @@ function render(){
   initBoard();
 }
 
+/* OK BUTTON */
 function closePopup(){
   popup.style.display="none";
 }
