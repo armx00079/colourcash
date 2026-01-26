@@ -45,8 +45,8 @@ body{
 .board{
   position:relative;
   width:320px;
-  height:360px;
-  margin:10px auto;
+  height:320px; /* FIXED */
+  margin:6px auto 0;
 }
 .pin{
   width:10px;
@@ -69,7 +69,9 @@ body{
 
 /* MULTIPLIERS */
 .rows{
-  margin:8px 10px;
+  margin-top:-6px; /* FIXED – dots touching boxes */
+  margin-left:10px;
+  margin-right:10px;
 }
 .row{
   display:grid;
@@ -205,14 +207,18 @@ const multipliers={
   green:[5.4,1.8,1.1,1,0.5,1,1.1,1.8,5.4]
 };
 
-/* PINS */
-const rows=8, sx=36, sy=36;
+/* PINS – ORIGINAL STYLE (3 → 10) */
+const rows=8;
+const startDots=3;
+const sx=34, sy=32;
+
 for(let r=0;r<rows;r++){
-  for(let c=0;c<=r;c++){
+  const dots=startDots+r;
+  for(let c=0;c<dots;c++){
     const p=document.createElement("div");
     p.className="pin";
     p.style.top=40+r*sy+"px";
-    p.style.left=160-r*sx/2+c*sx+"px";
+    p.style.left=160-((dots-1)*sx)/2+c*sx+"px";
     board.appendChild(p);
   }
 }
@@ -242,7 +248,7 @@ function dropBall(){
 
   function fall(){
     if(step<rows){
-      col += Math.random()<0.5?-1:1;
+      col+=Math.random()<0.5?-1:1;
       col=Math.max(0,Math.min(col,8));
       ball.style.top=40+step*sy+"px";
       ball.style.left=col*sx+20+"px";
