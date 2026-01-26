@@ -26,10 +26,7 @@ body{
 .header-arena img{height:80px}
 .center-cards{display:flex;align-items:center;gap:10px}
 
-.play-card{
-  width:46px;height:62px;
-  perspective:800px;
-}
+.play-card{width:46px;height:62px;perspective:800px}
 .play-card .inner{
   width:100%;height:100%;
   position:relative;
@@ -47,18 +44,11 @@ body{
   justify-content:center;
   font-weight:bold;
 }
-.play-card .front{
-  background:linear-gradient(135deg,#ffb85c,#ff8c1a);
-}
-.play-card .back{
-  background:#fff;
-  color:#000;
-  transform:rotateY(180deg);
-}
+.play-card .front{background:linear-gradient(135deg,#ffb85c,#ff8c1a)}
+.play-card .back{background:#fff;color:#000;transform:rotateY(180deg)}
 
 .vs-text{font-size:20px;color:#ffd56a}
 
-/* ===== BET BUTTON ===== */
 .bet-btn{
   margin:10px auto 6px;
   width:190px;
@@ -78,15 +68,9 @@ body{
   margin-bottom:6px;
 }
 .last-history span{
-  width:26px;
-  height:26px;
-  border-radius:50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:14px;
-  font-weight:bold;
-  color:#fff;
+  width:26px;height:26px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:bold;color:#fff;
 }
 
 /* ===== TABLE ===== */
@@ -98,13 +82,16 @@ body{
   padding:18px;
 }
 .cards{display:flex;justify-content:space-between;align-items:center}
+
+.card,.tie{
+  position:relative;
+  font-weight:bold;
+}
+
 .card{
   width:135px;height:95px;
   border-radius:16px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:bold;
+  display:flex;align-items:center;justify-content:center;
 }
 .dragon{background:#4a5fe0}
 .tiger{background:#ff8c1a}
@@ -113,36 +100,37 @@ body{
   width:200px;height:70px;
   border-radius:16px;
   background:#2ecc71;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:bold;
+  display:flex;align-items:center;justify-content:center;
+}
+
+/* ===== BET AMOUNT BADGE ===== */
+.bet-amt{
+  position:absolute;
+  top:6px;
+  right:8px;
+  background:rgba(0,0,0,.6);
+  padding:3px 8px;
+  border-radius:12px;
+  font-size:13px;
+  display:none;
 }
 
 /* ===== CHIPS ===== */
 .chips{display:flex;justify-content:center;gap:10px;margin:18px auto}
 .chip{
-  width:46px;height:46px;
-  border-radius:50%;
+  width:46px;height:46px;border-radius:50%;
   background:#ffd56a;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:#000;
-  font-weight:bold;
-  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  color:#000;font-weight:bold;cursor:pointer;
 }
 .chip.active{outline:3px solid #fff}
 .locked{pointer-events:none;opacity:.4}
 
 /* ===== RESULT POPUP ===== */
 .popup{
-  position:fixed;
-  inset:0;
+  position:fixed;inset:0;
   background:rgba(0,0,0,.6);
-  display:none;
-  align-items:center;
-  justify-content:center;
+  display:none;align-items:center;justify-content:center;
   z-index:9999;
 }
 .popup-box{
@@ -150,13 +138,7 @@ body{
   color:#000;
   padding:30px 50px;
   border-radius:20px;
-  font-size:26px;
-  font-weight:bold;
-  animation:pop .4s ease;
-}
-@keyframes pop{
-  from{transform:scale(.5);opacity:0}
-  to{transform:scale(1);opacity:1}
+  font-size:26px;font-weight:bold;
 }
 </style>
 </head>
@@ -166,7 +148,6 @@ body{
 <div class="game-header">
   <div class="header-arena">
     <img src="images/dragon.png">
-
     <div class="center-cards">
       <div class="play-card" id="topDragon">
         <div class="inner">
@@ -174,9 +155,7 @@ body{
           <div class="back" id="dVal"></div>
         </div>
       </div>
-
       <div class="vs-text">VS</div>
-
       <div class="play-card" id="topTiger">
         <div class="inner">
           <div class="front"></div>
@@ -184,7 +163,6 @@ body{
         </div>
       </div>
     </div>
-
     <img src="images/tiger.png">
   </div>
 
@@ -195,11 +173,11 @@ body{
 <div class="table-wrap">
   <div class="table">
     <div class="cards">
-      <div class="card dragon" id="dragon">DRAGON</div>
+      <div class="card dragon" id="dragon">DRAGON <span class="bet-amt" id="bet-dragon"></span></div>
       <div>VS</div>
-      <div class="card tiger" id="tiger">TIGER</div>
+      <div class="card tiger" id="tiger">TIGER <span class="bet-amt" id="bet-tiger"></span></div>
     </div>
-    <div class="tie" id="tie">TIE</div>
+    <div class="tie" id="tie">TIE <span class="bet-amt" id="bet-tie"></span></div>
   </div>
 </div>
 
@@ -216,19 +194,18 @@ body{
 </div>
 
 <script>
-let wallet=5000,selectedChip=0,selectedBet=null,timer=15,phase="bet";
+let selectedChip=0, timer=15, phase="bet";
+let bets={DRAGON:0,TIGER:0,TIE:0};
 
 const betStatus=document.getElementById("betStatus");
 const chips=document.querySelectorAll(".chip");
 const dragon=document.getElementById("dragon");
 const tiger=document.getElementById("tiger");
 const tie=document.getElementById("tie");
-
 const topDragon=document.getElementById("topDragon");
 const topTiger=document.getElementById("topTiger");
 const dVal=document.getElementById("dVal");
 const tVal=document.getElementById("tVal");
-
 const popup=document.getElementById("popup");
 const popupText=document.getElementById("popupText");
 const lastHistory=document.getElementById("lastHistory");
@@ -243,12 +220,15 @@ chips.forEach(c=>{
   };
 });
 
-/* BET */
+/* BET PLACE */
 [dragon,tiger,tie].forEach(b=>{
   b.onclick=()=>{
     if(phase!=="bet"||!selectedChip)return;
-    selectedBet=b.id.toUpperCase();
-    [dragon,tiger,tie].forEach(x=>x.style.boxShadow="none");
+    const type=b.id.toUpperCase();
+    bets[type]+=selectedChip;
+    const el=document.getElementById("bet-"+type.toLowerCase());
+    el.innerText="₹"+bets[type];
+    el.style.display="block";
     b.style.boxShadow="0 0 15px gold";
   };
 });
@@ -275,9 +255,7 @@ function startTimer(){
 function showResult(){
   const d=Math.floor(Math.random()*13)+1;
   const t=Math.floor(Math.random()*13)+1;
-
-  dVal.innerText=d;
-  tVal.innerText=t;
+  dVal.innerText=d; tVal.innerText=t;
   topDragon.classList.add("flip");
   topTiger.classList.add("flip");
 
@@ -286,11 +264,10 @@ function showResult(){
   if(t>d) win="TIGER";
 
   const h=document.createElement("span");
-  if(win==="DRAGON"){h.innerText="D";h.style.background="#4a5fe0";}
-  else if(win==="TIGER"){h.innerText="T";h.style.background="#ff8c1a";}
-  else{h.innerText="T";h.style.background="#2ecc71";}
+  h.innerText=win[0];
+  h.style.background=win==="DRAGON"?"#4a5fe0":win==="TIGER"?"#ff8c1a":"#2ecc71";
   lastHistory.prepend(h);
-  if(lastHistory.children.length>15) lastHistory.removeChild(lastHistory.lastChild);
+  if(lastHistory.children.length>15) lastHistory.lastChild.remove();
 
   setTimeout(()=>{
     popupText.innerText=win+" WINS";
@@ -305,16 +282,19 @@ function showResult(){
 
 /* RESET */
 function resetRound(){
-  selectedBet=null;selectedChip=0;phase="bet";
+  bets={DRAGON:0,TIGER:0,TIE:0};
+  ["dragon","tiger","tie"].forEach(x=>{
+    const el=document.getElementById("bet-"+x);
+    el.innerText=""; el.style.display="none";
+  });
   chips.forEach(c=>c.classList.remove("active","locked"));
   [dragon,tiger,tie].forEach(x=>x.style.boxShadow="none");
   topDragon.classList.remove("flip");
   topTiger.classList.remove("flip");
-  dVal.innerText="";tVal.innerText="";
+  dVal.innerText=""; tVal.innerText="";
   startTimer();
 }
 
-/* START */
 startTimer();
 </script>
 
