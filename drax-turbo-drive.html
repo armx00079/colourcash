@@ -13,11 +13,7 @@ body{
   color:#fff;
   text-align:center;
 }
-.header{
-  padding:14px;
-  font-size:22px;
-  font-weight:bold;
-}
+.header{padding:14px;font-size:22px;font-weight:bold}
 .wallet{
   margin-top:8px;
   background:rgba(0,0,0,.35);
@@ -25,110 +21,59 @@ body{
   padding:6px 18px;
   border-radius:20px;
 }
-.multis{
-  display:flex;
-  justify-content:center;
-  gap:10px;
-  margin:12px 0;
-}
-.multi{
-  padding:8px 16px;
-  background:#000;
-  border-radius:14px;
-  font-weight:bold;
-}
+.multis{display:flex;justify-content:center;gap:10px;margin:12px 0}
+.multi{padding:8px 16px;background:#000;border-radius:14px;font-weight:bold}
+
 .track{
   background:#14001f;
   margin:14px;
   padding:14px;
   border-radius:16px;
-  pointer-events:none;
 }
-.road{
-  display:flex;
-  align-items:center;
-  margin:18px 0;
-}
-.car{
-  font-size:32px;
-  transition:transform 1.2s ease;
-}
+.road{display:flex;align-items:center;margin:18px 0}
+.car{font-size:32px;transition:transform 1.2s ease}
 .line{
-  flex:1;
-  height:6px;
-  margin-left:10px;
-  background:repeating-linear-gradient(
-    90deg,
-    yellow 0 14px,
-    black 14px 28px
-  );
+  flex:1;height:6px;margin-left:10px;
+  background:repeating-linear-gradient(90deg,yellow 0 14px,black 14px 28px);
   border-radius:6px;
 }
 
-/* CAR SELECTION */
-.select{
-  display:flex;
-  gap:10px;
-  padding:0 14px;
-}
+/* selection */
+.select{display:flex;gap:10px;padding:0 14px}
 .sel{
-  flex:1;
-  padding:12px 0;
-  border-radius:16px;
-  background:#2b003d;
-  cursor:pointer;
-  font-weight:bold;
+  flex:1;padding:12px 0;border-radius:16px;
+  background:#2b003d;cursor:pointer;font-weight:bold
 }
-.sel.active{
-  background:#ff66e3;
-  color:#000;
-  transform:scale(1.05);
-}
-.logo{
-  width:42px;
-  height:42px;
-  object-fit:contain;
-  margin-bottom:6px;
-}
+.sel.active{background:#ff66e3;color:#000;transform:scale(1.05)}
+.logo{width:42px;height:42px;object-fit:contain;margin-bottom:6px}
 
-/* BOTTOM BAR */
-.bottom-bar{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:14px;
-  margin-bottom:20px;
-}
+/* bottom */
+.bottom-bar{display:flex;flex-direction:column;gap:14px;margin:14px}
 .bottom-bar input,
 .bottom-bar button{
-  width:90%;
-  padding:14px;
-  border:none;
-  border-radius:30px;
-  font-size:16px;
+  width:100%;padding:14px;border:none;border-radius:30px;font-size:16px
 }
-.bottom-bar button{
-  background:#ff4fd8;
-  font-size:18px;
-  font-weight:bold;
-}
+.bottom-bar button{background:#ff4fd8;font-size:18px;font-weight:bold}
 
-/* POPUP */
+/* history */
+.history{
+  background:#14001f;
+  margin:14px;
+  padding:12px;
+  border-radius:16px;
+  font-size:14px;
+  text-align:left;
+}
+.history h3{text-align:center;margin:0 0 8px}
+.history div{padding:4px 0;border-bottom:1px solid rgba(255,255,255,.1)}
+
 .popup{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.6);
-  display:none;
-  align-items:center;
-  justify-content:center;
+  position:fixed;inset:0;background:rgba(0,0,0,.6);
+  display:none;align-items:center;justify-content:center
 }
 .popup div{
-  background:#fff;
-  color:#000;
-  padding:24px 40px;
-  border-radius:20px;
-  font-size:22px;
-  font-weight:bold;
+  background:#fff;color:#000;padding:24px 40px;
+  border-radius:20px;font-size:22px;font-weight:bold
 }
 </style>
 </head>
@@ -153,20 +98,26 @@ body{
 </div>
 
 <div class="select">
-  <div class="sel" onclick="selectCar('mer',this)">
-    <img src="images/mercedes.png" class="logo"><div>Mercedes</div>
-  </div>
-  <div class="sel" onclick="selectCar('audi',this)">
-    <img src="images/audi.png" class="logo"><div>Audi</div>
-  </div>
-  <div class="sel" onclick="selectCar('bmw',this)">
-    <img src="images/bmw.png" class="logo"><div>BMW</div>
-  </div>
+ <div class="sel" onclick="selectCar('mer',this)">
+  <img src="images/mercedes.png" class="logo"><div>Mercedes</div>
+ </div>
+ <div class="sel" onclick="selectCar('audi',this)">
+  <img src="images/audi.png" class="logo"><div>Audi</div>
+ </div>
+ <div class="sel" onclick="selectCar('bmw',this)">
+  <img src="images/bmw.png" class="logo"><div>BMW</div>
+ </div>
 </div>
 
 <div class="bottom-bar">
-  <input id="betInput" type="number" value="100">
-  <button onclick="startRace()">START RACE</button>
+ <input id="betInput" type="number" value="100">
+ <button onclick="startRace()">START RACE</button>
+</div>
+
+<!-- MY BETS HISTORY -->
+<div class="history">
+ <h3>MY BETS</h3>
+ <div id="historyBox">No bets yet</div>
 </div>
 
 <div class="popup" id="popup"><div id="popupText"></div></div>
@@ -174,69 +125,88 @@ body{
 <script>
 let wallet = 10000;
 let selected = "";
+let firstGame = !localStorage.getItem("playedOnce");
+let history = [];
 
 const cars = {
-  mer:{el:"car-mer", payout:5},
-  audi:{el:"car-audi", payout:10},
-  bmw:{el:"car-bmw", payout:20}
+ mer:{el:"car-mer", payout:5},
+ audi:{el:"car-audi", payout:10},
+ bmw:{el:"car-bmw", payout:20}
 };
 
 function selectCar(c,el){
-  selected = c;
-  document.querySelectorAll(".sel").forEach(x=>x.classList.remove("active"));
-  el.classList.add("active");
+ selected=c;
+ document.querySelectorAll(".sel").forEach(x=>x.classList.remove("active"));
+ el.classList.add("active");
 }
 
 function startRace(){
-  const bet = Number(betInput.value);
-  if(!selected) return alert("Select a car");
-  if(bet<=0 || bet>wallet) return alert("Low balance");
+ const bet = Number(betInput.value);
+ if(!selected) return alert("Select car");
+ if(bet<=0||bet>wallet) return alert("Low balance");
 
-  wallet -= bet;
+ wallet -= bet;
+ updateWallet();
+
+ Object.values(cars).forEach(c=>{
+  document.getElementById(c.el).style.transform="translateX(0)";
+ });
+
+ const winner = decideWinner(bet);
+
+ setTimeout(()=>{
+  document.getElementById(cars[winner].el)
+   .style.transform="translateX(240px)";
+ },200);
+
+ setTimeout(()=>{
+  if(winner===selected){
+    const win = bet*cars[winner].payout;
+    wallet+=win;
+    addHistory(`✅ ${winner.toUpperCase()} +₹${win}`);
+    showPopup(`🎉 WIN ₹${win}`);
+  }else{
+    addHistory(`❌ ${selected.toUpperCase()} -₹${bet}`);
+    showPopup("❌ LOST");
+  }
   updateWallet();
-
-  Object.values(cars).forEach(c=>{
-    document.getElementById(c.el).style.transform="translateX(0)";
-  });
-
-  const winner = decideWinner(selected);
-
-  setTimeout(()=>{
-    document.getElementById(cars[winner].el)
-      .style.transform="translateX(240px)";
-  },200);
-
-  setTimeout(()=>{
-    if(winner === selected){
-      const winAmt = bet * cars[winner].payout;
-      wallet += winAmt;
-      showPopup(`🎉 YOU WIN ₹${winAmt}`);
-    }else{
-      showPopup("❌ YOU LOST");
-    }
-    updateWallet();
-  },1600);
+ },1600);
 }
 
-/* 🔥 70% LOSS CONTROL SYSTEM */
-function decideWinner(sel){
-  const all = ["mer","audi","bmw"];
-  const others = all.filter(x=>x!==sel);
-  if(Math.random() < 0.7){
-    return others[Math.floor(Math.random()*others.length)];
-  }
-  return sel;
+function decideWinner(bet){
+ // 🎁 FIRST GAME GUARANTEE
+ if(firstGame && bet<=300){
+  firstGame=false;
+  localStorage.setItem("playedOnce","yes");
+  return selected;
+ }
+
+ let winChance = 0.35;
+ if(bet>500) winChance=0.25;
+ if(bet>1000) winChance=0.15;
+
+ if(Math.random()<winChance){
+  return selected;
+ }
+ return Object.keys(cars).filter(c=>c!==selected)
+        [Math.floor(Math.random()*2)];
+}
+
+function addHistory(text){
+ history.unshift(text);
+ history = history.slice(0,10);
+ historyBox.innerHTML = history.join("<br>");
 }
 
 function updateWallet(){
-  walletSpan.innerText = wallet;
+ walletSpan.innerText=wallet;
 }
-const walletSpan = document.getElementById("wallet");
+const walletSpan=document.getElementById("wallet");
 
 function showPopup(msg){
-  popupText.innerText = msg;
-  popup.style.display="flex";
-  setTimeout(()=>popup.style.display="none",1500);
+ popupText.innerText=msg;
+ popup.style.display="flex";
+ setTimeout(()=>popup.style.display="none",1500);
 }
 </script>
 
