@@ -9,56 +9,67 @@
 body{
   margin:0;
   font-family:Arial, sans-serif;
-  background:radial-gradient(circle at top,#0b1c2d,#030b14);
+  background:radial-gradient(circle at top,#1b1f3b,#0b0f24);
   color:#fff;
   text-align:center;
 }
 
+/* WALLET */
 #walletBox{
   position:fixed;
-  bottom:12px;right:12px;
+  top:12px;
+  right:12px;
   background:#000;
-  padding:8px 14px;
+  padding:10px 16px;
   border-radius:20px;
   font-weight:bold;
 }
 
-h2{margin-top:30px}
+/* GAME */
+.game-box{
+  margin-top:90px;
+}
 
-#dice{
-  font-size:80px;
+.dice{
+  font-size:90px;
   margin:20px 0;
 }
 
-.chips{
-  display:flex;
-  justify-content:center;
-  gap:10px;
-  margin:20px 0;
-}
-.chip{
-  padding:10px 18px;
-  border-radius:20px;
-  background:#ffd56a;
-  color:#000;
-  font-weight:bold;
-  cursor:pointer;
-}
-.chip.active{outline:3px solid #fff}
-
-#rollBtn{
-  padding:12px 30px;
-  border-radius:25px;
+input{
+  width:140px;
+  padding:10px;
+  font-size:16px;
+  border-radius:10px;
   border:none;
-  font-size:18px;
+  text-align:center;
+}
+
+button{
+  margin-top:15px;
+  padding:12px 26px;
+  font-size:16px;
+  border:none;
+  border-radius:20px;
+  background:linear-gradient(135deg,#ffd56a,#ff9f1a);
   font-weight:bold;
-  background:linear-gradient(135deg,#ffcf6a,#ff9f1a);
   cursor:pointer;
 }
 
-#result{
-  margin-top:20px;
-  font-size:20px;
+/* POPUP */
+.popup{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.6);
+  display:none;
+  align-items:center;
+  justify-content:center;
+}
+.popup-box{
+  background:#fff;
+  color:#000;
+  padding:30px 50px;
+  border-radius:20px;
+  font-size:24px;
   font-weight:bold;
 }
 </style>
@@ -68,114 +79,87 @@ h2{margin-top:30px}
 
 <div id="walletBox">💰 ₹<span id="walletAmt">0</span></div>
 
-<h2>🎲 DICE ROLL</h2>
-<div id="dice">🎲</div>
+<div class="game-box">
+  <h2>DICE ROLL</h2>
+  <div class="dice" id="dice">🎲</div>
 
-<div class="chips">
-  <div class="chip" data-amt="10">10</div>
-  <div class="chip" data-amt="50">50</div>
-  <div class="chip" data-amt="100">100</div>
+  <input type="number" id="betAmount" placeholder="Bet Amount"><br>
+  <button onclick="rollDice()">ROLL DICE</button>
 </div>
 
-<button id="rollBtn">ROLL DICE</button>
-<p id="result"></p>
+<div class="popup" id="popup">
+  <div class="popup-box" id="popupText"></div>
+</div>
 
 <!-- ================= FIREBASE WALLET CONNECT ================= -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import {
-  getFirestore,
-  collection,
-  query,
-  where,
-  getDocs,
-  doc,
-  updateDoc
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-/* 🔴 APNA FIREBASE CONFIG DAALO */
+/* 🔴 STEP 1: APNA FIREBASE CONFIG YAHA DAAL */
 const firebaseConfig = {
-  apiKey: "API_KEY",
-  authDomain: "PROJECT.firebaseapp.com",
-  projectId: "PROJECT",
-  storageBucket: "PROJECT.appspot.com",
-  messagingSenderId: "XXXX",
-  appId: "XXXX"
+  apiKey: "AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
+  authDomain: "colourcash-ea60e.firebaseapp.com",
+  projectId: "colourcash-ea60e",
+  storageBucket: "colourcash-ea60e.firebasestorage.app",
+  messagingSenderId: "403688058646",
+  appId: "1:403688058646:web:f1753360471528f275ea37"
 };
 
+/* INIT */
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* ===== WALLET LOAD ===== */
+/* USER DOC */
+const userRef = doc(db, "users", "demoUser");
+
 let wallet = 0;
-let selectedBet = 0;
-let userDocId = "";
-
-/* SAME EMAIL JO TUM DRAGON TIGER ME USE KARTE HO */
-const userEmail = localStorage.getItem("USER_EMAIL");
-
 const walletAmt = document.getElementById("walletAmt");
+const diceEl = document.getElementById("dice");
+const popup = document.getElementById("popup");
+const popupText = document.getElementById("popupText");
 
+/* LOAD WALLET */
 async function loadWallet(){
-  const q = query(
-    collection(db,"users"),
-    where("email","==",userEmail)
-  );
-
-  const snap = await getDocs(q);
-  snap.forEach(d=>{
-    userDocId = d.id;
-    wallet = d.data().balance || 0;
+  const snap = await getDoc(userRef);
+  if(snap.exists()){
+    wallet = snap.data().wallet;
     walletAmt.innerText = wallet;
-  });
+  }
 }
+loadWallet();
 
-await loadWallet();
+/* ROLL DICE */
+window.rollDice = async function(){
+  const bet = parseInt(document.getElementById("betAmount").value);
+  if(!bet || bet <= 0) return alert("Bet amount daal");
+  if(bet > wallet) return alert("Wallet me paisa kam hai");
 
-/* ===== CHIP SELECT ===== */
-document.querySelectorAll(".chip").forEach(c=>{
-  c.onclick=()=>{
-    document.querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));
-    c.classList.add("active");
-    selectedBet = Number(c.dataset.amt);
-  };
-});
-
-/* ===== ROLL DICE ===== */
-document.getElementById("rollBtn").onclick = async ()=>{
-  if(!selectedBet){
-    alert("Bet select kar");
-    return;
-  }
-  if(wallet < selectedBet){
-    alert("Insufficient balance");
-    return;
-  }
-
-  /* BET CUT */
-  wallet -= selectedBet;
+  // minus bet
+  wallet -= bet;
   walletAmt.innerText = wallet;
-  await updateDoc(doc(db,"users",userDocId),{
-    balance: wallet
-  });
+  await updateDoc(userRef, { wallet });
 
-  /* DICE */
-  const dice = Math.floor(Math.random()*6)+1;
-  document.getElementById("dice").innerText = dice;
+  // dice roll
+  const dice = Math.floor(Math.random()*6) + 1;
+  diceEl.innerText = ["","⚀","⚁","⚂","⚃","⚄","⚅"][dice];
 
+  let winAmount = 0;
+
+  // rule: 4,5,6 = WIN (2x)
   if(dice >= 4){
-    const winAmt = selectedBet * 2;
-    wallet += winAmt;
-    walletAmt.innerText = wallet;
-
-    await updateDoc(doc(db,"users",userDocId),{
-      balance: wallet
-    });
-
-    document.getElementById("result").innerText = "🎉 YOU WIN ₹"+winAmt;
+    winAmount = bet * 2;
+    wallet += winAmount;
+    popupText.innerText = "🎉 YOU WIN ₹" + winAmount;
   }else{
-    document.getElementById("result").innerText = "❌ YOU LOSE";
+    popupText.innerText = "❌ YOU LOSE";
   }
+
+  walletAmt.innerText = wallet;
+  await updateDoc(userRef, { wallet });
+
+  popup.style.display = "flex";
+  setTimeout(()=>popup.style.display="none",2000);
 };
 </script>
 
