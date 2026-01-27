@@ -19,10 +19,10 @@ body{
   font-weight:bold;
 }
 .wallet{
-  margin-top:6px;
+  margin-top:8px;
   background:rgba(0,0,0,.35);
   display:inline-block;
-  padding:6px 16px;
+  padding:6px 18px;
   border-radius:20px;
 }
 .multis{
@@ -42,11 +42,12 @@ body{
   margin:14px;
   padding:14px;
   border-radius:16px;
+  pointer-events:none;
 }
 .road{
   display:flex;
   align-items:center;
-  margin:14px 0;
+  margin:18px 0;
 }
 .car{
   font-size:32px;
@@ -97,6 +98,8 @@ button{
   background:#ff4fd8;
   font-size:18px;
   font-weight:bold;
+  position:relative;
+  z-index:50;
 }
 .popup{
   position:fixed;
@@ -125,7 +128,7 @@ button{
 </div>
 
 <div class="multis">
- <div class="multi">Mercedes 2x</div>
+ <div class="multi">Mercedes 5x</div>
  <div class="multi">Audi 10x</div>
  <div class="multi">BMW 20x</div>
 </div>
@@ -146,74 +149,78 @@ button{
 </div>
 
 <div class="select">
- <div class="sel" onclick="selectCar('mer')">🚗 Mercedes</div>
- <div class="sel" onclick="selectCar('audi')">🚙 Audi</div>
- <div class="sel" onclick="selectCar('bmw')">🚕 BMW</div>
+ <div class="sel" onclick="selectCar('mer',this)">🚗 Mercedes</div>
+ <div class="sel" onclick="selectCar('audi',this)">🚙 Audi</div>
+ <div class="sel" onclick="selectCar('bmw',this)">🚕 BMW</div>
 </div>
 
-<input id="bet" type="number" value="100">
-<button onclick="startRace()">START RACE</button>
+<input id="betInput" type="number" value="100">
+<button id="startBtn">START RACE</button>
 
-<div class="popup" id="popup"><div id="popupText"></div></div>
+<div class="popup" id="popup">
+  <div id="popupText"></div>
+</div>
 
 <script>
-let wallet=10000;
-let selected="";
-const cars={
-  mer:{el:"car-mer",multi:2,win:5},
-  audi:{el:"car-audi",multi:10},
-  bmw:{el:"car-bmw",multi:20}
+let wallet = 10000;
+let selected = "";
+
+const cars = {
+  mer:{el:"car-mer", payout:5},
+  audi:{el:"car-audi", payout:10},
+  bmw:{el:"car-bmw", payout:20}
 };
 
-function selectCar(c){
- selected=c;
- document.querySelectorAll(".sel").forEach(x=>x.classList.remove("active"));
- event.target.classList.add("active");
+function selectCar(c,el){
+  selected = c;
+  document.querySelectorAll(".sel").forEach(x=>x.classList.remove("active"));
+  el.classList.add("active");
 }
 
+document.getElementById("startBtn").addEventListener("click", startRace);
+
 function startRace(){
- const bet=+bet.value;
- if(!selected) return alert("Select car");
- if(bet>wallet) return alert("Low balance");
+  const bet = Number(document.getElementById("betInput").value);
+  if(!selected) return alert("Select a car");
+  if(bet <= 0 || bet > wallet) return alert("Low balance");
 
- wallet-=bet;
- updateWallet();
-
- // reset
- Object.values(cars).forEach(c=>{
-  document.getElementById(c.el).style.transform="translateX(0)";
- });
-
- // random winner
- const keys=Object.keys(cars);
- const winner=keys[Math.floor(Math.random()*keys.length)];
-
- setTimeout(()=>{
-  document.getElementById(cars[winner].el)
-   .style.transform="translateX(220px)";
- },200);
-
- setTimeout(()=>{
-  let winAmt=0;
-  if(winner===selected){
-    winAmt = bet*(cars[winner].win||cars[winner].multi);
-    wallet+=winAmt;
-    showPopup(`🎉 WIN ₹${winAmt}`);
-  }else{
-    showPopup(`❌ LOST`);
-  }
+  wallet -= bet;
   updateWallet();
- },1500);
+
+  // reset cars
+  Object.values(cars).forEach(c=>{
+    document.getElementById(c.el).style.transform="translateX(0)";
+  });
+
+  // pick winner
+  const keys = Object.keys(cars);
+  const winner = keys[Math.floor(Math.random()*keys.length)];
+
+  setTimeout(()=>{
+    document.getElementById(cars[winner].el)
+      .style.transform="translateX(240px)";
+  },200);
+
+  setTimeout(()=>{
+    if(winner === selected){
+      const winAmt = bet * cars[winner].payout;
+      wallet += winAmt;
+      showPopup(`🎉 YOU WIN ₹${winAmt}`);
+    }else{
+      showPopup("❌ YOU LOST");
+    }
+    updateWallet();
+  },1600);
 }
 
 function updateWallet(){
- document.getElementById("wallet").innerText=wallet;
+  document.getElementById("wallet").innerText = wallet;
 }
 
-function showPopup(t){
- popupText.innerText=t;
- popup.style.display="flex";
- setTimeout(()=>popup.style.display="none",1500);
+function showPopup(msg){
+  document.getElementById("popupText").innerText = msg;
+  popup.style.display="flex";
+  setTimeout(()=>popup.style.display="none",1500);
 }
 </script>
 
