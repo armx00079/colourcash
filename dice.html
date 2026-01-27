@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dice Roll Game</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:radial-gradient(circle at top,#0b1c2d,#030b14);
+  color:#fff;
+  text-align:center;
+}
+
+#walletBox{
+  position:fixed;
+  bottom:12px;right:12px;
+  background:#000;
+  padding:8px 14px;
+  border-radius:20px;
+  font-weight:bold;
+}
+
+h2{margin-top:30px}
+
+#dice{
+  font-size:80px;
+  margin:20px 0;
+}
+
+.chips{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin:20px 0;
+}
+.chip{
+  padding:10px 18px;
+  border-radius:20px;
+  background:#ffd56a;
+  color:#000;
+  font-weight:bold;
+  cursor:pointer;
+}
+.chip.active{outline:3px solid #fff}
+
+#rollBtn{
+  padding:12px 30px;
+  border-radius:25px;
+  border:none;
+  font-size:18px;
+  font-weight:bold;
+  background:linear-gradient(135deg,#ffcf6a,#ff9f1a);
+  cursor:pointer;
+}
+
+#result{
+  margin-top:20px;
+  font-size:20px;
+  font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<div id="walletBox">💰 ₹<span id="walletAmt">0</span></div>
+
+<h2>🎲 DICE ROLL</h2>
+<div id="dice">🎲</div>
+
+<div class="chips">
+  <div class="chip" data-amt="10">10</div>
+  <div class="chip" data-amt="50">50</div>
+  <div class="chip" data-amt="100">100</div>
+</div>
+
+<button id="rollBtn">ROLL DICE</button>
+<p id="result"></p>
+
+<!-- ================= FIREBASE WALLET CONNECT ================= -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  query,
+  where,
+  getDocs,
+  doc,
+  updateDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+/* 🔴 APNA FIREBASE CONFIG DAALO */
+const firebaseConfig = {
+  apiKey: "API_KEY",
+  authDomain: "PROJECT.firebaseapp.com",
+  projectId: "PROJECT",
+  storageBucket: "PROJECT.appspot.com",
+  messagingSenderId: "XXXX",
+  appId: "XXXX"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+/* ===== WALLET LOAD ===== */
+let wallet = 0;
+let selectedBet = 0;
+let userDocId = "";
+
+/* SAME EMAIL JO TUM DRAGON TIGER ME USE KARTE HO */
+const userEmail = localStorage.getItem("USER_EMAIL");
+
+const walletAmt = document.getElementById("walletAmt");
+
+async function loadWallet(){
+  const q = query(
+    collection(db,"users"),
+    where("email","==",userEmail)
+  );
+
+  const snap = await getDocs(q);
+  snap.forEach(d=>{
+    userDocId = d.id;
+    wallet = d.data().balance || 0;
+    walletAmt.innerText = wallet;
+  });
+}
+
+await loadWallet();
+
+/* ===== CHIP SELECT ===== */
+document.querySelectorAll(".chip").forEach(c=>{
+  c.onclick=()=>{
+    document.querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));
+    c.classList.add("active");
+    selectedBet = Number(c.dataset.amt);
+  };
+});
+
+/* ===== ROLL DICE ===== */
+document.getElementById("rollBtn").onclick = async ()=>{
+  if(!selectedBet){
+    alert("Bet select kar");
+    return;
+  }
+  if(wallet < selectedBet){
+    alert("Insufficient balance");
+    return;
+  }
+
+  /* BET CUT */
+  wallet -= selectedBet;
+  walletAmt.innerText = wallet;
+  await updateDoc(doc(db,"users",userDocId),{
+    balance: wallet
+  });
+
+  /* DICE */
+  const dice = Math.floor(Math.random()*6)+1;
+  document.getElementById("dice").innerText = dice;
+
+  if(dice >= 4){
+    const winAmt = selectedBet * 2;
+    wallet += winAmt;
+    walletAmt.innerText = wallet;
+
+    await updateDoc(doc(db,"users",userDocId),{
+      balance: wallet
+    });
+
+    document.getElementById("result").innerText = "🎉 YOU WIN ₹"+winAmt;
+  }else{
+    document.getElementById("result").innerText = "❌ YOU LOSE";
+  }
+};
+</script>
+
+</body>
+</html>
