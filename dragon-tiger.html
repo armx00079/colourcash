@@ -1,32 +1,23 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Dragon Tiger</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<style>
-body{
-  margin:0;
-  font-family:Arial, sans-serif;
-  background:radial-gradient(circle at top,#0b1c2d,#030b14);
-  color:#fff;
-}
-
-/* ===== HEADER ===== */
-.game-header{
-background:linear-gradient(180deg,#2b1c3a,#1a1025);
-padding:14px 10px 10px;
-}
-.header-arena{
-display:flex;
-align-items:center;
-justify-content:space-between;
-}
-.header-arena img{height:80px}
-.center-cards{display:flex;align-items:center;gap:10px}
-
-/* ===== TOP CARDS ===== */
+<!DOCTYPE html>  <html lang="en">    <head>      <meta charset="UTF-8">      
+<title>Dragon Tiger</title>      
+<meta name="viewport" content="width=device-width, initial-scale=1">  <style>      
+body{      
+  margin:0;      
+  font-family:Arial, sans-serif;      
+  background:radial-gradient(circle at top,#0b1c2d,#030b14);      
+  color:#fff;      
+}    /* ===== HEADER ===== */  
+.game-header{  
+background:linear-gradient(180deg,#2b1c3a,#1a1025);  
+padding:14px 10px 10px;  
+}  
+.header-arena{  
+display:flex;  
+align-items:center;  
+justify-content:space-between;  
+}  
+.header-arena img{height:80px}  
+.center-cards{display:flex;align-items:center;gap:10px}  /* ===== TOP CARDS ===== */
 .play-card{width:46px;height:62px;perspective:800px}
 .play-card .inner{
 width:100%;height:100%;
@@ -63,6 +54,12 @@ display:flex;
 justify-content:center;
 gap:6px;
 margin-bottom:6px;
+}
+.last-history span{
+width:26px;height:26px;
+border-radius:50%;
+display:flex;align-items:center;justify-content:center;
+font-weight:bold;
 }
 
 /* ===== TABLE ===== */
@@ -102,7 +99,9 @@ font-size:13px;
 display:none;
 }
 
-.card.active,.tie.active{
+/* ===== SELECTION HIGHLIGHT ===== */
+.card.active,
+.tie.active{
 box-shadow:0 0 18px gold;
 transform:scale(1.03);
 }
@@ -162,70 +161,43 @@ font-size:14px;
 padding:6px 0;
 opacity:.9;
 }
-</style>
-</head>
+</style>  </head>  <body>  <div id="walletBox">💰 ₹<span id="walletAmt">5000</span></div>  <div class="game-header">
 
-<body>
-
-<div id="walletBox">💰 ₹<span id="walletAmt">0</span></div>
-
-<!-- ================= GAME UI ================= -->
-<div class="game-header">
-  <div class="header-arena">
-    <img src="images/dragon.png">
-    <div class="center-cards">
-      <div class="play-card" id="topDragon">
-        <div class="inner">
-          <div class="front"></div>
-          <div class="back" id="dVal"></div>
-        </div>
-      </div>
-      <div>VS</div>
-      <div class="play-card" id="topTiger">
-        <div class="inner">
-          <div class="front"></div>
-          <div class="back" id="tVal"></div>
-        </div>
-      </div>
-    </div>
-    <img src="images/tiger.png">
-  </div>
-  <div class="bet-btn" id="betStatus">START BETTING</div>
-</div>
-
-<div class="table-wrap">
-  <div class="table">
-    <div class="cards">
-      <div class="card dragon" id="dragon">DRAGON <span class="bet-amt" id="bet-dragon"></span></div>
-      <div>VS</div>
-      <div class="card tiger" id="tiger">TIGER <span class="bet-amt" id="bet-tiger"></span></div>
-    </div>
-    <div class="tie" id="tie">TIE <span class="bet-amt" id="bet-tie"></span></div>
-  </div>
-</div>
-
-<div class="chips">
-  <div class="chip">10</div>
-  <div class="chip">50</div>
-  <div class="chip">100</div>
-  <div class="chip">500</div>
-  <div class="chip">1000</div>
-</div>
-
-<div class="live-feed" id="liveFeed"></div>
-
-<div class="popup" id="popup">
-  <div class="popup-box" id="popupText"></div>
-</div>
-
-<script>
-let wallet = 0;
-let selectedChip = 0;
-let phase = "bet";
-let timer = 15;
-let bets = {DRAGON:0,TIGER:0,TIE:0};
-
-const MULTI={DRAGON:2,TIGER:2,TIE:13};
+  <div class="header-arena">      
+    <img src="images/dragon.png">      
+    <div class="center-cards">      
+      <div class="play-card" id="topDragon"><div class="inner"><div class="front"></div><div class="back" id="dVal"></div></div></div>      
+      <div>VS</div>      
+      <div class="play-card" id="topTiger"><div class="inner"><div class="front"></div><div class="back" id="tVal"></div></div></div>      
+    </div>      
+    <img src="images/tiger.png">      
+  </div>      
+  <div class="bet-btn" id="betStatus">START BETTING</div>      
+  <div class="last-history" id="lastHistory"></div>      
+</div>  <div class="table-wrap">      
+  <div class="table">      
+    <div class="cards">      
+      <div class="card dragon" id="dragon">DRAGON <span class="bet-amt" id="bet-dragon"></span></div>      
+      <div>VS</div>      
+      <div class="card tiger" id="tiger">TIGER <span class="bet-amt" id="bet-tiger"></span></div>      
+    </div>      
+    <div class="tie" id="tie">TIE <span class="bet-amt" id="bet-tie"></span></div>      
+  </div>      
+</div>  <div class="chips">      
+  <div class="chip">10</div>      
+  <div class="chip">50</div>      
+  <div class="chip">100</div>      
+  <div class="chip">500</div>      
+  <div class="chip">1000</div>      
+</div>  <div class="live-feed" id="liveFeed"></div>  <div class="popup" id="popup">      
+  <div class="popup-box" id="popupText"></div>      
+</div>  <script>      
+/* ===== LOAD SAVED GAME ===== */      
+const saved = JSON.parse(localStorage.getItem("DT_GAME"));    let wallet = saved?.wallet ?? 5000;  
+let selectedChip = 0;  
+let phase = saved?.phase ?? "bet";  
+let timer = saved?.timer ?? 15;  
+let bets = saved?.bets ?? {DRAGON:0,TIGER:0,TIE:0};  const MULTI={DRAGON:2,TIGER:2,TIE:13};
 
 const CARDS=[
 {n:"A",v:14},{n:"K",v:13},{n:"Q",v:12},{n:"J",v:11},
@@ -234,8 +206,16 @@ const CARDS=[
 ];
 
 const walletAmt=document.getElementById("walletAmt");
+walletAmt.innerText=wallet;
 
-/* CHIP SELECT */
+/* SAVE GAME */
+function saveGame(){
+localStorage.setItem("DT_GAME", JSON.stringify({
+wallet, phase, timer, bets
+}));
+}
+
+/* CHIP */
 document.querySelectorAll(".chip").forEach(c=>{
 c.onclick=()=>{
 if(phase!=="bet")return;
@@ -245,20 +225,25 @@ selectedChip=parseInt(c.innerText);
 };
 });
 
-/* BET */
+/* BET + HIGHLIGHT */
 ["dragon","tiger","tie"].forEach(id=>{
-document.getElementById(id).onclick=()=>{
+const el=document.getElementById(id);
+el.onclick=()=>{
 if(phase!=="bet"||!selectedChip||wallet<selectedChip)return;
 
-wallet -= selectedChip;
-walletAmt.innerText = wallet;
-updateMainWallet();   // 🔥 FIREBASE UPDATE
+document.querySelectorAll(".card,.tie").forEach(x=>x.classList.remove("active"));
+el.classList.add("active");
 
-bets[id.toUpperCase()] += selectedChip;
+wallet-=selectedChip;
+walletAmt.innerText=wallet;
+bets[id.toUpperCase()]+=selectedChip;
 
 const b=document.getElementById("bet-"+id);
 b.innerText="₹"+bets[id.toUpperCase()];
 b.style.display="block";
+
+saveGame();
+
 };
 });
 
@@ -266,7 +251,10 @@ b.style.display="block";
 function startTimer(){
 const t=setInterval(()=>{
 timer--;
-betStatus.innerText=timer>0?timer:"RESULT";
+if(timer>5){phase="bet";}
+else if(timer>0){phase="lock";document.querySelectorAll(".chip").forEach(c=>c.classList.add("locked"));}
+betStatus.innerText=timer>5?"START BETTING "+(timer-5):timer>0?"BET LOCK "+timer:"RESULT";
+saveGame();
 if(timer<=0){clearInterval(t); showResult();}
 },1000);
 }
@@ -283,66 +271,42 @@ if(d.v>t.v) win="DRAGON";
 else if(t.v>d.v) win="TIGER";
 
 if(bets[win]>0){
-wallet += bets[win]*MULTI[win];
-walletAmt.innerText = wallet;
-updateMainWallet();   // 🔥 FIREBASE UPDATE
+wallet+=bets[win]*MULTI[win];
+walletAmt.innerText=wallet;
 }
 
 popupText.innerText=win+" WINS";
 popup.style.display="flex";
 
+saveGame();
+
 setTimeout(()=>{popup.style.display="none"; resetRound();},2500);
 }
 
+/* RESET */
 function resetRound(){
 bets={DRAGON:0,TIGER:0,TIE:0};
-timer=15;
+timer=15; phase="bet";
 document.querySelectorAll(".bet-amt").forEach(b=>b.style.display="none");
+document.querySelectorAll(".chip").forEach(c=>c.classList.remove("active","locked"));
+document.querySelectorAll(".card,.tie").forEach(x=>x.classList.remove("active"));
 topDragon.classList.remove("flip"); topTiger.classList.remove("flip");
 dVal.innerText=""; tVal.innerText="";
+saveGame();
 startTimer();
 }
 
-/* GAME START */
-loadMainWallet();   // 🔥 FIREBASE WALLET LOAD
+/* LIVE FEED */
+setInterval(()=>{
+const amt=[15000,20000,35000,50000,80000][Math.floor(Math.random()*5)];
+const item=document.createElement("div");
+item.className="live-item";
+item.innerText="User just placed bet ₹"+amt;
+liveFeed.prepend(item);
+if(liveFeed.children.length>6) liveFeed.lastChild.remove();
+},2000);
+
 startTimer();
-</script>
+</script>  </body>
 
-<!-- ================= FIREBASE INIT ================= -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, query, where, getDocs, doc, updateDoc }
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-const app = initializeApp({
-  apiKey: "AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
-  authDomain: "colourcash-ea60e.firebaseapp.com",
-  projectId: "colourcash-ea60e"
-});
-
-const db = getFirestore(app);
-const userEmail = localStorage.getItem("userEmail");
-let userDocId = "";
-
-async function loadMainWallet(){
-  const snap = await getDocs(
-    query(collection(db,"users"), where("email","==",userEmail))
-  );
-  snap.forEach(d=>{
-    userDocId = d.id;
-    wallet = d.data().balance || 0;
-    walletAmt.innerText = wallet;
-  });
-}
-
-async function updateMainWallet(){
-  if(!userDocId) return;
-  await updateDoc(doc(db,"users",userDocId),{ balance: wallet });
-}
-
-window.loadMainWallet = loadMainWallet;
-window.updateMainWallet = updateMainWallet;
-</script>
-
-</body>
 </html>
