@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SPIN & STOP</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:radial-gradient(circle at top,#3b0a0a,#140404);
+  color:#fff;
+  text-align:center;
+}
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:14px;
+  font-weight:bold;
+}
+.wallet{
+  background:rgba(0,0,0,.5);
+  padding:6px 14px;
+  border-radius:20px;
+}
+
+/* SPINNER */
+.spinner-wrap{
+  margin:30px auto;
+  width:240px;
+  height:240px;
+  border-radius:50%;
+  border:8px solid #ff5252;
+  position:relative;
+  overflow:hidden;
+}
+.spinner{
+  width:100%;
+  height:100%;
+  border-radius:50%;
+  background:conic-gradient(
+    #2ecc71 0deg 90deg,
+    #e53935 90deg 180deg,
+    #2ecc71 180deg 270deg,
+    #e53935 270deg 360deg
+  );
+  transition:transform 0.1s linear;
+}
+.pointer{
+  position:absolute;
+  top:-14px;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:26px;
+}
+
+/* BET */
+input{
+  width:80%;
+  padding:14px;
+  border-radius:30px;
+  border:none;
+  font-size:16px;
+  margin-bottom:12px;
+}
+button{
+  width:80%;
+  padding:14px;
+  border-radius:30px;
+  border:none;
+  background:#ff5252;
+  color:#fff;
+  font-size:18px;
+  font-weight:bold;
+  margin-bottom:10px;
+}
+
+/* HISTORY */
+.history{
+  margin:14px;
+  background:rgba(0,0,0,.4);
+  border-radius:12px;
+  padding:10px;
+  font-size:13px;
+  text-align:left;
+}
+.history h3{
+  margin:0 0 6px;
+  text-align:center;
+}
+.h-row{
+  display:flex;
+  justify-content:space-between;
+  border-bottom:1px solid rgba(255,255,255,.1);
+  padding:6px 0;
+}
+.win{color:#4caf50}
+.lose{color:#ff5252}
+
+/* POPUP */
+.popup{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.7);
+  display:none;
+  align-items:center;
+  justify-content:center;
+}
+.popup-box{
+  background:#ff5252;
+  color:#fff;
+  padding:26px 40px;
+  border-radius:20px;
+  font-size:22px;
+  font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <div>🔥 SPIN & STOP</div>
+  <div class="wallet">₹ <span id="wallet">0</span></div>
+</div>
+
+<div class="spinner-wrap">
+  <div class="pointer">⬇️</div>
+  <div class="spinner" id="spinner"></div>
+</div>
+
+<input type="number" id="bet" value="100" placeholder="Enter Bet Amount">
+<br>
+<button id="spinBtn">SPIN</button>
+<button id="stopBtn" disabled>STOP</button>
+
+<div class="history">
+  <h3>LAST SPINS</h3>
+  <div id="history"></div>
+</div>
+
+<div class="popup" id="popup">
+  <div class="popup-box" id="popupText"></div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, getDocs, collection, query, where, doc, updateDoc }
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+/* FIREBASE (SAME AS YOUR GAMES) */
+const app = initializeApp({
+  apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
+  authDomain:"colourcash-ea60e.firebaseapp.com",
+  projectId:"colourcash-ea60e"
+});
+const db = getFirestore(app);
+
+const userEmail = localStorage.getItem("userEmail");
+let wallet = 0;
+let uid = "";
+
+/* LOAD WALLET */
+async function loadWallet(){
+  const q = query(collection(db,"users"), where("email","==",userEmail));
+  const snap = await getDocs(q);
+  snap.forEach(d=>{
+    uid = d.id;
+    wallet = Number(d.data().balance || 0);
+  });
+  renderWallet();
+}
+
+/* SAVE WALLET */
+async function saveWallet(){
+  if(!uid) return;
+  await updateDoc(doc(db,"users",uid), { balance: wallet });
+}
+
+/* UI */
+const spinner = document.getElementById("spinner");
+const spinBtn = document.getElementById("spinBtn");
+const stopBtn = document.getElementById("stopBtn");
+const popup = document.getElementById("popup");
+const popupText = document.getElementById("popupText");
+const historyBox = document.getElementById("history");
+
+function renderWallet(){
+  document.getElementById("wallet").innerText = wallet;
+}
+
+/* HOUSE EDGE LOGIC */
+function shouldWin(bet){
+  let baseLossChance = 0.65; // 65% loss
+  if(bet > wallet*0.3) baseLossChance = 0.8; // high bet = more loss
+  return Math.random() > baseLossChance;
+}
+
+/* GAME */
+let angle = 0;
+let spinInt = null;
+let spinning = false;
+
+spinBtn.onclick = async ()=>{
+  const bet = Number(document.getElementById("bet").value);
+  if(bet<=0 || bet>wallet) return alert("Low balance");
+
+  wallet -= bet;
+  await saveWallet();
+  renderWallet();
+
+  spinBtn.disabled = true;
+  stopBtn.disabled = false;
+  spinning = true;
+
+  spinInt = setInterval(()=>{
+    angle += 15;
+    spinner.style.transform = `rotate(${angle}deg)`;
+  },50);
+};
+
+stopBtn.onclick = async ()=>{
+  if(!spinning) return;
+
+  clearInterval(spinInt);
+  spinning = false;
+  spinBtn.disabled = false;
+  stopBtn.disabled = true;
+
+  const bet = Number(document.getElementById("bet").value);
+  const win = shouldWin(bet);
+
+  let resultText="";
+  if(win){
+    const winAmt = bet * 2;
+    wallet += winAmt;
+    await saveWallet();
+    resultText = `🎉 YOU WIN ₹${winAmt}`;
+    addHistory("WIN", winAmt);
+  }else{
+    resultText = "❌ YOU LOST";
+    addHistory("LOSE", bet);
+  }
+
+  renderWallet();
+  popupText.innerText = resultText;
+  popup.style.display="flex";
+  setTimeout(()=>popup.style.display="none",1500);
+};
+
+/* HISTORY */
+function addHistory(type,amt){
+  const div=document.createElement("div");
+  div.className="h-row";
+  div.innerHTML=`
+    <span>${type}</span>
+    <span class="${type==="WIN"?"win":"lose"}">
+      ${type==="WIN"?`+₹${amt}`:`-₹${amt}`}
+    </span>
+  `;
+  historyBox.prepend(div);
+}
+
+loadWallet();
+</script>
+
+</body>
+</html>
