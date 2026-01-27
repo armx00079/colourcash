@@ -41,6 +41,30 @@ input{
   margin-bottom:14px;
   font-size:16px;
 }
+
+/* 🔥 ODD EVEN */
+.odd-even{
+  display:flex;
+  justify-content:center;
+  gap:14px;
+  margin-bottom:14px;
+}
+.oe-btn{
+  flex:1;
+  max-width:140px;
+  padding:12px 0;
+  border-radius:20px;
+  border:none;
+  background:#1e2a3a;
+  color:#fff;
+  font-weight:bold;
+}
+.oe-btn.active{
+  background:#ffb300;
+  color:#000;
+  transform:scale(1.05);
+}
+
 button{
   width:80%;
   padding:14px;
@@ -83,6 +107,12 @@ button{
 
 <div class="dice" id="dice">🎲</div>
 
+<!-- ✅ ODD EVEN -->
+<div class="odd-even">
+  <button class="oe-btn" id="oddBtn">ODD<br><small>1 · 3 · 5</small></button>
+  <button class="oe-btn" id="evenBtn">EVEN<br><small>2 · 4 · 6</small></button>
+</div>
+
 <input type="number" id="bet" placeholder="Enter Bet Amount" value="100">
 <br>
 <button id="roll">ROLL DICE</button>
@@ -98,7 +128,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getFirestore, getDocs, collection, query, where, doc, updateDoc }
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-/* 🔥 SAME FIREBASE CONFIG AS PLINKO */
+/* 🔥 FIREBASE */
 const app = initializeApp({
   apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
   authDomain:"colourcash-ea60e.firebaseapp.com",
@@ -106,7 +136,6 @@ const app = initializeApp({
 });
 const db = getFirestore(app);
 
-/* 🔥 SAME WALLET LOGIC */
 const userEmail = localStorage.getItem("userEmail");
 let wallet = 0;
 let uid = "";
@@ -136,13 +165,29 @@ const popup = document.getElementById("popup");
 const popupText = document.getElementById("popupText");
 const history = document.getElementById("history");
 
+let selectedOE = "";
+
+/* ODD EVEN SELECT */
+oddBtn.onclick = ()=>{
+  selectedOE="odd";
+  oddBtn.classList.add("active");
+  evenBtn.classList.remove("active");
+};
+evenBtn.onclick = ()=>{
+  selectedOE="even";
+  evenBtn.classList.add("active");
+  oddBtn.classList.remove("active");
+};
+
+/* ROLL */
 rollBtn.onclick = async ()=>{
   const bet = Number(betInp.value);
+  if(!selectedOE) return alert("Select ODD or EVEN");
   if(bet<=0 || bet>wallet) return alert("Low balance");
 
   wallet -= bet;
   await saveWallet();
-  document.getElementById("wallet").innerText = wallet;
+  walletSpan();
 
   dice.classList.add("roll");
 
@@ -150,23 +195,32 @@ rollBtn.onclick = async ()=>{
     dice.classList.remove("roll");
 
     const num = Math.floor(Math.random()*6)+1;
-    const win = num >= 4 ? bet*2 : 0;
+    const isOdd = num % 2 !== 0;
+    let win = false;
 
-    if(win>0){
-      wallet += win;
+    if(selectedOE==="odd" && isOdd) win=true;
+    if(selectedOE==="even" && !isOdd) win=true;
+
+    if(win){
+      const reward = bet * 2;
+      wallet += reward;
+      popupText.innerText = `🎉 YOU WIN ₹${reward}`;
       await saveWallet();
-      popupText.innerText = `YOU WIN ₹${win}`;
     }else{
-      popupText.innerText = `YOU LOST`;
+      popupText.innerText = `❌ YOU LOST`;
     }
 
-    document.getElementById("wallet").innerText = wallet;
+    walletSpan();
     history.innerHTML += ` | 🎲 ${num}`;
     popup.style.display="flex";
 
-    setTimeout(()=>popup.style.display="none",1800);
+    setTimeout(()=>popup.style.display="none",1600);
   },600);
 };
+
+function walletSpan(){
+  document.getElementById("wallet").innerText = wallet;
+}
 
 loadWallet();
 </script>
