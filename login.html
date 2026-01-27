@@ -6,27 +6,73 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body{margin:0;font-family:Arial;background:#0f0f0f;color:#fff}
+body{
+  margin:0;
+  font-family:Arial;
+  background:#0f0f0f;
+  color:#fff;
+}
+
+/* CONTAINER */
 .container{
-  max-width:380px;margin:80px auto;background:#1b1b1b;
-  padding:25px;border-radius:16px;text-align:center
+  max-width:380px;
+  margin:80px auto;
+  background:#1b1b1b;
+  padding:25px;
+  border-radius:16px;
+  text-align:center;
 }
+
+/* 🔥 LOGO */
+.logo-wrap{
+  display:flex;
+  justify-content:center;
+  margin-bottom:12px;
+}
+.logo{
+  width:160px;
+  max-width:80%;
+}
+
+/* INPUT */
 input{
-  width:100%;padding:14px;margin-top:12px;
-  border-radius:10px;border:none;font-size:15px
+  width:100%;
+  padding:14px;
+  margin-top:12px;
+  border-radius:10px;
+  border:none;
+  font-size:15px;
 }
+
+/* BUTTON */
 button{
-  width:100%;padding:14px;margin-top:16px;
-  border:none;border-radius:10px;background:#3498db;
-  color:#fff;font-size:16px;font-weight:bold
+  width:100%;
+  padding:14px;
+  margin-top:16px;
+  border:none;
+  border-radius:10px;
+  background:#3498db;
+  color:#fff;
+  font-size:16px;
+  font-weight:bold;
 }
+
+/* POPUP */
 .popup{
-  position:fixed;inset:0;background:rgba(0,0,0,.6);
-  display:none;align-items:center;justify-content:center
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.6);
+  display:none;
+  align-items:center;
+  justify-content:center;
 }
 .popup div{
-  background:#1e1e1e;padding:25px;border-radius:14px;font-size:18px
+  background:#1e1e1e;
+  padding:25px;
+  border-radius:14px;
+  font-size:18px;
 }
+
 a{color:#2ecc71;text-decoration:none}
 </style>
 </head>
@@ -34,7 +80,12 @@ a{color:#2ecc71;text-decoration:none}
 <body>
 
 <div class="container">
-  <h2>🎨 Colour Cash</h2>
+
+  <!-- ✅ LOGO ADDED (TEXT REMOVED) -->
+  <div class="logo-wrap">
+    <img src="images/logo.png" class="logo">
+  </div>
+
   <p>Login to your account</p>
 
   <input type="email" id="email" placeholder="Email">
@@ -47,7 +98,9 @@ a{color:#2ecc71;text-decoration:none}
   </p>
 </div>
 
-<div class="popup" id="popup"><div id="popupText"></div></div>
+<div class="popup" id="popup">
+  <div id="popupText"></div>
+</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -85,7 +138,7 @@ window.login = () => {
   .then((result)=>{
     const user = result.user;
 
-    // 🔥 EXISTING CODE (UNCHANGED)
+    /* 🔥 EXISTING SYSTEM — UNCHANGED */
     localStorage.setItem("userEmail", user.email);
     localStorage.setItem(
       "userName",
@@ -95,25 +148,18 @@ window.login = () => {
     const now = new Date().toLocaleString();
     localStorage.setItem("lastLogin", now);
 
-    /* =================================================
-       ✅ ONLY ADDITION (MASTER USER LIST – ADMIN FIX)
-       ================================================= */
+    /* ADMIN USER LIST (UNCHANGED) */
     let users = JSON.parse(localStorage.getItem("users")) || [];
     const balance = Number(localStorage.getItem("balance")) || 0;
 
     const index = users.findIndex(u => u.email === user.email);
-
     if(index === -1){
-      users.push({
-        email: user.email,
-        balance: balance
-      });
+      users.push({ email:user.email, balance:balance });
     }else{
       users[index].balance = balance;
     }
 
     localStorage.setItem("users", JSON.stringify(users));
-    /* ================================================= */
 
     showPopup("Login Successful ✅");
     setTimeout(()=>location.href="index.html",1200);
