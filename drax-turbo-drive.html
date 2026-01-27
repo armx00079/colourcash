@@ -7,38 +7,29 @@
 
 <style>
 body{
-  margin:0;
-  font-family:Arial;
+  margin:0;font-family:Arial;
   background:linear-gradient(135deg,#ff4fd8,#8f2bff);
-  color:#fff;
-  text-align:center;
+  color:#fff;text-align:center
 }
 .header{padding:14px;font-size:22px;font-weight:bold}
 .wallet{
-  margin-top:8px;
-  background:rgba(0,0,0,.35);
-  display:inline-block;
-  padding:6px 18px;
-  border-radius:20px;
+  margin-top:8px;background:rgba(0,0,0,.35);
+  display:inline-block;padding:6px 18px;border-radius:20px
 }
 .multis{display:flex;justify-content:center;gap:10px;margin:12px 0}
 .multi{padding:8px 16px;background:#000;border-radius:14px;font-weight:bold}
 
 .track{
-  background:#14001f;
-  margin:14px;
-  padding:14px;
-  border-radius:16px;
+  background:#14001f;margin:14px;padding:14px;border-radius:16px
 }
 .road{display:flex;align-items:center;margin:18px 0}
 .car{font-size:32px;transition:transform 1.2s ease}
 .line{
   flex:1;height:6px;margin-left:10px;
   background:repeating-linear-gradient(90deg,yellow 0 14px,black 14px 28px);
-  border-radius:6px;
+  border-radius:6px
 }
 
-/* selection */
 .select{display:flex;gap:10px;padding:0 14px}
 .sel{
   flex:1;padding:12px 0;border-radius:16px;
@@ -47,7 +38,6 @@ body{
 .sel.active{background:#ff66e3;color:#000;transform:scale(1.05)}
 .logo{width:42px;height:42px;object-fit:contain;margin-bottom:6px}
 
-/* bottom */
 .bottom-bar{display:flex;flex-direction:column;gap:14px;margin:14px}
 .bottom-bar input,
 .bottom-bar button{
@@ -55,14 +45,9 @@ body{
 }
 .bottom-bar button{background:#ff4fd8;font-size:18px;font-weight:bold}
 
-/* history */
 .history{
-  background:#14001f;
-  margin:14px;
-  padding:12px;
-  border-radius:16px;
-  font-size:14px;
-  text-align:left;
+  background:#14001f;margin:14px;padding:12px;
+  border-radius:16px;font-size:14px;text-align:left
 }
 .history h3{text-align:center;margin:0 0 8px}
 .history div{padding:4px 0;border-bottom:1px solid rgba(255,255,255,.1)}
@@ -82,7 +67,7 @@ body{
 
 <div class="header">
  🚗 DRAX TURBO DRIVE
- <div class="wallet">₹ <span id="wallet">10000</span></div>
+ <div class="wallet">₹ <span id="wallet">0</span></div>
 </div>
 
 <div class="multis">
@@ -114,7 +99,6 @@ body{
  <button onclick="startRace()">START RACE</button>
 </div>
 
-<!-- MY BETS HISTORY -->
 <div class="history">
  <h3>MY BETS</h3>
  <div id="historyBox">No bets yet</div>
@@ -122,47 +106,78 @@ body{
 
 <div class="popup" id="popup"><div id="popupText"></div></div>
 
-<script>
-let wallet = 10000;
-let selected = "";
-let firstGame = !localStorage.getItem("playedOnce");
-let history = [];
+<!-- 🔥 FIREBASE WALLET CONNECT -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getFirestore,collection,query,where,
+  getDocs,doc,updateDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-const cars = {
- mer:{el:"car-mer", payout:5},
- audi:{el:"car-audi", payout:10},
- bmw:{el:"car-bmw", payout:20}
+/* 🔐 FIREBASE CONFIG */
+const app = initializeApp({
+  apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
+  authDomain:"colourcash-ea60e.firebaseapp.com",
+  projectId:"colourcash-ea60e"
+});
+const db = getFirestore(app);
+
+const userEmail = localStorage.getItem("userEmail");
+let uid="", wallet=0;
+
+async function loadWallet(){
+  const q=query(collection(db,"users"),where("email","==",userEmail));
+  const snap=await getDocs(q);
+  snap.forEach(d=>{
+    uid=d.id;
+    wallet=Number(d.data().balance||0);
+  });
+  updateWallet();
+}
+
+async function saveWallet(){
+  if(uid) await updateDoc(doc(db,"users",uid),{balance:wallet});
+}
+
+/* ===== GAME LOGIC ===== */
+let selected="";
+let firstGame=!localStorage.getItem("playedOnce");
+let history=[];
+
+const cars={
+ mer:{el:"car-mer",pay:5},
+ audi:{el:"car-audi",pay:10},
+ bmw:{el:"car-bmw",pay:20}
 };
 
-function selectCar(c,el){
+window.selectCar=(c,el)=>{
  selected=c;
  document.querySelectorAll(".sel").forEach(x=>x.classList.remove("active"));
  el.classList.add("active");
-}
+};
 
-function startRace(){
- const bet = Number(betInput.value);
+window.startRace=async ()=>{
+ const bet=Number(betInput.value);
  if(!selected) return alert("Select car");
  if(bet<=0||bet>wallet) return alert("Low balance");
 
- wallet -= bet;
- updateWallet();
+ wallet-=bet; await saveWallet(); updateWallet();
 
  Object.values(cars).forEach(c=>{
   document.getElementById(c.el).style.transform="translateX(0)";
  });
 
- const winner = decideWinner(bet);
+ const winner=decideWinner(bet);
 
  setTimeout(()=>{
   document.getElementById(cars[winner].el)
    .style.transform="translateX(240px)";
  },200);
 
- setTimeout(()=>{
+ setTimeout(async ()=>{
   if(winner===selected){
-    const win = bet*cars[winner].payout;
-    wallet+=win;
+    const win=bet*cars[winner].pay;
+    wallet+=win; await saveWallet();
     addHistory(`✅ ${winner.toUpperCase()} +₹${win}`);
     showPopup(`🎉 WIN ₹${win}`);
   }else{
@@ -171,31 +186,27 @@ function startRace(){
   }
   updateWallet();
  },1600);
-}
+};
 
 function decideWinner(bet){
- // 🎁 FIRST GAME GUARANTEE
  if(firstGame && bet<=300){
   firstGame=false;
   localStorage.setItem("playedOnce","yes");
   return selected;
  }
+ let chance=0.35;
+ if(bet>500) chance=0.25;
+ if(bet>1000) chance=0.15;
 
- let winChance = 0.35;
- if(bet>500) winChance=0.25;
- if(bet>1000) winChance=0.15;
-
- if(Math.random()<winChance){
-  return selected;
- }
+ if(Math.random()<chance) return selected;
  return Object.keys(cars).filter(c=>c!==selected)
-        [Math.floor(Math.random()*2)];
+  [Math.floor(Math.random()*2)];
 }
 
-function addHistory(text){
- history.unshift(text);
- history = history.slice(0,10);
- historyBox.innerHTML = history.join("<br>");
+function addHistory(t){
+ history.unshift(t);
+ history=history.slice(0,10);
+ historyBox.innerHTML=history.join("<br>");
 }
 
 function updateWallet(){
@@ -203,11 +214,13 @@ function updateWallet(){
 }
 const walletSpan=document.getElementById("wallet");
 
-function showPopup(msg){
- popupText.innerText=msg;
+function showPopup(t){
+ popupText.innerText=t;
  popup.style.display="flex";
  setTimeout(()=>popup.style.display="none",1500);
 }
+
+loadWallet();
 </script>
 
 </body>
