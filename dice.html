@@ -30,9 +30,8 @@ body{
   margin:20px 0;
   transition:transform .3s;
 }
-.roll{
-  transform:rotate(360deg) scale(1.2);
-}
+.roll{ transform:rotate(360deg) scale(1.2); }
+
 input{
   width:80%;
   padding:14px;
@@ -42,7 +41,7 @@ input{
   font-size:16px;
 }
 
-/* 🔥 ODD EVEN */
+/* ODD EVEN */
 .odd-even{
   display:flex;
   justify-content:center;
@@ -74,11 +73,29 @@ button{
   font-size:18px;
   font-weight:bold;
 }
-.history{
-  margin-top:14px;
-  font-size:12px;
-  opacity:.85;
+
+/* HISTORY */
+.my-history{
+  margin:16px;
+  background:rgba(0,0,0,.35);
+  border-radius:12px;
+  padding:10px;
+  text-align:left;
+  font-size:13px;
 }
+.my-history h3{
+  margin:0 0 6px;
+  text-align:center;
+}
+.bet-row{
+  display:flex;
+  justify-content:space-between;
+  border-bottom:1px solid rgba(255,255,255,.1);
+  padding:6px 0;
+}
+.win{ color:#4caf50; }
+.lose{ color:#ff5252; }
+
 .popup{
   position:fixed;
   inset:0;
@@ -107,17 +124,20 @@ button{
 
 <div class="dice" id="dice">🎲</div>
 
-<!-- ✅ ODD EVEN -->
 <div class="odd-even">
   <button class="oe-btn" id="oddBtn">ODD<br><small>1 · 3 · 5</small></button>
   <button class="oe-btn" id="evenBtn">EVEN<br><small>2 · 4 · 6</small></button>
 </div>
 
-<input type="number" id="bet" placeholder="Enter Bet Amount" value="100">
+<input type="number" id="bet" value="100">
 <br>
 <button id="roll">ROLL DICE</button>
 
-<div class="history" id="history">Last Rolls:</div>
+<!-- ✅ MY BETS HISTORY -->
+<div class="my-history">
+  <h3>MY BETS HISTORY</h3>
+  <div id="betHistory"></div>
+</div>
 
 <div class="popup" id="popup">
   <div class="popup-box" id="popupText"></div>
@@ -128,7 +148,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getFirestore, getDocs, collection, query, where, doc, updateDoc }
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-/* 🔥 FIREBASE */
+/* FIREBASE */
 const app = initializeApp({
   apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
   authDomain:"colourcash-ea60e.firebaseapp.com",
@@ -148,7 +168,7 @@ async function loadWallet(){
     uid = d.id;
     wallet = Number(d.data().balance || 0);
   });
-  document.getElementById("wallet").innerText = wallet;
+  updateWallet();
 }
 
 /* SAVE WALLET */
@@ -163,17 +183,17 @@ const rollBtn = document.getElementById("roll");
 const betInp = document.getElementById("bet");
 const popup = document.getElementById("popup");
 const popupText = document.getElementById("popupText");
-const history = document.getElementById("history");
+const betHistory = document.getElementById("betHistory");
 
-let selectedOE = "";
+let selectedOE="";
 
-/* ODD EVEN SELECT */
-oddBtn.onclick = ()=>{
+/* SELECT */
+oddBtn.onclick=()=>{
   selectedOE="odd";
   oddBtn.classList.add("active");
   evenBtn.classList.remove("active");
 };
-evenBtn.onclick = ()=>{
+evenBtn.onclick=()=>{
   selectedOE="even";
   evenBtn.classList.add("active");
   oddBtn.classList.remove("active");
@@ -187,7 +207,7 @@ rollBtn.onclick = async ()=>{
 
   wallet -= bet;
   await saveWallet();
-  walletSpan();
+  updateWallet();
 
   dice.classList.add("roll");
 
@@ -201,25 +221,42 @@ rollBtn.onclick = async ()=>{
     if(selectedOE==="odd" && isOdd) win=true;
     if(selectedOE==="even" && !isOdd) win=true;
 
+    let resultText="", winAmt=0;
+
     if(win){
-      const reward = bet * 2;
-      wallet += reward;
-      popupText.innerText = `🎉 YOU WIN ₹${reward}`;
+      winAmt = bet * 2;
+      wallet += winAmt;
+      resultText="WIN";
+      popupText.innerText=`🎉 YOU WIN ₹${winAmt}`;
       await saveWallet();
     }else{
-      popupText.innerText = `❌ YOU LOST`;
+      resultText="LOSE";
+      popupText.innerText="❌ YOU LOST";
     }
 
-    walletSpan();
-    history.innerHTML += ` | 🎲 ${num}`;
+    updateWallet();
+    addHistory(num, bet, selectedOE, resultText, winAmt);
     popup.style.display="flex";
 
-    setTimeout(()=>popup.style.display="none",1600);
+    setTimeout(()=>popup.style.display="none",1500);
   },600);
 };
 
-function walletSpan(){
-  document.getElementById("wallet").innerText = wallet;
+function updateWallet(){
+  document.getElementById("wallet").innerText=wallet;
+}
+
+/* ADD BET HISTORY */
+function addHistory(num,bet,oe,result,amt){
+  const div=document.createElement("div");
+  div.className="bet-row";
+  div.innerHTML=`
+    <span>🎲 ${num} (${oe.toUpperCase()})</span>
+    <span class="${result==="WIN"?"win":"lose"}">
+      ${result==="WIN"?`+₹${amt}`:`-₹${bet}`}
+    </span>
+  `;
+  betHistory.prepend(div);
 }
 
 loadWallet();
