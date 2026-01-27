@@ -63,13 +63,16 @@ body{
   color:#111;
 }
 
-/* 🔴 DICE ROLL (NEW – RED) */
+/* 🔴 DICE ROLL */
 .dice{
   background:linear-gradient(135deg,#ff3b3b,#b30000);
   color:#fff;
 }
-.dice:hover{
-  box-shadow:0 10px 25px rgba(255,0,0,.45);
+
+/* 🌸 SPIN STOP (PINK) */
+.spinstop{
+  background:linear-gradient(135deg,#ff5fa2,#ff2f92);
+  color:#fff;
 }
 
 /* BOTTOM NAV */
@@ -147,14 +150,12 @@ body{
     <p>High Risk • High Reward</p>
   </div>
 
-  <!-- 🐔 CHICKEN ROAD -->
   <div class="game-card chicken" onclick="location.href='chicken-road.html'">
     <div class="icon">🐔</div>
     <h3>CHICKEN ROAD</h3>
     <p>High Risk • High Reward</p>
   </div>
 
-  <!-- 🔴 DICE ROLL (ADDED HERE) -->
   <div class="game-card dice" onclick="location.href='dice.html'">
     <div class="icon">🎲</div>
     <h3>DICE ROLL</h3>
@@ -166,6 +167,13 @@ body{
     <div class="icon">⚪</div>
     <h3>PLINKO</h3>
     <p>Low • Medium • High Risk</p>
+  </div>
+
+  <!-- 🌸 SPIN STOP (NEW) -->
+  <div class="game-card spinstop" onclick="location.href='spin-stop.html'">
+    <div class="icon">⏹️</div>
+    <h3>SPIN STOP</h3>
+    <p>2x Only • Manual Stop</p>
   </div>
 
 </div>
