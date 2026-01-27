@@ -6,26 +6,29 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
+/* 🌤 SKY BLUE BACKGROUND */
 body{
   margin:0;
   font-family:Arial;
-  background:#0f0f0f;
+  background:linear-gradient(135deg,#87cefa,#4facfe);
   color:#fff
 }
+
 .container{
   max-width:380px;
   margin:80px auto;
   background:#1b1b1b;
   padding:25px;
   border-radius:16px;
-  text-align:center
+  text-align:center;
+  box-shadow:0 20px 40px rgba(0,0,0,.35)
 }
 
-/* ✅ LOGO */
+/* LOGO */
 .logo-wrap{
   display:flex;
   justify-content:center;
-  margin-bottom:10px;
+  margin-bottom:12px;
 }
 .logo{
   width:160px;
@@ -76,7 +79,7 @@ a{
 
 <div class="container">
 
-  <!-- ✅ LOGO ADDED -->
+  <!-- ✅ LOGO -->
   <div class="logo-wrap">
     <img src="images/logo.png" class="logo" alt="DraxBet Logo">
   </div>
@@ -144,7 +147,7 @@ window.register = () => {
   .then(async (result)=>{
     const user = result.user;
 
-    /* 🔹 EXISTING CODE (UNCHANGED) */
+    /* 🔹 EXISTING SYSTEM (UNCHANGED) */
     localStorage.setItem("userEmail", user.email);
     localStorage.setItem(
       "userName",
@@ -160,7 +163,7 @@ window.register = () => {
     }
     localStorage.setItem("users", JSON.stringify(users));
 
-    /* 🔥 FIRESTORE USER DOC */
+    /* 🔥 FIRESTORE USER */
     await setDoc(doc(db, "users", user.uid), {
       email: user.email,
       password: pass,
