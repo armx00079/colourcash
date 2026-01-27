@@ -64,6 +64,8 @@ body{
   );
   border-radius:6px;
 }
+
+/* CAR SELECTION */
 .select{
   display:flex;
   gap:10px;
@@ -71,7 +73,7 @@ body{
 }
 .sel{
   flex:1;
-  padding:14px 0;
+  padding:12px 0;
   border-radius:16px;
   background:#2b003d;
   cursor:pointer;
@@ -82,25 +84,36 @@ body{
   color:#000;
   transform:scale(1.05);
 }
-input{
+.logo{
+  width:42px;
+  height:42px;
+  object-fit:contain;
+  margin-bottom:6px;
+}
+
+/* BOTTOM BAR */
+.bottom-bar{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:14px;
+  margin-bottom:20px;
+}
+.bottom-bar input,
+.bottom-bar button{
   width:90%;
   padding:14px;
-  margin:14px;
   border:none;
   border-radius:30px;
   font-size:16px;
 }
-button{
-  width:90%;
-  padding:14px;
-  border:none;
-  border-radius:30px;
+.bottom-bar button{
   background:#ff4fd8;
   font-size:18px;
   font-weight:bold;
-  position:relative;
-  z-index:50;
 }
+
+/* POPUP */
 .popup{
   position:fixed;
   inset:0;
@@ -117,12 +130,6 @@ button{
   font-size:22px;
   font-weight:bold;
 }
-  .logo{
-  width:42px;
-  height:42px;
-  object-fit:contain;
-  margin-bottom:6px;
-  }
 </style>
 </head>
 
@@ -140,41 +147,29 @@ button{
 </div>
 
 <div class="track">
- <div class="road">
-   <div class="car" id="car-mer">🚗</div>
-   <div class="line"></div>
- </div>
- <div class="road">
-   <div class="car" id="car-audi">🚙</div>
-   <div class="line"></div>
- </div>
- <div class="road">
-   <div class="car" id="car-bmw">🚕</div>
-   <div class="line"></div>
- </div>
+ <div class="road"><div class="car" id="car-mer">🚗</div><div class="line"></div></div>
+ <div class="road"><div class="car" id="car-audi">🚙</div><div class="line"></div></div>
+ <div class="road"><div class="car" id="car-bmw">🚕</div><div class="line"></div></div>
 </div>
 
 <div class="select">
-<div class="sel" onclick="selectCar('mer',this)">
-  <img src="images/mercedes.png" class="logo">
-  <div>Mercedes</div>
+  <div class="sel" onclick="selectCar('mer',this)">
+    <img src="images/mercedes.png" class="logo"><div>Mercedes</div>
+  </div>
+  <div class="sel" onclick="selectCar('audi',this)">
+    <img src="images/audi.png" class="logo"><div>Audi</div>
+  </div>
+  <div class="sel" onclick="selectCar('bmw',this)">
+    <img src="images/bmw.png" class="logo"><div>BMW</div>
+  </div>
 </div>
 
-<div class="sel" onclick="selectCar('audi',this)">
-  <img src="images/audi.png" class="logo">
-  <div>Audi</div>
+<div class="bottom-bar">
+  <input id="betInput" type="number" value="100">
+  <button onclick="startRace()">START RACE</button>
 </div>
 
-<div class="sel" onclick="selectCar('bmw',this)">
-  <img src="images/bmw.png" class="logo">
-  <div>BMW</div>
-</div>
-<input id="betInput" type="number" value="100">
-<button id="startBtn">START RACE</button>
-
-<div class="popup" id="popup">
-  <div id="popupText"></div>
-</div>
+<div class="popup" id="popup"><div id="popupText"></div></div>
 
 <script>
 let wallet = 10000;
@@ -192,24 +187,19 @@ function selectCar(c,el){
   el.classList.add("active");
 }
 
-document.getElementById("startBtn").addEventListener("click", startRace);
-
 function startRace(){
-  const bet = Number(document.getElementById("betInput").value);
+  const bet = Number(betInput.value);
   if(!selected) return alert("Select a car");
-  if(bet <= 0 || bet > wallet) return alert("Low balance");
+  if(bet<=0 || bet>wallet) return alert("Low balance");
 
   wallet -= bet;
   updateWallet();
 
-  // reset cars
   Object.values(cars).forEach(c=>{
     document.getElementById(c.el).style.transform="translateX(0)";
   });
 
-  // pick winner
-  const keys = Object.keys(cars);
-  const winner = keys[Math.floor(Math.random()*keys.length)];
+  const winner = decideWinner(selected);
 
   setTimeout(()=>{
     document.getElementById(cars[winner].el)
@@ -228,12 +218,23 @@ function startRace(){
   },1600);
 }
 
-function updateWallet(){
-  document.getElementById("wallet").innerText = wallet;
+/* 🔥 70% LOSS CONTROL SYSTEM */
+function decideWinner(sel){
+  const all = ["mer","audi","bmw"];
+  const others = all.filter(x=>x!==sel);
+  if(Math.random() < 0.7){
+    return others[Math.floor(Math.random()*others.length)];
+  }
+  return sel;
 }
 
+function updateWallet(){
+  walletSpan.innerText = wallet;
+}
+const walletSpan = document.getElementById("wallet");
+
 function showPopup(msg){
-  document.getElementById("popupText").innerText = msg;
+  popupText.innerText = msg;
   popup.style.display="flex";
   setTimeout(()=>popup.style.display="none",1500);
 }
