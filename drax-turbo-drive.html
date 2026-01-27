@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>🚗 Drax Turbo Drive</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:radial-gradient(circle at top,#ff4fd8,#1a0015);
+  color:#fff;
+  text-align:center;
+}
+.header{
+  padding:14px;
+  font-size:24px;
+  font-weight:bold;
+  text-shadow:0 0 10px #ff5cff;
+}
+.wallet{
+  position:absolute;
+  top:14px;
+  right:14px;
+  background:rgba(0,0,0,.4);
+  padding:6px 14px;
+  border-radius:20px;
+  font-weight:bold;
+}
+
+.road{
+  margin:30px auto 10px;
+  width:92%;
+  max-width:360px;
+  background:#120012;
+  border-radius:16px;
+  padding:14px;
+  box-shadow:0 0 20px #ff4fd8;
+}
+.track{
+  display:flex;
+  justify-content:space-between;
+  margin-top:14px;
+}
+.box{
+  flex:1;
+  margin:0 4px;
+  padding:10px 0;
+  border-radius:10px;
+  background:#260026;
+  font-size:13px;
+  font-weight:bold;
+}
+.box.active{
+  background:#ff4fd8;
+  color:#000;
+  box-shadow:0 0 12px #ff4fd8;
+}
+
+.cars{
+  margin-top:20px;
+}
+.car{
+  font-size:26px;
+  margin:6px 0;
+  transition:transform .3s;
+}
+.move{
+  transform:translateX(12px);
+}
+
+.controls{
+  margin-top:20px;
+}
+input{
+  width:80%;
+  padding:14px;
+  border-radius:30px;
+  border:none;
+  font-size:16px;
+}
+button{
+  width:80%;
+  padding:14px;
+  margin-top:14px;
+  border:none;
+  border-radius:30px;
+  background:#ff4fd8;
+  color:#000;
+  font-size:18px;
+  font-weight:bold;
+  box-shadow:0 0 12px #ff4fd8;
+}
+
+.popup{
+  position:fixed;
+  inset:0;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.7);
+}
+.popup-box{
+  background:#ff4fd8;
+  color:#000;
+  padding:26px 40px;
+  border-radius:20px;
+  font-size:22px;
+  font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">🚗 DRAX TURBO DRIVE</div>
+<div class="wallet">₹ <span id="wallet">0</span></div>
+
+<div class="road">
+  <div class="track" id="track"></div>
+
+  <div class="cars">
+    <div class="car">🚗</div>
+    <div class="car">🚕</div>
+    <div class="car">🚙</div>
+  </div>
+</div>
+
+<div class="controls">
+  <input type="number" id="bet" placeholder="Enter Bet Amount" value="100">
+  <button id="start">START RACE</button>
+</div>
+
+<div class="popup" id="popup">
+  <div class="popup-box" id="popupText"></div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, getDocs, collection, query, where, doc, updateDoc }
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+/* 🔥 FIREBASE CONFIG (SAME AS YOUR OTHER GAMES) */
+const app = initializeApp({
+  apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
+  authDomain:"colourcash-ea60e.firebaseapp.com",
+  projectId:"colourcash-ea60e"
+});
+const db = getFirestore(app);
+const userEmail = localStorage.getItem("userEmail");
+
+let wallet=0, uid="";
+
+/* MULTIPLIERS */
+const MULTI = [1.2,1.5,2,3,5,10,20];
+const PROB  = [30,25,20,12,8,4,1]; // house edge safe
+
+const track=document.getElementById("track");
+const cars=document.querySelectorAll(".car");
+
+/* RENDER BOXES */
+MULTI.forEach(x=>{
+  const d=document.createElement("div");
+  d.className="box";
+  d.innerText=x+"x";
+  track.appendChild(d);
+});
+
+/* LOAD WALLET */
+async function loadWallet(){
+  const q=query(collection(db,"users"),where("email","==",userEmail));
+  const snap=await getDocs(q);
+  snap.forEach(d=>{
+    uid=d.id;
+    wallet=d.data().balance||0;
+  });
+  document.getElementById("wallet").innerText=wallet;
+}
+
+/* SAVE WALLET */
+async function saveWallet(){
+  if(uid) await updateDoc(doc(db,"users",uid),{balance:wallet});
+}
+
+/* RANDOM PICK WITH WEIGHT */
+function pickMultiplier(){
+  const bag=[];
+  MULTI.forEach((x,i)=>{
+    for(let j=0;j<PROB[i];j++) bag.push(i);
+  });
+  return bag[Math.floor(Math.random()*bag.length)];
+}
+
+/* START GAME */
+document.getElementById("start").onclick=async()=>{
+  const bet=Number(bet.value);
+  if(bet<=0||bet>wallet) return alert("Low balance");
+
+  wallet-=bet;
+  await saveWallet();
+  document.getElementById("wallet").innerText=wallet;
+
+  document.querySelectorAll(".box").forEach(b=>b.classList.remove("active"));
+
+  let steps=0;
+  const race=setInterval(()=>{
+    cars.forEach(c=>c.classList.toggle("move"));
+    steps++;
+    if(steps>8){
+      clearInterval(race);
+      finish(bet);
+    }
+  },250);
+};
+
+/* FINISH */
+async function finish(bet){
+  const idx=pickMultiplier();
+  const mult=MULTI[idx];
+  document.querySelectorAll(".box")[idx].classList.add("active");
+
+  const win=Math.round(bet*mult);
+  wallet+=win;
+  await saveWallet();
+  document.getElementById("wallet").innerText=wallet;
+
+  popupText.innerText=`🚗 ${mult}x WIN ₹${win}`;
+  popup.style.display="flex";
+  setTimeout(()=>popup.style.display="none",1800);
+}
+
+loadWallet();
+</script>
+
+</body>
+</html>
