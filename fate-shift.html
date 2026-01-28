@@ -65,6 +65,7 @@ input{
   font-size:18px;
   font-weight:bold;
   margin-top:14px;
+  cursor:pointer;
 }
 .start{background:#ff5fd8;color:#000}
 .start.running{box-shadow:0 0 25px #ff5fd8}
@@ -94,11 +95,12 @@ input{
 <div class="card">
   <div class="multiplier"><span id="multi">1.00</span>x</div>
 
-  <div class="bar"><div class="bar-fill" id="bar"></div></div>
+  <div class="bar">
+    <div class="bar-fill" id="bar"></div>
+  </div>
 
   <input id="betInput" type="number" value="100">
-  <!-- ✅ AUTO SHIFT INPUT -->
-  <input id="autoInput" type="number" step="0.01" placeholder="Auto Shift at (e.g. 1.50x)">
+  <input id="autoInput" type="number" step="0.01" placeholder="Auto Shift (e.g. 1.10)">
 
   <button class="btn start" id="startBtn">START CHARGE</button>
   <button class="btn shift" id="shiftBtn" disabled>SHIFT</button>
@@ -116,6 +118,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getFirestore, collection, query, where, getDocs, doc, updateDoc }
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+/* FIREBASE */
 const app = initializeApp({
   apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
   authDomain:"colourcash-ea60e.firebaseapp.com",
@@ -123,6 +126,7 @@ const app = initializeApp({
 });
 const db = getFirestore(app);
 
+/* DOM */
 const startBtn = document.getElementById("startBtn");
 const shiftBtn = document.getElementById("shiftBtn");
 const betInput = document.getElementById("betInput");
@@ -133,20 +137,41 @@ const barEl = document.getElementById("bar");
 const betsEl = document.getElementById("bets");
 const statusEl = document.getElementById("status");
 
+/* STATE */
 let running=false;
-let multiplier=1, bar=0, bet=0, crash=0;
-let balance=0, docId="";
+let multiplier=1;
+let bar=0;
+let bet=0;
+let crash=0;
+let balance=0;
+let docId="";
 let autoShift=0;
+
+/* LOAD HISTORY */
+let history = JSON.parse(localStorage.getItem("FS_HISTORY")||"[]");
+renderHistory();
 
 /* LOAD WALLET */
 const email = localStorage.getItem("userEmail");
-const snap = await getDocs(query(collection(db,"users"),where("email","==",email)));
-snap.forEach(d=>{docId=d.id;balance=d.data().balance||0});
+const snap = await getDocs(
+  query(collection(db,"users"), where("email","==",email))
+);
+snap.forEach(d=>{
+  docId=d.id;
+  balance=d.data().balance||0;
+});
 walletEl.innerText = balance.toFixed(2);
 
 /* CRASH POINT (MAX ≈ 2.2x) */
 function crashPoint(){
-  return 1.5 + Math.random()*0.7;
+  return 1.45 + Math.random()*0.75;
+}
+
+/* OWNER EDGE */
+function shouldAutoWin(){
+  let loseChance = 0.65;              // base loss
+  loseChance += Math.min(bet/1000,1)*0.2; // high bet = more loss
+  return Math.random() > loseChance;
 }
 
 /* START */
@@ -156,21 +181,24 @@ startBtn.onclick = async ()=>{
   bet = +betInput.value;
   autoShift = +autoInput.value || 0;
 
-  if(bet<10 || bet>balance) return alert("Invalid bet");
+  if(bet < 10 || bet > balance){
+    alert("Invalid bet");
+    return;
+  }
 
   balance -= bet;
   await updateDoc(doc(db,"users",docId),{balance});
   walletEl.innerText = balance.toFixed(2);
 
-  multiplier=1;
-  bar=0;
+  multiplier = 1;
+  bar = 0;
   crash = crashPoint();
 
-  running=true;
-  startBtn.disabled=true;
-  shiftBtn.disabled=false;
+  running = true;
+  startBtn.disabled = true;
+  shiftBtn.disabled = false;
   startBtn.classList.add("running");
-  statusEl.innerText="Charging...";
+  statusEl.innerText = "Charging...";
 
   requestAnimationFrame(loop);
 };
@@ -179,18 +207,29 @@ startBtn.onclick = async ()=>{
 function loop(){
   if(!running) return;
 
-  multiplier += 0.035;
-  bar += 2.8;
+  multiplier += 0.025 + Math.random()*0.02;
+  bar += 2 + Math.random()*1;
 
   multiEl.innerText = multiplier.toFixed(2);
   barEl.style.width = Math.min(bar,100)+"%";
 
-  /* ✅ AUTO SHIFT CHECK */
-  if(autoShift>1 && multiplier >= autoShift){
-    end(true);
+  // RANDOM EARLY CRASH (OWNER SAFE)
+  if(Math.random() < 0.02){
+    end(false);
     return;
   }
 
+  // AUTO SHIFT (NOT GUARANTEED)
+  if(autoShift > 1 && multiplier >= autoShift){
+    if(shouldAutoWin()){
+      end(true);
+    }else{
+      end(false);
+    }
+    return;
+  }
+
+  // HARD CRASH
   if(multiplier >= crash){
     end(false);
     return;
@@ -207,9 +246,9 @@ shiftBtn.onclick = ()=>{
 
 /* END */
 async function end(win){
-  running=false;
-  startBtn.disabled=false;
-  shiftBtn.disabled=true;
+  running = false;
+  startBtn.disabled = false;
+  shiftBtn.disabled = true;
   startBtn.classList.remove("running");
 
   if(win){
@@ -217,16 +256,24 @@ async function end(win){
     balance += amt;
     await updateDoc(doc(db,"users",docId),{balance});
     walletEl.innerText = balance.toFixed(2);
-    betsEl.innerHTML =
-      `<div class="bet-row win">WIN ₹${amt.toFixed(2)} @ ${multiplier.toFixed(2)}x</div>` +
-      betsEl.innerHTML;
-    statusEl.innerText="🎉 You Win";
+
+    history.unshift(`WIN ₹${amt.toFixed(2)} @ ${multiplier.toFixed(2)}x`);
+    statusEl.innerText = "🎉 You Win";
   }else{
-    betsEl.innerHTML =
-      `<div class="bet-row lose">LOSS ₹${bet}</div>` +
-      betsEl.innerHTML;
-    statusEl.innerText="💥 Crashed";
+    history.unshift(`LOSS ₹${bet}`);
+    statusEl.innerText = "💥 Crashed";
   }
+
+  history = history.slice(0,10);
+  localStorage.setItem("FS_HISTORY", JSON.stringify(history));
+  renderHistory();
+}
+
+/* RENDER HISTORY */
+function renderHistory(){
+  betsEl.innerHTML = history.length
+    ? history.map(h=>`<div class="bet-row ${h.startsWith("WIN")?"win":"lose"}">${h}</div>`).join("")
+    : "No bets yet";
 }
 </script>
 
