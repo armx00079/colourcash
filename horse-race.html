@@ -69,25 +69,30 @@ body{
 .horse-card.active{
   outline:3px solid gold;
 }
-.horse-card img{width:60px}
+.horse-card img{width:55px}
 .odds{font-size:13px;opacity:.9}
 
-/* RACE AREA (NO TRACK IMAGE) */
+/* ===== RACE AREA ===== */
 .track{
   margin:10px;
-  padding:10px;
-  border-radius:12px;
+  padding-top:110px; /* ⬅️ pushes horses exactly on dirt track */
   position:relative;
-  height:300px;
+  height:260px;
 }
+
+/* EACH LANE */
 .lane{
-  height:45px;
+  height:38px;              /* ⬅️ tighter lanes */
   position:relative;
+  margin-bottom:8px;
 }
+
+/* HORSE IMAGE */
 .lane img{
-  width:55px;
+  width:42px;               /* ✅ HORSE SIZE REDUCED */
   position:absolute;
   left:0;
+  bottom:0;                 /* ✅ feet on ground */
   transition:left 0.08s linear;
 }
 
@@ -174,7 +179,7 @@ const track=document.getElementById("track");
 const statusEl=document.getElementById("status");
 
 /* BUILD HORSES */
-horses.forEach((h,i)=>{
+horses.forEach((h)=>{
   const card=document.createElement("div");
   card.className="horse-card";
   card.innerHTML=`
@@ -193,7 +198,6 @@ horses.forEach((h,i)=>{
 
   const lane=document.createElement("div");
   lane.className="lane";
-  lane.style.top=(i*45)+"px";
   lane.innerHTML=`<img id="horse${h.id}" src="images/horses/horse${h.id}.png">`;
   track.appendChild(lane);
 });
@@ -230,7 +234,7 @@ function startRace(){
 
   const race=setInterval(()=>{
     horses.forEach(h=>{
-      pos[h.id]+=Math.random()*5;
+      pos[h.id]+=Math.random()*4;   /* smoother speed */
       document.getElementById("horse"+h.id).style.left=pos[h.id]+"%";
       if(pos[h.id]>=90){
         clearInterval(race);
