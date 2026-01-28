@@ -47,6 +47,13 @@ body{
 }
 .timer-box img{width:32px;margin-right:8px}
 
+.bet-close{
+  text-align:center;
+  font-size:14px;
+  color:#ffeb3b;
+  margin-top:-4px;
+}
+
 /* HISTORY */
 .history{
   display:flex;
@@ -65,7 +72,7 @@ body{
   font-weight:bold;
 }
 
-/* HORSE BET AREA */
+/* BET PANEL */
 .bet-panel{
   display:grid;
   grid-template-columns:repeat(2,1fr);
@@ -81,34 +88,24 @@ body{
   gap:8px;
   cursor:pointer;
 }
-.horse-card.active{
-  outline:3px solid gold;
-}
+.horse-card.active{outline:3px solid gold;}
 .horse-card img{width:50px}
-.odds{font-size:13px;opacity:.9}
 
-/* ===== RACE AREA ===== */
-.track{
-  margin:10px;
-  padding-top:20px;
-}
-
-/* LANE */
+/* TRACK */
+.track{margin:10px;}
 .lane{
   height:42px;
   position:relative;
-  border-bottom:2px solid rgba(255,255,255,.35); /* ✅ boundary */
+  border-bottom:2px solid rgba(255,255,255,.35);
   margin-bottom:6px;
-  background:rgba(139,69,19,.25); /* dirt feel */
+  background:rgba(139,69,19,.25);
 }
-
-/* HORSE */
 .lane img{
-  width:38px;                /* ✅ smaller horse */
+  width:38px;
   position:absolute;
   left:0;
   bottom:2px;
-  transition:left 0.08s linear;
+  transition:left .08s linear;
 }
 
 /* CHIPS */
@@ -126,15 +123,43 @@ body{
   font-weight:bold;
   cursor:pointer;
 }
-.chip.active{
-  background:gold;
-}
+.chip.active{background:gold}
 
 /* STATUS */
-.status{
+.status{text-align:center;padding:8px;font-weight:bold}
+
+/* ===== POPUP ===== */
+.overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.6);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:999;
+}
+.popup{
+  background:#0f8a70;
+  padding:22px 28px;
+  border-radius:16px;
   text-align:center;
-  padding:8px;
+  animation:pop .3s ease;
+}
+.popup.win{background:#2e7d32}
+.popup.lose{background:#b71c1c}
+.popup h2{margin:0 0 10px}
+.popup button{
+  margin-top:10px;
+  padding:8px 18px;
+  border:none;
+  border-radius:20px;
+  background:#fff;
   font-weight:bold;
+}
+
+@keyframes pop{
+  from{transform:scale(.7);opacity:0}
+  to{transform:scale(1);opacity:1}
 }
 </style>
 </head>
@@ -142,28 +167,21 @@ body{
 <body>
 <div class="stage">
 
-<!-- HEADER -->
 <div class="header">
   🐎 Horse Race
   <div class="wallet">₹ <span id="wallet">1000</span></div>
 </div>
 
-<!-- TIMER -->
 <div class="timer-box">
   <img src="images/ui/timer.png">
   <span id="time">15</span>s
 </div>
+<div class="bet-close" id="betClose"></div>
 
-<!-- HISTORY -->
 <div class="history" id="history"></div>
-
-<!-- BET HORSES -->
 <div class="bet-panel" id="betPanel"></div>
-
-<!-- TRACK -->
 <div class="track" id="track"></div>
 
-<!-- CHIPS -->
 <div class="chips">
   <div class="chip" data-amt="10">10</div>
   <div class="chip" data-amt="50">50</div>
@@ -172,122 +190,89 @@ body{
 </div>
 
 <div class="status" id="status">Select Chip & Horse</div>
+</div>
 
+<!-- POPUP -->
+<div class="overlay" id="overlay">
+  <div class="popup" id="popup">
+    <h2 id="popupText"></h2>
+    <button onclick="location.reload()">OK</button>
+  </div>
 </div>
 
 <script>
-/* DATA */
 const horses=[
- {id:1,odds:8.6},
- {id:2,odds:6.5},
- {id:3,odds:4.7},
- {id:4,odds:6.8},
- {id:5,odds:9.7},
- {id:6,odds:3.9}
+ {id:1,odds:8.6},{id:2,odds:6.5},{id:3,odds:4.7},
+ {id:4,odds:6.8},{id:5,odds:9.7},{id:6,odds:3.9}
 ];
 
-let selectedHorse=null;
-let selectedChip=0;
-let time=15;
-let betting=true;
-let history=[];
+let selectedHorse=null,selectedChip=0,time=15,betting=true,history=[];
+let balance=+localStorage.getItem("wallet")||1000;
 
-/* WALLET */
-let balance = Number(localStorage.getItem("wallet") || 1000);
-const walletEl=document.getElementById("wallet");
-walletEl.innerText=balance;
+const walletEl=wallet.innerText=balance;
+const betClose=document.getElementById("betClose");
 
-/* ELEMENTS */
-const timeEl=document.getElementById("time");
-const historyEl=document.getElementById("history");
-const betPanel=document.getElementById("betPanel");
-const track=document.getElementById("track");
-const statusEl=document.getElementById("status");
-
-/* BUILD HORSES */
 horses.forEach(h=>{
-  const card=document.createElement("div");
-  card.className="horse-card";
-  card.innerHTML=`
+  betPanel.innerHTML+=`
+  <div class="horse-card" onclick="selectHorse(${h.id})">
     <img src="images/horses/horse${h.id}.png">
-    <div>
-      <b>Horse ${h.id}</b>
-      <div class="odds">Odds ${h.odds}</div>
-    </div>`;
-  card.onclick=()=>{
-    if(!betting || !selectedChip) return;
-    document.querySelectorAll(".horse-card").forEach(c=>c.classList.remove("active"));
-    card.classList.add("active");
-    selectedHorse=h;
-    statusEl.innerText="Bet ₹"+selectedChip+" on Horse "+h.id;
-  };
-  betPanel.appendChild(card);
-
-  const lane=document.createElement("div");
-  lane.className="lane";
-  lane.innerHTML=`<img id="horse${h.id}" src="images/horses/horse${h.id}.png">`;
-  track.appendChild(lane);
+    <div><b>Horse ${h.id}</b><div>Odds ${h.odds}</div></div>
+  </div>`;
+  track.innerHTML+=`
+  <div class="lane"><img id="horse${h.id}" src="images/horses/horse${h.id}.png"></div>`;
 });
 
-/* CHIPS */
 document.querySelectorAll(".chip").forEach(c=>{
   c.onclick=()=>{
     document.querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));
     c.classList.add("active");
     selectedChip=+c.dataset.amt;
-  };
+  }
 });
 
-/* TIMER */
-const timerInt=setInterval(()=>{
-  time--;
-  timeEl.innerText=time;
+function selectHorse(id){
+  if(!betting||!selectedChip)return;
+  document.querySelectorAll(".horse-card").forEach(c=>c.classList.remove("active"));
+  event.currentTarget.classList.add("active");
+  selectedHorse=horses.find(h=>h.id===id);
+}
 
-  if(time<=3){
-    betting=false;
-    statusEl.innerText="Bet Closed";
-  }
-  if(time<=0){
-    clearInterval(timerInt);
-    startRace();
-  }
+const timerInt=setInterval(()=>{
+  time--; timeEl.innerText=time;
+  if(time<=3){betting=false; betClose.innerText="Bet Closed";}
+  if(time<=0){clearInterval(timerInt); betClose.innerText=""; startRace();}
 },1000);
 
-/* RACE */
 function startRace(){
-  statusEl.innerText="Race Started 🏁";
-  let pos={};
-  horses.forEach(h=>pos[h.id]=0);
-
+  let pos={}; horses.forEach(h=>pos[h.id]=0);
   const race=setInterval(()=>{
     horses.forEach(h=>{
       pos[h.id]+=Math.random()*3.5;
-      document.getElementById("horse"+h.id).style.left=pos[h.id]+"%";
-      if(pos[h.id]>=90){
-        clearInterval(race);
-        finish(h.id);
-      }
+      horse=document.getElementById("horse"+h.id);
+      horse.style.left=pos[h.id]+"%";
+      if(pos[h.id]>=90){clearInterval(race); finish(h.id);}
     });
   },60);
 }
 
-/* FINISH */
 function finish(winId){
-  history.unshift(winId);
-  history=history.slice(0,10);
-  historyEl.innerHTML=history.map(n=>`<div class="ball">${n}</div>`).join("");
+  const popup=document.getElementById("popup");
+  const text=document.getElementById("popupText");
+  overlay.style.display="flex";
 
   if(selectedHorse && selectedHorse.id===winId){
     const win=selectedChip*selectedHorse.odds;
     balance+=win;
-    statusEl.innerText="🎉 You Win ₹"+win;
+    popup.className="popup win";
+    text.innerText="🎉 You Win ₹"+win;
   }else{
     balance-=selectedChip;
-    statusEl.innerText="❌ You Lose";
+    popup.className="popup lose";
+    text.innerText="❌ You Lose";
   }
 
   localStorage.setItem("wallet",balance);
-  walletEl.innerText=balance;
+  wallet.innerText=balance;
 }
 </script>
 </body>
