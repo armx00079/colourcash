@@ -21,12 +21,27 @@ body{
   min-height:100vh;
 }
 
+/* HEADER */
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px 14px;
+  font-size:20px;
+  font-weight:bold;
+}
+.wallet{
+  background:rgba(0,0,0,.35);
+  padding:6px 14px;
+  border-radius:20px;
+}
+
 /* TIMER */
 .timer-box{
   display:flex;
   justify-content:center;
   align-items:center;
-  padding:10px;
+  padding:8px;
   font-size:22px;
   font-weight:bold;
 }
@@ -69,30 +84,30 @@ body{
 .horse-card.active{
   outline:3px solid gold;
 }
-.horse-card img{width:55px}
+.horse-card img{width:50px}
 .odds{font-size:13px;opacity:.9}
 
 /* ===== RACE AREA ===== */
 .track{
   margin:10px;
-  padding-top:110px; /* ⬅️ pushes horses exactly on dirt track */
-  position:relative;
-  height:260px;
+  padding-top:20px;
 }
 
-/* EACH LANE */
+/* LANE */
 .lane{
-  height:38px;              /* ⬅️ tighter lanes */
+  height:42px;
   position:relative;
-  margin-bottom:8px;
+  border-bottom:2px solid rgba(255,255,255,.35); /* ✅ boundary */
+  margin-bottom:6px;
+  background:rgba(139,69,19,.25); /* dirt feel */
 }
 
-/* HORSE IMAGE */
+/* HORSE */
 .lane img{
-  width:42px;               /* ✅ HORSE SIZE REDUCED */
+  width:38px;                /* ✅ smaller horse */
   position:absolute;
   left:0;
-  bottom:0;                 /* ✅ feet on ground */
+  bottom:2px;
   transition:left 0.08s linear;
 }
 
@@ -127,6 +142,12 @@ body{
 <body>
 <div class="stage">
 
+<!-- HEADER -->
+<div class="header">
+  🐎 Horse Race
+  <div class="wallet">₹ <span id="wallet">1000</span></div>
+</div>
+
 <!-- TIMER -->
 <div class="timer-box">
   <img src="images/ui/timer.png">
@@ -139,7 +160,7 @@ body{
 <!-- BET HORSES -->
 <div class="bet-panel" id="betPanel"></div>
 
-<!-- RACE AREA -->
+<!-- TRACK -->
 <div class="track" id="track"></div>
 
 <!-- CHIPS -->
@@ -171,6 +192,11 @@ let time=15;
 let betting=true;
 let history=[];
 
+/* WALLET */
+let balance = Number(localStorage.getItem("wallet") || 1000);
+const walletEl=document.getElementById("wallet");
+walletEl.innerText=balance;
+
 /* ELEMENTS */
 const timeEl=document.getElementById("time");
 const historyEl=document.getElementById("history");
@@ -179,7 +205,7 @@ const track=document.getElementById("track");
 const statusEl=document.getElementById("status");
 
 /* BUILD HORSES */
-horses.forEach((h)=>{
+horses.forEach(h=>{
   const card=document.createElement("div");
   card.className="horse-card";
   card.innerHTML=`
@@ -189,10 +215,11 @@ horses.forEach((h)=>{
       <div class="odds">Odds ${h.odds}</div>
     </div>`;
   card.onclick=()=>{
-    if(!betting) return;
+    if(!betting || !selectedChip) return;
     document.querySelectorAll(".horse-card").forEach(c=>c.classList.remove("active"));
     card.classList.add("active");
     selectedHorse=h;
+    statusEl.innerText="Bet ₹"+selectedChip+" on Horse "+h.id;
   };
   betPanel.appendChild(card);
 
@@ -234,7 +261,7 @@ function startRace(){
 
   const race=setInterval(()=>{
     horses.forEach(h=>{
-      pos[h.id]+=Math.random()*4;   /* smoother speed */
+      pos[h.id]+=Math.random()*3.5;
       document.getElementById("horse"+h.id).style.left=pos[h.id]+"%";
       if(pos[h.id]>=90){
         clearInterval(race);
@@ -252,10 +279,15 @@ function finish(winId){
 
   if(selectedHorse && selectedHorse.id===winId){
     const win=selectedChip*selectedHorse.odds;
+    balance+=win;
     statusEl.innerText="🎉 You Win ₹"+win;
   }else{
+    balance-=selectedChip;
     statusEl.innerText="❌ You Lose";
   }
+
+  localStorage.setItem("wallet",balance);
+  walletEl.innerText=balance;
 }
 </script>
 </body>
