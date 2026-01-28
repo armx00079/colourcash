@@ -9,256 +9,258 @@
 body{
   margin:0;
   font-family:Arial, sans-serif;
-  background:url(images/bg/sky.png) no-repeat center/cover;
+  background:#1b5e20;
   color:#fff;
 }
 
-/* HEADER */
-.header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:12px 16px;
-  background:rgba(0,0,0,.35);
-  font-size:20px;
-  font-weight:bold;
-}
-.wallet{
-  background:#0b8457;
-  padding:6px 14px;
-  border-radius:20px;
+/* BACKGROUND */
+.stage{
+  background:
+    url("images/bg/sky.png") top center / cover no-repeat,
+    url("images/bg/grass.png") bottom center / cover no-repeat;
+  min-height:100vh;
 }
 
 /* TIMER */
 .timer-box{
-  text-align:center;
-  margin:12px 0;
-}
-.timer-box img{width:34px}
-.timer{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:10px;
   font-size:22px;
   font-weight:bold;
 }
-.bet-status{
-  margin-top:4px;
+.timer-box img{width:32px;margin-right:8px}
+
+/* HISTORY */
+.history{
+  display:flex;
+  justify-content:center;
+  gap:6px;
+  padding:6px;
+}
+.ball{
+  width:26px;
+  height:26px;
+  border-radius:50%;
+  background:#ff9800;
+  text-align:center;
+  line-height:26px;
   font-size:14px;
-  color:#ffd54f;
+  font-weight:bold;
 }
 
-/* HORSE BET PANEL */
+/* HORSE BET AREA */
 .bet-panel{
   display:grid;
   grid-template-columns:repeat(2,1fr);
-  gap:12px;
-  padding:14px;
+  gap:10px;
+  padding:10px;
 }
 .horse-card{
-  background:#128c7e;
-  border-radius:14px;
-  padding:10px;
+  background:#0f8a70;
+  border-radius:10px;
+  padding:8px;
   display:flex;
-  gap:10px;
   align-items:center;
+  gap:8px;
   cursor:pointer;
 }
 .horse-card.active{
   outline:3px solid gold;
 }
-.horse-card img{
-  width:70px;
-}
-.horse-info{font-size:14px}
-.odds{opacity:.9}
+.horse-card img{width:60px}
+.odds{font-size:13px;opacity:.9}
 
 /* TRACK */
 .track{
-  background:url(images/bg/track.png) no-repeat center/cover;
+  background:url("images/bg/track.png") center / cover;
   margin:10px;
-  border-radius:16px;
-  padding:12px;
-  height:260px;
-  position:relative;
-  overflow:hidden;
+  padding:10px;
+  border-radius:12px;
 }
-.horse-run{
+.lane{
+  display:flex;
+  align-items:center;
+  height:50px;
+  position:relative;
+}
+.lane img{
+  width:50px;
   position:absolute;
   left:0;
-  height:36px;
-  transition:transform 2.5s linear;
+  transition:left 0.1s linear;
+}
+.finish{
+  position:absolute;
+  right:0;
+  width:40px;
 }
 
 /* CHIPS */
 .chips{
   display:flex;
   justify-content:center;
-  gap:12px;
-  padding:12px;
+  gap:10px;
+  padding:10px;
 }
 .chip{
-  width:56px;
+  background:#fff;
+  color:#000;
+  padding:10px;
+  border-radius:50%;
+  font-weight:bold;
   cursor:pointer;
 }
-.chip.active{transform:scale(1.15)}
-
-/* HISTORY */
-.history{
-  padding:10px;
-  text-align:center;
-}
-.ball{
-  display:inline-block;
-  width:26px;
-  height:26px;
-  line-height:26px;
-  border-radius:50%;
-  background:#333;
-  margin:2px;
+.chip.active{
+  background:gold;
 }
 
-/* RESULT */
-.result{
+/* STATUS */
+.status{
   text-align:center;
-  font-size:18px;
-  margin:8px;
+  padding:8px;
+  font-weight:bold;
 }
-.win{color:#4caf50}
-.lose{color:#ff5252}
 </style>
 </head>
 
 <body>
+<div class="stage">
 
-<div class="header">
-  🐎 HORSE RACE
-  <div class="wallet">₹ <span id="wallet">1000</span></div>
-</div>
-
+<!-- TIMER -->
 <div class="timer-box">
   <img src="images/ui/timer.png">
-  <div class="timer" id="timer">15s</div>
-  <div class="bet-status" id="betStatus">Place Your Bet</div>
+  <span id="time">15</span>s
 </div>
 
+<!-- HISTORY -->
+<div class="history" id="history"></div>
+
+<!-- BET HORSES -->
 <div class="bet-panel" id="betPanel"></div>
 
+<!-- TRACK -->
 <div class="track" id="track"></div>
 
+<!-- CHIPS -->
 <div class="chips">
-  <img src="images/chips/chip10.png" class="chip" data-value="10">
-  <img src="images/chips/chip50.png" class="chip" data-value="50">
-  <img src="images/chips/chip100.png" class="chip" data-value="100">
-  <img src="images/chips/chip500.png" class="chip" data-value="500">
+  <div class="chip" data-amt="10">10</div>
+  <div class="chip" data-amt="50">50</div>
+  <div class="chip" data-amt="100">100</div>
+  <div class="chip" data-amt="500">500</div>
 </div>
 
-<div class="history" id="history"></div>
-<div class="result" id="result"></div>
+<div class="status" id="status">Select Chip & Horse</div>
+
+</div>
 
 <script>
-let wallet = 1000;
-let selectedChip = 0;
-let selectedHorse = null;
-let timer = 15;
-let bettingOpen = true;
-let history = [];
-
-const horses = [
- {id:1, odds:8.6},
- {id:2, odds:6.5},
- {id:3, odds:4.7},
- {id:4, odds:6.8},
- {id:5, odds:9.7},
- {id:6, odds:3.9}
+/* DATA */
+const horses=[
+ {id:1,odds:8.6},
+ {id:2,odds:6.5},
+ {id:3,odds:4.7},
+ {id:4,odds:6.8},
+ {id:5,odds:9.7},
+ {id:6,odds:3.9}
 ];
 
-const betPanel = document.getElementById("betPanel");
-const track = document.getElementById("track");
+let selectedHorse=null;
+let selectedChip=0;
+let time=15;
+let betting=true;
+let history=[];
 
-/* RENDER HORSES */
+/* ELEMENTS */
+const timeEl=document.getElementById("time");
+const historyEl=document.getElementById("history");
+const betPanel=document.getElementById("betPanel");
+const track=document.getElementById("track");
+const statusEl=document.getElementById("status");
+
+/* BUILD HORSES */
 horses.forEach(h=>{
-  betPanel.innerHTML += `
-  <div class="horse-card" data-id="${h.id}">
+  const card=document.createElement("div");
+  card.className="horse-card";
+  card.innerHTML=`
     <img src="images/horses/horse${h.id}.png">
-    <div class="horse-info">
-      Horse ${h.id}<br>
-      <span class="odds">Odds ${h.odds}</span>
-    </div>
-  </div>`;
-  track.innerHTML += `
-    <img src="images/horses/horse${h.id}.png"
-    class="horse-run" id="run${h.id}" style="top:${(h.id-1)*40}px">`;
+    <div>
+      <b>Horse ${h.id}</b>
+      <div class="odds">Odds ${h.odds}</div>
+    </div>`;
+  card.onclick=()=>{
+    if(!betting) return;
+    document.querySelectorAll(".horse-card").forEach(c=>c.classList.remove("active"));
+    card.classList.add("active");
+    selectedHorse=h;
+  };
+  betPanel.appendChild(card);
+
+  const lane=document.createElement("div");
+  lane.className="lane";
+  lane.innerHTML=`
+    <img id="horse${h.id}" src="images/horses/horse${h.id}.png">
+    <img class="finish" src="images/ui/crown.png">
+  `;
+  track.appendChild(lane);
 });
 
-/* CHIP SELECT */
+/* CHIPS */
 document.querySelectorAll(".chip").forEach(c=>{
   c.onclick=()=>{
     document.querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));
     c.classList.add("active");
-    selectedChip = +c.dataset.value;
-  }
-});
-
-/* HORSE SELECT */
-document.querySelectorAll(".horse-card").forEach(card=>{
-  card.onclick=()=>{
-    if(!bettingOpen || !selectedChip) return;
-    document.querySelectorAll(".horse-card").forEach(x=>x.classList.remove("active"));
-    card.classList.add("active");
-    selectedHorse = +card.dataset.id;
-  }
+    selectedChip=+c.dataset.amt;
+  };
 });
 
 /* TIMER */
-const timerInt = setInterval(()=>{
-  timer--;
-  document.getElementById("timer").innerText = timer+"s";
+const timer=setInterval(()=>{
+  time--;
+  timeEl.innerText=time;
 
-  if(timer<=3){
-    bettingOpen=false;
-    document.getElementById("betStatus").innerText="Bet Closed";
+  if(time<=3){
+    betting=false;
+    statusEl.innerText="Bet Closed";
   }
-
-  if(timer===0){
-    clearInterval(timerInt);
+  if(time<=0){
+    clearInterval(timer);
     startRace();
   }
 },1000);
 
 /* RACE */
 function startRace(){
-  const winner = Math.floor(Math.random()*6)+1;
+  statusEl.innerText="Race Started 🏁";
+  let positions={};
+  horses.forEach(h=>positions[h.id]=0);
 
-  horses.forEach(h=>{
-    document.getElementById("run"+h.id)
-      .style.transform = `translateX(${h.id===winner?260:200}px)`;
-  });
-
-  setTimeout(()=>{
-    resolve(winner);
-  },2600);
+  const race=setInterval(()=>{
+    horses.forEach(h=>{
+      positions[h.id]+=Math.random()*6;
+      document.getElementById("horse"+h.id).style.left=positions[h.id]+"%";
+      if(positions[h.id]>=90){
+        clearInterval(race);
+        finish(h.id);
+      }
+    });
+  },60);
 }
 
-/* RESULT */
-function resolve(winner){
-  let res = document.getElementById("result");
+/* FINISH */
+function finish(winId){
+  history.unshift(winId);
+  history=history.slice(0,10);
+  historyEl.innerHTML=history.map(n=>`<div class="ball">${n}</div>`).join("");
 
-  if(selectedHorse===winner){
-    let odd = horses.find(h=>h.id===winner).odds;
-    let win = selectedChip * odd;
-    wallet += win;
-    res.innerHTML = `<span class="win">You Win ₹${win.toFixed(0)}</span>`;
+  if(selectedHorse && selectedHorse.id===winId){
+    const win=selectedChip*selectedHorse.odds;
+    statusEl.innerText="🎉 You Win "+win;
   }else{
-    wallet -= selectedChip;
-    res.innerHTML = `<span class="lose">You Lose</span>`;
+    statusEl.innerText="❌ You Lose";
   }
-
-  document.getElementById("wallet").innerText = wallet;
-
-  history.unshift(winner);
-  history = history.slice(0,10);
-  document.getElementById("history").innerHTML =
-    history.map(n=>`<span class="ball">${n}</span>`).join("");
 }
 </script>
-
 </body>
 </html>
