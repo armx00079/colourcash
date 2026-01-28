@@ -8,11 +8,13 @@
 <style>
 body{
   margin:0;
-  font-family:Arial;
+  font-family:Arial, sans-serif;
   background:radial-gradient(circle at top,#3a005f,#12001f);
   color:#fff;
   text-align:center;
 }
+
+/* HEADER */
 .header{
   padding:14px;
   font-size:22px;
@@ -25,37 +27,49 @@ body{
   background:rgba(0,0,0,.35);
   padding:6px 14px;
   border-radius:20px;
+  font-size:16px;
 }
+
+/* CARD */
 .card{
   margin:18px;
   padding:20px;
   border-radius:20px;
   background:linear-gradient(180deg,#24003a,#140020);
 }
+
+/* MULTI */
 .multiplier{
   font-size:46px;
   font-weight:bold;
+  margin-bottom:14px;
 }
+
+/* BAR */
 .bar{
   height:10px;
   background:#333;
   border-radius:10px;
   overflow:hidden;
-  margin:14px 0;
 }
 .bar-fill{
   height:100%;
   width:0%;
   background:linear-gradient(90deg,#ff5fd8,#ff9f43);
 }
+
+/* INPUT */
 input{
   width:100%;
   padding:14px;
-  border-radius:30px;
   border:none;
+  border-radius:30px;
   font-size:18px;
   text-align:center;
+  margin:16px 0;
 }
+
+/* BUTTONS */
 .btn{
   width:100%;
   padding:14px;
@@ -63,15 +77,25 @@ input{
   border-radius:30px;
   font-size:18px;
   font-weight:bold;
-  margin-top:12px;
-  cursor:pointer;
+  margin-top:14px;
 }
-.start{background:#ff5fd8;color:#000}
-.start.active{box-shadow:0 0 20px #ff5fd8}
-.shift{background:#6d3b85;color:#fff}
+.start{
+  background:#ff5fd8;
+  color:#000;
+}
+.start.running{
+  box-shadow:0 0 25px #ff5fd8;
+}
+.shift{
+  background:#6d3b85;
+  margin-top:18px;
+}
 .shift:disabled{opacity:.5}
-.auto{margin-top:8px;font-size:14px}
-.status{margin-top:10px;opacity:.8}
+
+/* STATUS */
+.status{margin-top:12px}
+
+/* BETS */
 .bets-box{
   margin:18px;
   background:#1a0126;
@@ -79,7 +103,10 @@ input{
   padding:14px;
   text-align:left;
 }
-.bet-row{font-size:14px;padding:6px 0}
+.bet-row{
+  font-size:14px;
+  padding:6px 0;
+}
 .win{color:#4caf50}
 .lose{color:#ff5252}
 </style>
@@ -94,14 +121,12 @@ input{
 
 <div class="card">
   <div class="multiplier"><span id="multi">1.00</span>x</div>
-  <div class="bar"><div class="bar-fill" id="bar"></div></div>
 
-  <input id="betInput" type="number" value="100" min="10">
-
-  <div class="auto">
-    <label><input type="checkbox" id="autoShift"> Auto Shift</label>
-    <input id="autoAt" type="number" step="0.01" value="1.80">
+  <div class="bar">
+    <div class="bar-fill" id="bar"></div>
   </div>
+
+  <input id="betInput" type="number" value="100">
 
   <button class="btn start" id="startBtn">START CHARGE</button>
   <button class="btn shift" id="shiftBtn" disabled>SHIFT</button>
@@ -110,8 +135,8 @@ input{
 </div>
 
 <div class="bets-box">
-  <b>MY BETS</b>
-  <div id="bets"></div>
+ <b>MY BETS</b>
+ <div id="bets">No bets yet</div>
 </div>
 
 <script type="module">
@@ -119,6 +144,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getFirestore, collection, query, where, getDocs, doc, updateDoc }
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+/* FIREBASE */
 const app = initializeApp({
   apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
   authDomain:"colourcash-ea60e.firebaseapp.com",
@@ -126,113 +152,94 @@ const app = initializeApp({
 });
 const db = getFirestore(app);
 
-const userEmail = localStorage.getItem("userEmail");
-let uid="", balance=0;
+/* DOM */
+const startBtn = document.getElementById("startBtn");
+const shiftBtn = document.getElementById("shiftBtn");
+const betInput = document.getElementById("betInput");
+const walletEl = document.getElementById("wallet");
+const multiEl = document.getElementById("multi");
+const barEl = document.getElementById("bar");
+const betsEl = document.getElementById("bets");
+const statusEl = document.getElementById("status");
 
-const walletEl=wallet, multiEl=multi, barEl=bar;
-const startBtn=startBtnEl=startBtn;
-const shiftBtn=shiftBtnEl=shiftBtn;
-const betsEl=bets;
+/* STATE */
+let running=false, raf=null;
+let multiplier=1, bar=0, bet=0, crash=0;
+let balance=0, docId="";
 
-let running=false, timer=null;
-let multiplier=1, barWidth=0, bet=0;
-let crashPoint=0;
+/* LOAD WALLET */
+const email = localStorage.getItem("userEmail");
+const snap = await getDocs(query(collection(db,"users"),where("email","==",email)));
+snap.forEach(d=>{docId=d.id;balance=d.data().balance||0});
+walletEl.innerText = balance.toFixed(2);
 
-// 🔒 LOAD HISTORY
-let betHistory = JSON.parse(localStorage.getItem("fs_history")||"[]");
-renderHistory();
-
-// 🔒 LOAD WALLET
-(async()=>{
- const q=query(collection(db,"users"),where("email","==",userEmail));
- const s=await getDocs(q);
- s.forEach(d=>{uid=d.id;balance=d.data().balance||0});
- walletEl.innerText=balance.toFixed(2);
-})();
-
-// 🎯 CRASH ENGINE
-function getCrashPoint(){
- let base = 1.6 + Math.random()*0.6;   // 1.6–2.2
- let cap = 500.00;                       // MAX LIMIT
- return Math.min(base, cap);
+/* CRASH POINT */
+function crashPoint(){
+  return 1.5 + Math.random()*0.7;
 }
 
+/* START */
 startBtn.onclick = async ()=>{
- if(running) return;
- bet=+betInput.value;
- if(bet<10||bet>balance) return alert("Invalid bet");
+  if(running) return;
 
- balance-=bet;
- await updateDoc(doc(db,"users",uid),{balance});
- walletEl.innerText=balance.toFixed(2);
+  bet = +betInput.value;
+  if(bet<10 || bet>balance) return alert("Invalid bet");
 
- multiplier=1;
- barWidth=0;
- crashPoint=getCrashPoint();
+  balance-=bet;
+  await updateDoc(doc(db,"users",docId),{balance});
+  walletEl.innerText = balance.toFixed(2);
 
- running=true;
- startBtn.classList.add("active");
- shiftBtn.disabled=false;
- status.innerText="Charging...";
- barEl.style.width="0%";
- multiEl.innerText="1.00";
+  multiplier=1;
+  bar=0;
+  crash = crashPoint();
 
- timer=setInterval(tick,120);
+  running=true;
+  startBtn.classList.add("running");
+  startBtn.disabled=true;
+  shiftBtn.disabled=false;
+  statusEl.innerText="Charging...";
+
+  function loop(){
+    if(!running) return;
+    multiplier+=0.035;
+    bar+=2.8;
+
+    multiEl.innerText = multiplier.toFixed(2);
+    barEl.style.width = Math.min(bar,100)+"%";
+
+    if(multiplier>=crash){
+      end(false);
+      return;
+    }
+    raf=requestAnimationFrame(loop);
+  }
+  loop();
 };
 
-function tick(){
- multiplier += 0.04;
- barWidth += 2.2;
- barEl.style.width=Math.min(barWidth,100)+"%";
- multiEl.innerText=multiplier.toFixed(2);
+/* SHIFT */
+shiftBtn.onclick = async ()=>{
+  if(!running) return;
+  end(true);
+};
 
- if(autoShift.checked && multiplier>=+autoAt.value){
-   cashOut();
- }
+/* END */
+async function end(win){
+  running=false;
+  startBtn.classList.remove("running");
+  startBtn.disabled=false;
+  shiftBtn.disabled=true;
 
- if(multiplier>=crashPoint){
-   crash();
- }
-}
-
-async function cashOut(){
- if(!running) return;
- clearInterval(timer);
- running=false;
-
- const win=bet*multiplier;
- balance+=win;
- await updateDoc(doc(db,"users",uid),{balance});
- walletEl.innerText=balance.toFixed(2);
-
- saveBet(`WIN ₹${bet} → ₹${win.toFixed(2)}`,"win");
- end("🎉 You Win");
-}
-
-function crash(){
- clearInterval(timer);
- running=false;
- saveBet(`LOSS ₹${bet}`,"lose");
- end("💥 Crashed");
-}
-
-function end(msg){
- startBtn.classList.remove("active");
- shiftBtn.disabled=true;
- status.innerText=msg;
-}
-
-shiftBtn.onclick=cashOut;
-
-// 📜 HISTORY
-function saveBet(text,cls){
- betHistory.unshift({text,cls});
- betHistory=betHistory.slice(0,10);
- localStorage.setItem("fs_history",JSON.stringify(betHistory));
- renderHistory();
-}
-function renderHistory(){
- betsEl.innerHTML=betHistory.map(b=>`<div class="bet-row ${b.cls}">${b.text}</div>`).join("")||"No bets yet";
+  if(win){
+    let amt = bet*multiplier;
+    balance+=amt;
+    await updateDoc(doc(db,"users",docId),{balance});
+    walletEl.innerText = balance.toFixed(2);
+    betsEl.innerHTML=`<div class="bet-row win">WIN ₹${amt.toFixed(2)}</div>`+betsEl.innerHTML;
+    statusEl.innerText="🎉 You Win";
+  }else{
+    betsEl.innerHTML=`<div class="bet-row lose">LOSS ₹${bet}</div>`+betsEl.innerHTML;
+    statusEl.innerText="💥 Crashed";
+  }
 }
 </script>
 
