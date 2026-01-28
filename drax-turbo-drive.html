@@ -23,7 +23,11 @@ body{
   background:#14001f;margin:14px;padding:14px;border-radius:16px
 }
 .road{display:flex;align-items:center;margin:18px 0}
-.car{font-size:32px;transition:transform 1.2s ease}
+.car{
+  width:56px;
+  height:auto;
+  transition:transform 1.2s ease;
+}
 .line{
   flex:1;height:6px;margin-left:10px;
   background:repeating-linear-gradient(90deg,yellow 0 14px,black 14px 28px);
@@ -77,9 +81,9 @@ body{
 </div>
 
 <div class="track">
- <div class="road"><div class="car" id="car-mer">🚗</div><div class="line"></div></div>
- <div class="road"><div class="car" id="car-audi">🚙</div><div class="line"></div></div>
- <div class="road"><div class="car" id="car-bmw">🚕</div><div class="line"></div></div>
+ <img src="images/car-mercedes.png" class="car" id="car-mer">
+<img src="images/car-audi.png" class="car" id="car-audi">
+<img src="images/car-bmw.png" class="car" id="car-bmw">
 </div>
 
 <div class="select">
@@ -92,7 +96,6 @@ body{
  <div class="sel" onclick="selectCar('bmw',this)">
   <img src="images/bmw.png" class="logo"><div>BMW</div>
  </div>
-</div>
 
 <div class="bottom-bar">
  <input id="betInput" type="number" value="100">
