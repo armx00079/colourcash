@@ -8,13 +8,11 @@
 <style>
 body{
   margin:0;
-  font-family:Arial, sans-serif;
+  font-family:Arial;
   background:radial-gradient(circle at top,#3a005f,#12001f);
   color:#fff;
   text-align:center;
 }
-
-/* HEADER */
 .header{
   padding:14px;
   font-size:22px;
@@ -28,47 +26,36 @@ body{
   padding:6px 14px;
   border-radius:20px;
 }
-
-/* CARD */
 .card{
   margin:18px;
   padding:20px;
   border-radius:20px;
   background:linear-gradient(180deg,#24003a,#140020);
 }
-
-/* MULTI */
 .multiplier{
   font-size:46px;
   font-weight:bold;
-  margin-bottom:14px;
 }
-
-/* BAR */
 .bar{
   height:10px;
   background:#333;
   border-radius:10px;
   overflow:hidden;
+  margin:14px 0;
 }
 .bar-fill{
   height:100%;
   width:0%;
   background:linear-gradient(90deg,#ff5fd8,#ff9f43);
 }
-
-/* INPUT */
 input{
   width:100%;
   padding:14px;
-  border:none;
   border-radius:30px;
+  border:none;
   font-size:18px;
   text-align:center;
-  margin-top:10px;
 }
-
-/* BUTTONS */
 .btn{
   width:100%;
   padding:14px;
@@ -76,27 +63,15 @@ input{
   border-radius:30px;
   font-size:18px;
   font-weight:bold;
-  margin-top:14px;
+  margin-top:12px;
   cursor:pointer;
 }
 .start{background:#ff5fd8;color:#000}
 .start.active{box-shadow:0 0 20px #ff5fd8}
 .shift{background:#6d3b85;color:#fff}
 .shift:disabled{opacity:.5}
-
-/* AUTO */
-.auto{
-  margin-top:10px;
-  font-size:14px;
-}
-
-/* STATUS */
-.status{
-  margin-top:10px;
-  opacity:.85;
-}
-
-/* BETS */
+.auto{margin-top:8px;font-size:14px}
+.status{margin-top:10px;opacity:.8}
 .bets-box{
   margin:18px;
   background:#1a0126;
@@ -104,10 +79,7 @@ input{
   padding:14px;
   text-align:left;
 }
-.bet-row{
-  font-size:14px;
-  padding:6px 0;
-}
+.bet-row{font-size:14px;padding:6px 0}
 .win{color:#4caf50}
 .lose{color:#ff5252}
 </style>
@@ -122,16 +94,12 @@ input{
 
 <div class="card">
   <div class="multiplier"><span id="multi">1.00</span>x</div>
-
   <div class="bar"><div class="bar-fill" id="bar"></div></div>
 
   <input id="betInput" type="number" value="100" min="10">
 
-  <!-- AUTO SHIFT -->
   <div class="auto">
-    <label>
-      <input type="checkbox" id="autoShift"> Auto Shift
-    </label>
+    <label><input type="checkbox" id="autoShift"> Auto Shift</label>
     <input id="autoAt" type="number" step="0.01" value="1.80">
   </div>
 
@@ -143,15 +111,13 @@ input{
 
 <div class="bets-box">
   <b>MY BETS</b>
-  <div id="bets">No bets yet</div>
+  <div id="bets"></div>
 </div>
 
-<!-- FIREBASE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import {
-  getFirestore, collection, query, where, getDocs, doc, updateDoc
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, query, where, getDocs, doc, updateDoc }
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
@@ -164,75 +130,73 @@ const userEmail = localStorage.getItem("userEmail");
 let uid="", balance=0;
 
 const walletEl=wallet, multiEl=multi, barEl=bar;
-const startBtn=document.getElementById("startBtn");
-const shiftBtn=document.getElementById("shiftBtn");
-const autoShift=document.getElementById("autoShift");
-const autoAt=document.getElementById("autoAt");
-const betsEl=document.getElementById("bets");
+const startBtn=startBtnEl=startBtn;
+const shiftBtn=shiftBtnEl=shiftBtn;
+const betsEl=bets;
 
 let running=false, timer=null;
 let multiplier=1, barWidth=0, bet=0;
-let bets=[];
+let crashPoint=0;
 
-/* LOAD WALLET */
-(async ()=>{
+// 🔒 LOAD HISTORY
+let betHistory = JSON.parse(localStorage.getItem("fs_history")||"[]");
+renderHistory();
+
+// 🔒 LOAD WALLET
+(async()=>{
  const q=query(collection(db,"users"),where("email","==",userEmail));
  const s=await getDocs(q);
  s.forEach(d=>{uid=d.id;balance=d.data().balance||0});
  walletEl.innerText=balance.toFixed(2);
 })();
 
-/* CRASH POINT */
-function crashPoint(){
- let base=1.6+Math.random()*0.6;
- let risk=Math.min(bet/1000,1)*0.5;
- return Math.max(1.3,base-risk);
+// 🎯 CRASH ENGINE
+function getCrashPoint(){
+ let base = 1.6 + Math.random()*0.6;   // 1.6–2.2
+ let cap = 500.00;                       // MAX LIMIT
+ return Math.min(base, cap);
 }
-let crash=0;
 
-/* START */
-startBtn.onclick=async ()=>{
- if(running)return;
+startBtn.onclick = async ()=>{
+ if(running) return;
  bet=+betInput.value;
- if(bet<10||bet>balance)return alert("Invalid bet");
+ if(bet<10||bet>balance) return alert("Invalid bet");
 
  balance-=bet;
  await updateDoc(doc(db,"users",uid),{balance});
  walletEl.innerText=balance.toFixed(2);
 
- multiplier=1;barWidth=0;
- crash=crashPoint();
- running=true;
+ multiplier=1;
+ barWidth=0;
+ crashPoint=getCrashPoint();
 
+ running=true;
  startBtn.classList.add("active");
  shiftBtn.disabled=false;
  status.innerText="Charging...";
- multiEl.innerText="1.00";
  barEl.style.width="0%";
+ multiEl.innerText="1.00";
 
- timer=setInterval(tick,100);
+ timer=setInterval(tick,120);
 };
 
-/* TICK */
 function tick(){
- multiplier+=0.04;
- barWidth+=2;
+ multiplier += 0.04;
+ barWidth += 2.2;
  barEl.style.width=Math.min(barWidth,100)+"%";
  multiEl.innerText=multiplier.toFixed(2);
 
- // AUTO SHIFT
  if(autoShift.checked && multiplier>=+autoAt.value){
-   shift();
+   cashOut();
  }
 
- if(multiplier>=crash){
-   lose();
+ if(multiplier>=crashPoint){
+   crash();
  }
 }
 
-/* SHIFT */
-async function shift(){
- if(!running)return;
+async function cashOut(){
+ if(!running) return;
  clearInterval(timer);
  running=false;
 
@@ -241,33 +205,34 @@ async function shift(){
  await updateDoc(doc(db,"users",uid),{balance});
  walletEl.innerText=balance.toFixed(2);
 
- addBet(`WIN ₹${bet} → ₹${win.toFixed(2)}`,"win");
+ saveBet(`WIN ₹${bet} → ₹${win.toFixed(2)}`,"win");
  end("🎉 You Win");
 }
 
-/* LOSE */
-function lose(){
+function crash(){
  clearInterval(timer);
  running=false;
- addBet(`LOSS ₹${bet}`,"lose");
+ saveBet(`LOSS ₹${bet}`,"lose");
  end("💥 Crashed");
 }
 
-/* END */
 function end(msg){
  startBtn.classList.remove("active");
  shiftBtn.disabled=true;
  status.innerText=msg;
 }
 
-/* MANUAL */
-shiftBtn.onclick=shift;
+shiftBtn.onclick=cashOut;
 
-/* HISTORY */
-function addBet(t,c){
- bets.unshift(`<div class="bet-row ${c}">${t}</div>`);
- bets=bets.slice(0,8);
- betsEl.innerHTML=bets.join("");
+// 📜 HISTORY
+function saveBet(text,cls){
+ betHistory.unshift({text,cls});
+ betHistory=betHistory.slice(0,10);
+ localStorage.setItem("fs_history",JSON.stringify(betHistory));
+ renderHistory();
+}
+function renderHistory(){
+ betsEl.innerHTML=betHistory.map(b=>`<div class="bet-row ${b.cls}">${b.text}</div>`).join("")||"No bets yet";
 }
 </script>
 
