@@ -1,129 +1,221 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>⚡ FATE SHIFT</title>
+<title>⚡ Fate Shift</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <style>
 body{
-  margin:0;font-family:Arial;
-  background:linear-gradient(135deg,#12001f,#3a0066);
-  color:#fff;text-align:center;
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:radial-gradient(circle at top,#3b0066,#12001f);
+  color:#fff;
+  text-align:center;
 }
-h1{margin:16px 0}
-.panel{
-  margin:16px;
-  background:#1c002e;
-  border-radius:20px;
-  padding:20px;
-}
-.multiplier{
-  font-size:48px;
+
+/* HEADER */
+.header{
+  padding:16px;
+  font-size:22px;
   font-weight:bold;
-  margin:20px 0;
 }
+.wallet{
+  margin-top:8px;
+  display:inline-block;
+  padding:8px 20px;
+  background:rgba(0,0,0,.4);
+  border-radius:30px;
+  font-size:18px;
+}
+
+/* CARD */
+.card{
+  margin:30px 16px;
+  padding:24px;
+  background:rgba(0,0,0,.35);
+  border-radius:22px;
+}
+
+.multiplier{
+  font-size:42px;
+  font-weight:bold;
+  margin-bottom:18px;
+}
+
 .bar{
-  height:14px;
+  height:10px;
   background:#333;
   border-radius:10px;
   overflow:hidden;
+  margin-bottom:20px;
 }
-.fill{
+.bar span{
+  display:block;
   height:100%;
   width:0%;
-  background:linear-gradient(90deg,#00ffcc,#ff00cc);
+  background:linear-gradient(90deg,#ff5cff,#ffb347);
 }
-input,button{
+
+/* BET */
+input{
   width:90%;
   padding:14px;
-  margin:10px 0;
-  border:none;border-radius:30px;
+  border-radius:30px;
+  border:none;
   font-size:16px;
+  text-align:center;
 }
+
+/* BUTTONS */
 button{
-  background:#ff4fd8;
+  width:90%;
+  margin-top:14px;
+  padding:14px;
+  border:none;
+  border-radius:30px;
+  font-size:18px;
   font-weight:bold;
+  cursor:pointer;
 }
-.log{
-  font-size:14px;
+.start{background:#ff4fd8;color:#000}
+.shift{background:#ff77ff;color:#000}
+.shift:disabled{opacity:.4}
+
+/* STATUS */
+.status{
+  margin-top:14px;
   opacity:.8;
+}
+
+/* POPUP */
+.popup{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.7);
+  display:none;
+  align-items:center;
+  justify-content:center;
+}
+.popup div{
+  background:#fff;
+  color:#000;
+  padding:24px 40px;
+  border-radius:22px;
+  font-size:22px;
+  font-weight:bold;
 }
 </style>
 </head>
 
 <body>
 
-<h1>⚡ FATE SHIFT</h1>
+<div class="header">
+ ⚡ FATE SHIFT
+ <div class="wallet">₹ <span id="wallet">1000</span></div>
+</div>
 
-<div class="panel">
+<div class="card">
   <div class="multiplier" id="multi">1.00x</div>
-  <div class="bar"><div class="fill" id="fill"></div></div>
 
-  <input id="bet" type="number" value="100" placeholder="Enter Bet">
-  <button id="startBtn">START CHARGE</button>
-  <button id="shiftBtn" disabled>SHIFT</button>
+  <div class="bar"><span id="barFill"></span></div>
 
-  <div class="log" id="log">Ready</div>
+  <input id="bet" type="number" value="100" min="10">
+
+  <button class="start" onclick="startCharge()">START CHARGE</button>
+  <button class="shift" id="shiftBtn" onclick="cashOut()" disabled>SHIFT</button>
+
+  <div class="status" id="status">Ready</div>
+</div>
+
+<div class="popup" id="popup">
+  <div id="popupText"></div>
 </div>
 
 <script>
-let running=false;
-let m=1;
-let timer;
-let firstGame=true;
+let wallet = 1000;
+let bet = 0;
+let multiplier = 1.00;
+let interval = null;
+let playing = false;
+let tick = 0;
 
-const multiEl=document.getElementById("multi");
-const fill=document.getElementById("fill");
-const log=document.getElementById("log");
-
-document.getElementById("startBtn").onclick=start;
-document.getElementById("shiftBtn").onclick=shift;
-
-function start(){
-  if(running) return;
-  const bet=+bet.value;
-  if(bet<=0) return alert("Invalid bet");
-
-  running=true;
-  m=1;
-  fill.style.width="0%";
-  multiEl.innerText="1.00x";
-  log.innerText="Charging...";
-  document.getElementById("shiftBtn").disabled=false;
-
-  let risk = bet>500 ? 0.035 : bet>200 ? 0.028 : 0.022;
-
-  if(firstGame && bet<=300){
-    risk=0.01; // first game easy
-  }
-
-  timer=setInterval(()=>{
-    m+=0.02;
-    multiEl.innerText=m.toFixed(2)+"x";
-    fill.style.width=Math.min((m/5)*100,100)+"%";
-
-    if(Math.random()<risk){
-      end(false);
-    }
-  },120);
+function updateWallet(){
+  document.getElementById("wallet").innerText = wallet.toFixed(2);
 }
 
-function shift(){
-  if(!running) return;
-  end(true);
+function startCharge(){
+  if(playing) return;
+
+  bet = +document.getElementById("bet").value;
+  if(bet < 10 || bet > wallet){
+    alert("Invalid bet");
+    return;
+  }
+
+  wallet -= bet;
+  updateWallet();
+
+  multiplier = 1.00;
+  tick = 0;
+  playing = true;
+
+  document.getElementById("shiftBtn").disabled = false;
+  document.getElementById("status").innerText = "Charging...";
+  document.getElementById("barFill").style.width = "0%";
+
+  interval = setInterval(runGame, 120);
 }
 
-function end(win){
-  clearInterval(timer);
-  running=false;
-  document.getElementById("shiftBtn").disabled=true;
+function runGame(){
+  tick++;
 
-  if(win){
-    log.innerText="🎉 WIN at "+m.toFixed(2)+"x";
-    firstGame=false;
-  }else{
-    log.innerText="💥 BURST! You lost";
+  // multiplier growth
+  multiplier += (multiplier < 2 ? 0.01 : multiplier < 5 ? 0.03 : 0.06);
+  document.getElementById("multi").innerText = multiplier.toFixed(2)+"x";
+
+  document.getElementById("barFill").style.width =
+    Math.min(100, tick*1.5) + "%";
+
+  // 🔥 HOUSE EDGE (hidden)
+  let blastChance = 0.01 + (bet/1000)*0.03 + tick*0.002;
+
+  if(Math.random() < blastChance){
+    blast();
   }
+}
+
+function cashOut(){
+  if(!playing) return;
+
+  clearInterval(interval);
+  playing = false;
+
+  let win = bet * multiplier;
+  wallet += win;
+  updateWallet();
+
+  showPopup("🎉 WIN ₹"+win.toFixed(2));
+  resetGame();
+}
+
+function blast(){
+  clearInterval(interval);
+  playing = false;
+
+  showPopup("💥 SHIFT FAILED");
+  resetGame();
+}
+
+function resetGame(){
+  document.getElementById("shiftBtn").disabled = true;
+  document.getElementById("status").innerText = "Ready";
+}
+
+function showPopup(msg){
+  popupText.innerText = msg;
+  popup.style.display="flex";
+  setTimeout(()=>popup.style.display="none",1600);
 }
 </script>
 
