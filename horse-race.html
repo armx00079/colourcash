@@ -72,29 +72,23 @@ body{
 .horse-card img{width:60px}
 .odds{font-size:13px;opacity:.9}
 
-/* TRACK */
+/* RACE AREA (NO TRACK IMAGE) */
 .track{
-  background:url("images/bg/track.png") center / cover;
   margin:10px;
   padding:10px;
   border-radius:12px;
+  position:relative;
+  height:300px;
 }
 .lane{
-  display:flex;
-  align-items:center;
-  height:50px;
+  height:45px;
   position:relative;
 }
 .lane img{
-  width:50px;
+  width:55px;
   position:absolute;
   left:0;
-  transition:left 0.1s linear;
-}
-.finish{
-  position:absolute;
-  right:0;
-  width:40px;
+  transition:left 0.08s linear;
 }
 
 /* CHIPS */
@@ -140,7 +134,7 @@ body{
 <!-- BET HORSES -->
 <div class="bet-panel" id="betPanel"></div>
 
-<!-- TRACK -->
+<!-- RACE AREA -->
 <div class="track" id="track"></div>
 
 <!-- CHIPS -->
@@ -180,7 +174,7 @@ const track=document.getElementById("track");
 const statusEl=document.getElementById("status");
 
 /* BUILD HORSES */
-horses.forEach(h=>{
+horses.forEach((h,i)=>{
   const card=document.createElement("div");
   card.className="horse-card";
   card.innerHTML=`
@@ -199,10 +193,8 @@ horses.forEach(h=>{
 
   const lane=document.createElement("div");
   lane.className="lane";
-  lane.innerHTML=`
-    <img id="horse${h.id}" src="images/horses/horse${h.id}.png">
-    <img class="finish" src="images/ui/crown.png">
-  `;
+  lane.style.top=(i*45)+"px";
+  lane.innerHTML=`<img id="horse${h.id}" src="images/horses/horse${h.id}.png">`;
   track.appendChild(lane);
 });
 
@@ -216,7 +208,7 @@ document.querySelectorAll(".chip").forEach(c=>{
 });
 
 /* TIMER */
-const timer=setInterval(()=>{
+const timerInt=setInterval(()=>{
   time--;
   timeEl.innerText=time;
 
@@ -225,7 +217,7 @@ const timer=setInterval(()=>{
     statusEl.innerText="Bet Closed";
   }
   if(time<=0){
-    clearInterval(timer);
+    clearInterval(timerInt);
     startRace();
   }
 },1000);
@@ -233,14 +225,14 @@ const timer=setInterval(()=>{
 /* RACE */
 function startRace(){
   statusEl.innerText="Race Started 🏁";
-  let positions={};
-  horses.forEach(h=>positions[h.id]=0);
+  let pos={};
+  horses.forEach(h=>pos[h.id]=0);
 
   const race=setInterval(()=>{
     horses.forEach(h=>{
-      positions[h.id]+=Math.random()*6;
-      document.getElementById("horse"+h.id).style.left=positions[h.id]+"%";
-      if(positions[h.id]>=90){
+      pos[h.id]+=Math.random()*5;
+      document.getElementById("horse"+h.id).style.left=pos[h.id]+"%";
+      if(pos[h.id]>=90){
         clearInterval(race);
         finish(h.id);
       }
@@ -256,7 +248,7 @@ function finish(winId){
 
   if(selectedHorse && selectedHorse.id===winId){
     const win=selectedChip*selectedHorse.odds;
-    statusEl.innerText="🎉 You Win "+win;
+    statusEl.innerText="🎉 You Win ₹"+win;
   }else{
     statusEl.innerText="❌ You Lose";
   }
