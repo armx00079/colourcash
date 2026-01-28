@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>⚡ FATE SHIFT</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{
+  margin:0;font-family:Arial;
+  background:linear-gradient(135deg,#12001f,#3a0066);
+  color:#fff;text-align:center;
+}
+h1{margin:16px 0}
+.panel{
+  margin:16px;
+  background:#1c002e;
+  border-radius:20px;
+  padding:20px;
+}
+.multiplier{
+  font-size:48px;
+  font-weight:bold;
+  margin:20px 0;
+}
+.bar{
+  height:14px;
+  background:#333;
+  border-radius:10px;
+  overflow:hidden;
+}
+.fill{
+  height:100%;
+  width:0%;
+  background:linear-gradient(90deg,#00ffcc,#ff00cc);
+}
+input,button{
+  width:90%;
+  padding:14px;
+  margin:10px 0;
+  border:none;border-radius:30px;
+  font-size:16px;
+}
+button{
+  background:#ff4fd8;
+  font-weight:bold;
+}
+.log{
+  font-size:14px;
+  opacity:.8;
+}
+</style>
+</head>
+
+<body>
+
+<h1>⚡ FATE SHIFT</h1>
+
+<div class="panel">
+  <div class="multiplier" id="multi">1.00x</div>
+  <div class="bar"><div class="fill" id="fill"></div></div>
+
+  <input id="bet" type="number" value="100" placeholder="Enter Bet">
+  <button id="startBtn">START CHARGE</button>
+  <button id="shiftBtn" disabled>SHIFT</button>
+
+  <div class="log" id="log">Ready</div>
+</div>
+
+<script>
+let running=false;
+let m=1;
+let timer;
+let firstGame=true;
+
+const multiEl=document.getElementById("multi");
+const fill=document.getElementById("fill");
+const log=document.getElementById("log");
+
+document.getElementById("startBtn").onclick=start;
+document.getElementById("shiftBtn").onclick=shift;
+
+function start(){
+  if(running) return;
+  const bet=+bet.value;
+  if(bet<=0) return alert("Invalid bet");
+
+  running=true;
+  m=1;
+  fill.style.width="0%";
+  multiEl.innerText="1.00x";
+  log.innerText="Charging...";
+  document.getElementById("shiftBtn").disabled=false;
+
+  let risk = bet>500 ? 0.035 : bet>200 ? 0.028 : 0.022;
+
+  if(firstGame && bet<=300){
+    risk=0.01; // first game easy
+  }
+
+  timer=setInterval(()=>{
+    m+=0.02;
+    multiEl.innerText=m.toFixed(2)+"x";
+    fill.style.width=Math.min((m/5)*100,100)+"%";
+
+    if(Math.random()<risk){
+      end(false);
+    }
+  },120);
+}
+
+function shift(){
+  if(!running) return;
+  end(true);
+}
+
+function end(win){
+  clearInterval(timer);
+  running=false;
+  document.getElementById("shiftBtn").disabled=true;
+
+  if(win){
+    log.innerText="🎉 WIN at "+m.toFixed(2)+"x";
+    firstGame=false;
+  }else{
+    log.innerText="💥 BURST! You lost";
+  }
+}
+</script>
+
+</body>
+</html>
