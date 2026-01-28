@@ -6,161 +6,82 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body{
-  margin:0;
-  font-family:Arial, sans-serif;
-  background:#1b5e20;
-  color:#fff;
-}
-
-/* BACKGROUND */
+body{margin:0;font-family:Arial;background:#1b5e20;color:#fff}
 .stage{
-  background:
-    url("images/bg/sky.png") top center / cover no-repeat,
-    url("images/bg/grass.png") bottom center / cover no-repeat;
+  background:url("images/bg/sky.png") top/cover no-repeat,
+             url("images/bg/grass.png") bottom/cover no-repeat;
   min-height:100vh;
 }
 
 /* HEADER */
 .header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:10px 14px;
-  font-size:20px;
-  font-weight:bold;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:10px 14px;font-size:20px;font-weight:bold
 }
-.wallet{
-  background:rgba(0,0,0,.35);
-  padding:6px 14px;
-  border-radius:20px;
-}
+.wallet{background:rgba(0,0,0,.35);padding:6px 14px;border-radius:20px}
 
 /* TIMER */
 .timer-box{
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  padding:8px;
-  font-size:22px;
-  font-weight:bold;
+  display:flex;justify-content:center;align-items:center;
+  font-size:22px;font-weight:bold
 }
-.timer-box img{width:32px;margin-right:8px}
-
-.bet-close{
-  text-align:center;
-  font-size:14px;
-  color:#ffeb3b;
-  margin-top:-4px;
-}
+.timer-box img{width:30px;margin-right:6px}
+.bet-close{text-align:center;color:#ffeb3b;font-size:14px}
 
 /* HISTORY */
-.history{
-  display:flex;
-  justify-content:center;
-  gap:6px;
-  padding:6px;
-}
-.ball{
-  width:26px;
-  height:26px;
-  border-radius:50%;
-  background:#ff9800;
-  text-align:center;
-  line-height:26px;
-  font-size:14px;
-  font-weight:bold;
-}
+.history{display:flex;justify-content:center;gap:6px;padding:6px}
+.ball{width:26px;height:26px;border-radius:50%;background:#ff9800;
+line-height:26px;text-align:center;font-weight:bold}
 
 /* BET PANEL */
-.bet-panel{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:10px;
-  padding:10px;
-}
+.bet-panel{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:10px}
 .horse-card{
-  background:#0f8a70;
-  border-radius:10px;
-  padding:8px;
-  display:flex;
-  align-items:center;
-  gap:8px;
-  cursor:pointer;
+  background:#0f8a70;border-radius:10px;padding:8px;
+  display:flex;align-items:center;gap:8px;position:relative
 }
-.horse-card.active{outline:3px solid gold;}
-.horse-card img{width:50px}
+.horse-card.active{outline:3px solid gold}
+.horse-card img{width:48px}
+
+/* BET BADGE */
+.bet-badge{
+  position:absolute;top:-6px;right:-6px;
+  background:#ffeb3b;color:#000;
+  padding:2px 6px;border-radius:12px;
+  font-size:12px;font-weight:bold
+}
 
 /* TRACK */
-.track{margin:10px;}
+.track{margin:10px}
 .lane{
-  height:42px;
-  position:relative;
+  height:42px;position:relative;
   border-bottom:2px solid rgba(255,255,255,.35);
-  margin-bottom:6px;
-  background:rgba(139,69,19,.25);
+  background:rgba(139,69,19,.25);margin-bottom:6px
 }
 .lane img{
-  width:38px;
-  position:absolute;
-  left:0;
-  bottom:2px;
-  transition:left .08s linear;
+  width:36px;position:absolute;left:0;bottom:2px;
+  transition:left .08s linear
 }
 
 /* CHIPS */
-.chips{
-  display:flex;
-  justify-content:center;
-  gap:10px;
-  padding:10px;
-}
+.chips{display:flex;justify-content:center;gap:10px;padding:10px}
 .chip{
-  background:#fff;
-  color:#000;
-  padding:10px;
-  border-radius:50%;
-  font-weight:bold;
-  cursor:pointer;
+  background:#fff;color:#000;padding:10px;border-radius:50%;
+  font-weight:bold;cursor:pointer
 }
 .chip.active{background:gold}
 
-/* STATUS */
-.status{text-align:center;padding:8px;font-weight:bold}
-
-/* ===== POPUP ===== */
+/* POPUP */
 .overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.6);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  z-index:999;
+  position:fixed;inset:0;background:rgba(0,0,0,.6);
+  display:none;align-items:center;justify-content:center;z-index:99
 }
 .popup{
-  background:#0f8a70;
-  padding:22px 28px;
-  border-radius:16px;
-  text-align:center;
-  animation:pop .3s ease;
+  background:#0f8a70;padding:22px 28px;border-radius:16px;
+  text-align:center
 }
 .popup.win{background:#2e7d32}
 .popup.lose{background:#b71c1c}
-.popup h2{margin:0 0 10px}
-.popup button{
-  margin-top:10px;
-  padding:8px 18px;
-  border:none;
-  border-radius:20px;
-  background:#fff;
-  font-weight:bold;
-}
 
-@keyframes pop{
-  from{transform:scale(.7);opacity:0}
-  to{transform:scale(1);opacity:1}
-}
 </style>
 </head>
 
@@ -168,13 +89,13 @@ body{
 <div class="stage">
 
 <div class="header">
-  🐎 Horse Race
-  <div class="wallet">₹ <span id="wallet">1000</span></div>
+ 🐎 Horse Race
+ <div class="wallet">₹ <span id="wallet">1000</span></div>
 </div>
 
 <div class="timer-box">
-  <img src="images/ui/timer.png">
-  <span id="time">15</span>s
+ <img src="images/ui/timer.png">
+ <span id="time">15</span>s
 </div>
 <div class="bet-close" id="betClose"></div>
 
@@ -183,21 +104,16 @@ body{
 <div class="track" id="track"></div>
 
 <div class="chips">
-  <div class="chip" data-amt="10">10</div>
-  <div class="chip" data-amt="50">50</div>
-  <div class="chip" data-amt="100">100</div>
-  <div class="chip" data-amt="500">500</div>
+ <div class="chip" data-amt="10">10</div>
+ <div class="chip" data-amt="50">50</div>
+ <div class="chip" data-amt="100">100</div>
+ <div class="chip" data-amt="500">500</div>
 </div>
 
-<div class="status" id="status">Select Chip & Horse</div>
 </div>
 
-<!-- POPUP -->
 <div class="overlay" id="overlay">
-  <div class="popup" id="popup">
-    <h2 id="popupText"></h2>
-    <button onclick="location.reload()">OK</button>
-  </div>
+ <div class="popup" id="popup"><h2 id="popupText"></h2></div>
 </div>
 
 <script>
@@ -206,73 +122,97 @@ const horses=[
  {id:4,odds:6.8},{id:5,odds:9.7},{id:6,odds:3.9}
 ];
 
-let selectedHorse=null,selectedChip=0,time=15,betting=true,history=[];
+let selectedHorse=null,selectedChip=0;
+let time=15,betting=true,timerInt;
 let balance=+localStorage.getItem("wallet")||1000;
+wallet.innerText=balance;
 
-const walletEl=wallet.innerText=balance;
-const betClose=document.getElementById("betClose");
-
-horses.forEach(h=>{
+/* BUILD */
+function build(){
+ betPanel.innerHTML=""; track.innerHTML="";
+ horses.forEach(h=>{
   betPanel.innerHTML+=`
-  <div class="horse-card" onclick="selectHorse(${h.id})">
+   <div class="horse-card" onclick="selectHorse(${h.id},this)">
     <img src="images/horses/horse${h.id}.png">
     <div><b>Horse ${h.id}</b><div>Odds ${h.odds}</div></div>
-  </div>`;
+   </div>`;
   track.innerHTML+=`
-  <div class="lane"><img id="horse${h.id}" src="images/horses/horse${h.id}.png"></div>`;
-});
+   <div class="lane">
+    <img id="horse${h.id}" src="images/horses/horse${h.id}.png">
+   </div>`;
+ });
+}
+build();
 
+/* CHIP */
 document.querySelectorAll(".chip").forEach(c=>{
-  c.onclick=()=>{
-    document.querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));
-    c.classList.add("active");
-    selectedChip=+c.dataset.amt;
-  }
+ c.onclick=()=>{
+  document.querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));
+  c.classList.add("active");
+  selectedChip=+c.dataset.amt;
+ };
 });
 
-function selectHorse(id){
-  if(!betting||!selectedChip)return;
-  document.querySelectorAll(".horse-card").forEach(c=>c.classList.remove("active"));
-  event.currentTarget.classList.add("active");
-  selectedHorse=horses.find(h=>h.id===id);
+/* HORSE SELECT */
+function selectHorse(id,el){
+ if(!betting||!selectedChip)return;
+ document.querySelectorAll(".horse-card").forEach(c=>c.classList.remove("active"));
+ document.querySelectorAll(".bet-badge").forEach(b=>b.remove());
+ el.classList.add("active");
+ el.innerHTML+=`<div class="bet-badge">₹${selectedChip}</div>`;
+ selectedHorse=horses.find(h=>h.id===id);
 }
 
-const timerInt=setInterval(()=>{
+/* TIMER */
+function startTimer(){
+ time=15; betting=true; betClose.innerText="";
+ timeEl.innerText=time;
+ timerInt=setInterval(()=>{
   time--; timeEl.innerText=time;
-  if(time<=3){betting=false; betClose.innerText="Bet Closed";}
-  if(time<=0){clearInterval(timerInt); betClose.innerText=""; startRace();}
-},1000);
+  if(time<=3){betting=false;betClose.innerText="Bet Closed";}
+  if(time<=0){clearInterval(timerInt);startRace();}
+ },1000);
+}
+startTimer();
 
+/* RACE */
 function startRace(){
-  let pos={}; horses.forEach(h=>pos[h.id]=0);
-  const race=setInterval(()=>{
-    horses.forEach(h=>{
-      pos[h.id]+=Math.random()*3.5;
-      horse=document.getElementById("horse"+h.id);
-      horse.style.left=pos[h.id]+"%";
-      if(pos[h.id]>=90){clearInterval(race); finish(h.id);}
-    });
-  },60);
+ let pos={};horses.forEach(h=>pos[h.id]=0);
+ const race=setInterval(()=>{
+  horses.forEach(h=>{
+   pos[h.id]+=Math.random()*3.5;
+   horse=document.getElementById("horse"+h.id);
+   horse.style.left=pos[h.id]+"%";
+   if(pos[h.id]>=90){clearInterval(race);finish(h.id);}
+  });
+ },60);
 }
 
+/* FINISH */
 function finish(winId){
-  const popup=document.getElementById("popup");
-  const text=document.getElementById("popupText");
-  overlay.style.display="flex";
+ overlay.style.display="flex";
+ if(selectedHorse && selectedHorse.id===winId){
+  let win=selectedChip*selectedHorse.odds;
+  balance+=win;
+  popup.className="popup win";
+  popupText.innerText="🎉 You Win ₹"+win;
+ }else{
+  balance-=selectedChip;
+  popup.className="popup lose";
+  popupText.innerText="❌ You Lose";
+ }
+ localStorage.setItem("wallet",balance);
+ wallet.innerText=balance;
 
-  if(selectedHorse && selectedHorse.id===winId){
-    const win=selectedChip*selectedHorse.odds;
-    balance+=win;
-    popup.className="popup win";
-    text.innerText="🎉 You Win ₹"+win;
-  }else{
-    balance-=selectedChip;
-    popup.className="popup lose";
-    text.innerText="❌ You Lose";
-  }
-
-  localStorage.setItem("wallet",balance);
-  wallet.innerText=balance;
+ setTimeout(()=>{
+  overlay.style.display="none";
+  document.querySelectorAll(".bet-badge").forEach(b=>b.remove());
+  selectedHorse=null; selectedChip=0;
+  document.querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));
+  document.querySelectorAll(".horse-card").forEach(c=>c.classList.remove("active"));
+  build();
+  startTimer();
+ },2000);
 }
 </script>
 </body>
