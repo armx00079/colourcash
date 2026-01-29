@@ -49,32 +49,15 @@ font-weight:bold;
 
 .bet-btn{
 margin:10px auto 6px;
-width:200px;
-padding:10px 0;
+width:220px;
+padding:12px 0;
 text-align:center;
-border-radius:20px;
+border-radius:30px;
 background:linear-gradient(135deg,#ffcf6a,#ff9f1a);
 color:#000;
 font-weight:bold;
+font-size:18px;
 }
-
-.last-history{
-display:flex;
-justify-content:center;
-gap:6px;
-margin-bottom:6px;
-}
-.last-history span{
-width:26px;height:26px;
-border-radius:50%;
-display:flex;
-align-items:center;
-justify-content:center;
-font-weight:bold;
-}
-.h-dragon{background:#4a5fe0}
-.h-tiger{background:#ff8c1a}
-.h-tie{background:#2ecc71}
 
 /* ===== TABLE ===== */
 .table-wrap{display:flex;justify-content:center;margin-top:20px}
@@ -86,7 +69,11 @@ padding:18px;
 }
 .cards{display:flex;justify-content:space-between;align-items:center}
 
-.card,.tie{position:relative;font-weight:bold}
+.card,.tie{
+position:relative;
+font-weight:bold;
+cursor:pointer;
+}
 .card{
 width:135px;height:95px;
 border-radius:16px;
@@ -151,23 +138,11 @@ font-weight:bold;
 position:fixed;
 bottom:12px;right:12px;
 background:#000;
-padding:8px 14px;
-border-radius:20px;
+padding:10px 18px;
+border-radius:22px;
 font-weight:bold;
+font-size:18px;
 }
-
-/* ===== LIVE FEED ===== */
-.live-feed{
-margin:15px auto;
-width:90%;
-max-width:360px;
-height:120px;
-overflow:hidden;
-background:linear-gradient(#0e2238,#081423);
-border-radius:16px;
-padding:10px;
-}
-.live-item{font-size:14px;padding:6px 0;opacity:.9}
 </style>
 </head>
 
@@ -179,15 +154,24 @@ padding:10px;
   <div class="header-arena">
     <img src="images/dragon.png">
     <div class="center-cards">
-      <div class="play-card" id="topDragon"><div class="inner"><div class="front"></div><div class="back" id="dVal"></div></div></div>
+      <div class="play-card" id="topDragon">
+        <div class="inner">
+          <div class="front"></div>
+          <div class="back" id="dVal"></div>
+        </div>
+      </div>
       <div>VS</div>
-      <div class="play-card" id="topTiger"><div class="inner"><div class="front"></div><div class="back" id="tVal"></div></div></div>
+      <div class="play-card" id="topTiger">
+        <div class="inner">
+          <div class="front"></div>
+          <div class="back" id="tVal"></div>
+        </div>
+      </div>
     </div>
     <img src="images/tiger.png">
   </div>
 
   <div class="bet-btn" id="betStatus">START BETTING</div>
-  <div class="last-history" id="lastHistory"></div>
 </div>
 
 <div class="table-wrap">
@@ -209,13 +193,11 @@ padding:10px;
   <div class="chip">1000</div>
 </div>
 
-<div class="live-feed" id="liveFeed"></div>
-
 <div class="popup" id="popup">
   <div class="popup-box" id="popupText"></div>
 </div>
 
-<!-- 🔥 FIREBASE WALLET CONNECT -->
+<!-- 🔥 FIREBASE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, getDocs, collection, query, where, doc, updateDoc }
@@ -239,57 +221,96 @@ async function loadWallet(){
 }
 function userRef(){return doc(db,"users",uid);}
 loadWallet();
-</script>
 
-<script>
-/* ===== GAME LOGIC (UNCHANGED) ===== */
-let selectedChip=0, phase="bet", timer=15;
+/* ===== GAME LOGIC ===== */
+let selectedChip=0;
+let phase="bet";
+let timer=15;
 let bets={DRAGON:0,TIGER:0,TIE:0};
-const MULTI={DRAGON:2,TIGER:2,TIE:13};
+
 const CARDS=[
 {n:"A",v:14},{n:"K",v:13},{n:"Q",v:12},{n:"J",v:11},
 {n:"10",v:10},{n:"9",v:9},{n:"8",v:8},{n:"7",v:7},
 {n:"6",v:6},{n:"5",v:5},{n:"4",v:4},{n:"3",v:3},{n:"2",v:2}
 ];
+const MULTI={DRAGON:2,TIGER:2,TIE:13};
 
-const history = JSON.parse(localStorage.getItem("DT_HISTORY")||"[]");
-const lastHistory=document.getElementById("lastHistory");
-function renderHistory(){
- lastHistory.innerHTML="";
- history.slice(0,10).forEach(r=>{
-  const s=document.createElement("span");
-  s.className=r==="DRAGON"?"h-dragon":r==="TIGER"?"h-tiger":"h-tie";
-  s.innerText=r[0];
-  lastHistory.appendChild(s);
- });
+document.querySelectorAll(".chip").forEach(c=>{
+ c.onclick=()=>{
+  if(phase!=="bet")return;
+  document.querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));
+  c.classList.add("active");
+  selectedChip=parseInt(c.innerText);
+ };
+});
+
+["dragon","tiger","tie"].forEach(id=>{
+ const el=document.getElementById(id);
+ el.onclick=async ()=>{
+  if(phase!=="bet"||!selectedChip||wallet<selectedChip)return;
+
+  wallet-=selectedChip;
+  walletAmt.innerText=wallet;
+  await updateDoc(userRef(),{balance:wallet});
+
+  bets[id.toUpperCase()]+=selectedChip;
+  const b=document.getElementById("bet-"+id);
+  b.innerText="₹"+bets[id.toUpperCase()];
+  b.style.display="block";
+
+  document.querySelectorAll(".card,.tie").forEach(x=>x.classList.remove("active"));
+  el.classList.add("active");
+ };
+});
+
+function startTimer(){
+ betStatus.innerText="START BETTING (10)";
+ timer=15;
+ phase="bet";
+
+ const t=setInterval(()=>{
+  timer--;
+
+  if(timer>5){
+    phase="bet";
+    betStatus.innerText="START BETTING ("+(timer-5)+")";
+  }else if(timer>0){
+    phase="lock";
+    betStatus.innerText="BET LOCK ("+timer+")";
+    document.querySelectorAll(".chip").forEach(c=>c.classList.add("locked"));
+  }else{
+    clearInterval(t);
+    showResult();
+  }
+ },1000);
 }
-renderHistory();
 
-/* RESULT */
 async function showResult(){
+ phase="result";
+
  const d=CARDS[Math.floor(Math.random()*CARDS.length)];
  const t=CARDS[Math.floor(Math.random()*CARDS.length)];
  dVal.innerText=d.n; tVal.innerText=t.n;
- topDragon.classList.add("flip"); topTiger.classList.add("flip");
+ topDragon.classList.add("flip");
+ topTiger.classList.add("flip");
 
  let win="TIE";
  if(d.v>t.v) win="DRAGON";
  else if(t.v>d.v) win="TIGER";
 
- history.unshift(win);
- localStorage.setItem("DT_HISTORY",JSON.stringify(history.slice(0,20)));
- renderHistory();
-
  if(bets[win]>0){
   wallet+=bets[win]*MULTI[win];
   walletAmt.innerText=wallet;
-  updateDoc(userRef(),{balance:wallet});
+  await updateDoc(userRef(),{balance:wallet});
  }
 
  popupText.innerText=win+" WINS";
  popup.style.display="flex";
- setTimeout(()=>{popup.style.display="none";location.reload();},2000);
+
+ setTimeout(()=>location.reload(),2500);
 }
+
+startTimer();
 </script>
 
 </body>
