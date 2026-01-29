@@ -1,239 +1,229 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Wheel</title>
+<title>Wheel Game</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
 body{
   margin:0;
-  font-family:Arial, sans-serif;
   background:#244a86;
+  font-family:Arial;
   color:#fff;
   text-align:center;
 }
+h1{color:#ffd56a;margin:14px 0}
 
-/* ===== WALLET ===== */
-#walletBox{
-  position:fixed;
-  bottom:12px;right:12px;
-  background:#000;
-  padding:10px 18px;
-  border-radius:22px;
-  font-weight:bold;
-  font-size:18px;
+/* WALLET */
+#wallet{
+ position:fixed;
+ right:12px;
+ bottom:12px;
+ background:#000;
+ padding:10px 18px;
+ border-radius:22px;
+ font-weight:bold;
 }
 
-/* ===== TITLE ===== */
-h1{margin:20px 0 10px;color:#ffd56a}
-
-/* ===== POINTER ===== */
+/* POINTER */
 .pointer{
-  width:0;height:0;
-  border-left:14px solid transparent;
-  border-right:14px solid transparent;
-  border-bottom:26px solid orange;
-  margin:auto;
+ width:0;height:0;
+ border-left:14px solid transparent;
+ border-right:14px solid transparent;
+ border-bottom:26px solid orange;
+ margin:auto;
 }
 
-/* ===== WHEEL ===== */
+/* WHEEL */
 .wheel-wrap{
-  position:relative;
-  width:320px;
-  height:320px;
-  margin:10px auto;
+ width:320px;
+ height:320px;
+ margin:14px auto 30px;
+ position:relative;
 }
 .wheel{
-  width:100%;
-  height:100%;
-  border-radius:50%;
-  border:10px solid #ffd56a;
-  transition:transform 4s cubic-bezier(.17,.67,.2,1);
-  background:conic-gradient(
-    #ff4fa3 0deg 24deg,
-    #2ec7ff 24deg 48deg,
-    #ff4fa3 48deg 72deg,
-    #2ec7ff 72deg 96deg,
-    #ff4fa3 96deg 120deg,
-    #2ec7ff 120deg 144deg,
-    #ff4fa3 144deg 168deg,
-    #2ec7ff 168deg 192deg,
-    #ff4fa3 192deg 216deg,
-    #2ec7ff 216deg 240deg,
-    #ff4fa3 240deg 264deg,
-    #2ec7ff 264deg 288deg,
-    #ff4fa3 288deg 312deg,
-    #2ec7ff 312deg 336deg,
-    #ffd56a 336deg 360deg
-  );
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:22px;
-}
-.center{
-  position:absolute;
-  font-size:26px;
+ width:100%;
+ height:100%;
+ border-radius:50%;
+ border:10px solid #ffd56a;
+ transition:transform 4s cubic-bezier(.17,.67,.2,1);
+ background:conic-gradient(
+  #ff4fa3 0deg 24deg,
+  #2ec7ff 24deg 48deg,
+  #ff4fa3 48deg 72deg,
+  #2ec7ff 72deg 96deg,
+  #ff4fa3 96deg 120deg,
+  #2ec7ff 120deg 144deg,
+  #ff4fa3 144deg 168deg,
+  #2ec7ff 168deg 192deg,
+  #ff4fa3 192deg 216deg,
+  #2ec7ff 216deg 240deg,
+  #ff4fa3 240deg 264deg,
+  #2ec7ff 264deg 288deg,
+  #ff4fa3 288deg 312deg,
+  #2ec7ff 312deg 336deg,
+  #ffd56a 336deg 360deg
+ );
 }
 
-/* ===== BET ===== */
+/* BET */
 .bet-row{
-  display:flex;
-  justify-content:center;
-  gap:12px;
-  margin:14px 0;
+ display:flex;
+ justify-content:center;
+ gap:10px;
+ margin-bottom:10px;
 }
-.bet-btn{
-  background:#ffd56a;
-  color:#000;
-  padding:10px 18px;
-  border-radius:30px;
-  font-weight:bold;
+.btn{
+ background:#ffd56a;
+ color:#000;
+ padding:12px 18px;
+ border-radius:20px;
+ font-weight:bold;
+ cursor:pointer;
 }
-
-/* ===== MULTI ===== */
-.multi-row{
-  display:flex;
-  justify-content:center;
-  gap:10px;
-}
-.multi{
-  padding:10px 18px;
-  border-radius:18px;
-  font-weight:bold;
+.mult{
+ padding:10px 16px;
+ border-radius:16px;
+ font-weight:bold;
+ cursor:pointer;
 }
 .pink{background:#ff4fa3}
 .blue{background:#2ec7ff}
 .gold{background:#ffd56a;color:#000}
 
-/* ===== SPIN ===== */
-#spinBtn{
-  margin:20px auto;
-  width:220px;
-  padding:14px;
-  border-radius:40px;
-  background:orange;
-  color:#000;
-  font-size:22px;
-  font-weight:bold;
-  cursor:pointer;
+/* SPIN */
+.spin{
+ margin-top:10px;
+ background:#ffb000;
+ color:#000;
+ padding:14px 60px;
+ border-radius:28px;
+ font-size:20px;
+ font-weight:bold;
+ cursor:pointer;
 }
-#spinBtn:disabled{opacity:.5}
 
-#result{
-  font-size:22px;
-  font-weight:bold;
-  margin-top:10px;
+/* POPUP */
+.popup{
+ position:fixed;
+ inset:0;
+ background:rgba(0,0,0,.6);
+ display:none;
+ align-items:center;
+ justify-content:center;
 }
+.popup .box{
+ padding:30px 50px;
+ border-radius:20px;
+ font-size:26px;
+ font-weight:bold;
+}
+.win{background:#ffd56a;color:#000}
+.loss{background:#b00020}
 </style>
 </head>
 
 <body>
 
 <h1>WHEEL</h1>
-
-<div id="walletBox">💰 ₹<span id="walletAmt">0</span></div>
-
 <div class="pointer"></div>
 
 <div class="wheel-wrap">
-  <div class="wheel" id="wheel">
-    <div class="center">💰</div>
-  </div>
+ <div class="wheel" id="wheel"></div>
 </div>
 
 <div class="bet-row">
-  <button class="bet-btn" onclick="betChange(-1)">−</button>
-  <div class="bet-btn">Bet ₹<span id="betAmt">1</span></div>
-  <button class="bet-btn" onclick="betChange(1)">+</button>
+ <div class="btn" id="minus">-</div>
+ <div class="btn" id="bet">Bet ₹1</div>
+ <div class="btn" id="plus">+</div>
 </div>
 
-<div class="multi-row">
-  <div class="multi pink">💎 2x</div>
-  <div class="multi gold">💰 14x</div>
-  <div class="multi blue">💎 2x</div>
+<div class="bet-row">
+ <div class="mult pink" data-m="2">💎 2x</div>
+ <div class="mult gold" data-m="14">💰 14x</div>
+ <div class="mult blue" data-m="2">💎 2x</div>
 </div>
 
-<button id="spinBtn" onclick="spin()">SPIN</button>
+<div class="spin" id="spin">SPIN</div>
 
-<div id="result"></div>
+<div id="wallet">💰 ₹<span id="bal">500</span></div>
 
-<!-- ===== FIREBASE + LOGIC ===== -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, getDocs, collection, query, where, doc, updateDoc }
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+<div class="popup" id="popup">
+ <div class="box" id="popupBox"></div>
+</div>
 
-/* FIREBASE */
-const app = initializeApp({
-  apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
-  authDomain:"colourcash-ea60e.firebaseapp.com",
-  projectId:"colourcash-ea60e"
-});
-const db = getFirestore(app);
-
-const email=localStorage.getItem("userEmail");
-let uid="", wallet=0;
-
-async function loadWallet(){
-  const q=query(collection(db,"users"),where("email","==",email));
-  const s=await getDocs(q);
-  s.forEach(d=>{
-    uid=d.id;
-    wallet=Number(d.data().balance||0);
-  });
-  walletAmt.innerText=wallet;
-}
-function userRef(){return doc(db,"users",uid);}
-loadWallet();
-
-/* GAME */
+<script>
+let balance=500;
 let bet=1;
-let spinning=false;
+let games=Number(localStorage.getItem("GAMES")||0);
+let wins=Number(localStorage.getItem("WINS")||0);
+
+const bal=document.getElementById("bal");
 const wheel=document.getElementById("wheel");
-const segments=15;
-const degPer=360/segments;
+bal.innerText=balance;
 
-function betChange(v){
-  bet=Math.max(1,bet+v);
-  betAmt.innerText=bet;
-}
+minus.onclick=()=>{ if(bet>1){bet--;betBtn()} }
+plus.onclick=()=>{ bet++;betBtn() }
+function betBtn(){ document.getElementById("bet").innerText="Bet ₹"+bet }
 
-async function spin(){
-  if(spinning) return;
-  if(wallet<bet){alert("Low balance");return;}
+let forcedWin=false;
+if(games===0||games===2) forcedWin=true;
 
-  spinning=true;
-  spinBtn.disabled=true;
-  result.innerText="";
+spin.onclick=()=>{
+ if(balance<bet) return;
 
-  wallet-=bet;
-  walletAmt.innerText=wallet;
-  await updateDoc(userRef(),{balance:wallet});
+ balance-=bet;
+ bal.innerText=balance;
 
-  const index=Math.floor(Math.random()*segments);
-  const finalDeg=(360*5)+(360-(index*degPer)-(degPer/2));
-  wheel.style.transform=`rotate(${finalDeg}deg)`;
+ games++;
+ localStorage.setItem("GAMES",games);
 
-  setTimeout(async ()=>{
-    let multi=2;
-    let text="💎 2x";
+ let win=false;
+ if(forcedWin) win=true;
+ else{
+   if(wins<4) win=Math.random()<0.6;
+   else win=Math.random()<0.4;
+ }
 
-    if(index===14){
-      multi=14;
-      text="💰 14x";
-    }
+ let angle;
+ let payout=0;
 
-    const win=bet*multi;
-    wallet+=win;
-    walletAmt.innerText=wallet;
-    await updateDoc(userRef(),{balance:wallet});
+ if(win){
+   wins++;
+   localStorage.setItem("WINS",wins);
+   const big=Math.random()<0.15;
+   if(big){
+     payout=Math.min(bet*14,200);
+     angle=350;
+   }else{
+     payout=Math.min(bet*2,200);
+     angle=Math.random()*300;
+   }
+ }else{
+   angle=Math.random()*330;
+ }
 
-    result.innerText=`WIN ${text} → ₹${win}`;
-    spinning=false;
-    spinBtn.disabled=false;
-  },4200);
+ wheel.style.transform="rotate("+(360*5+angle)+"deg)";
+
+ setTimeout(()=>{
+   if(win){
+     balance+=payout;
+     bal.innerText=balance;
+     showPopup("YOU WIN ₹"+payout,true);
+   }else{
+     showPopup("YOU LOSE",false);
+   }
+ },4200);
+};
+
+function showPopup(txt,isWin){
+ const p=document.getElementById("popup");
+ const b=document.getElementById("popupBox");
+ b.className="box "+(isWin?"win":"loss");
+ b.innerText=txt;
+ p.style.display="flex";
+ setTimeout(()=>p.style.display="none",2000);
 }
 </script>
 
