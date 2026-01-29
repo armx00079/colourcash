@@ -23,10 +23,10 @@ body{margin:0;font-family:Arial;background:#1b5e20;color:#fff}
 /* TIMER */
 .timer-box{
   display:flex;justify-content:center;align-items:center;
-  font-size:22px;font-weight:bold
+  font-size:22px;font-weight:bold;margin-top:4px
 }
 .timer-box img{width:30px;margin-right:6px}
-.bet-close{text-align:center;color:#ffeb3b;font-size:14px}
+.bet-close{text-align:center;color:#ffeb3b;font-size:14px;height:18px}
 
 /* BET PANEL */
 .bet-panel{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:10px}
@@ -36,9 +36,7 @@ body{margin:0;font-family:Arial;background:#1b5e20;color:#fff}
   cursor:pointer
 }
 .horse-card.active{outline:3px solid gold}
-.horse-card img{width:48px}
-
-/* BET BADGE */
+.horse-card img{width:46px}
 .bet-badge{
   position:absolute;top:-6px;right:-6px;
   background:#ffeb3b;color:#000;
@@ -110,57 +108,68 @@ body{margin:0;font-family:Arial;background:#1b5e20;color:#fff}
 </div>
 
 <script>
+/* DATA */
 const horses=[
  {id:1,odds:8.6},{id:2,odds:6.5},{id:3,odds:4.7},
  {id:4,odds:6.8},{id:5,odds:9.7},{id:6,odds:3.9}
 ];
 
 let selectedChip=0;
-let time=15,betting=true,timerInterval;
-let balance=+localStorage.getItem("wallet")||400;
+let time=15;
+let betting=true;
+let timerInterval=null;
+
+let balance=Number(localStorage.getItem("wallet")||400);
 let horseBets={};
 
-wallet.innerText=balance;
+const walletEl=document.getElementById("wallet");
+walletEl.innerText=balance;
 
-/* BUILD */
-function build(){
- betPanel.innerHTML=""; track.innerHTML="";
+/* BUILD UI */
+function buildRound(){
+ betPanel.innerHTML="";
+ track.innerHTML="";
  horseBets={};
+ betting=true;
+ betClose.innerText="";
+
  horses.forEach(h=>{
   horseBets[h.id]=0;
 
-  betPanel.innerHTML+=`
-   <div class="horse-card" id="card${h.id}">
+  const card=document.createElement("div");
+  card.className="horse-card";
+  card.innerHTML=`
     <img src="images/horses/horse${h.id}.png">
     <div><b>Horse ${h.id}</b><div>Odds ${h.odds}</div></div>
-   </div>`;
+  `;
 
-  track.innerHTML+=`
-   <div class="lane">
-    <img id="horse${h.id}" src="images/horses/horse${h.id}.png">
-   </div>`;
-
-  document.getElementById("card"+h.id).onclick=()=>{
+  card.onclick=()=>{
     if(!betting || !selectedChip) return;
     if(balance < selectedChip) return alert("Low Balance");
 
     balance -= selectedChip;
     horseBets[h.id] += selectedChip;
-    wallet.innerText=balance;
+    walletEl.innerText=balance;
     localStorage.setItem("wallet",balance);
 
-    document.getElementById("card"+h.id).classList.add("active");
-    let badge=document.querySelector(`#card${h.id} .bet-badge`);
+    card.classList.add("active");
+    let badge=card.querySelector(".bet-badge");
     if(!badge){
       badge=document.createElement("div");
       badge.className="bet-badge";
-      document.getElementById("card"+h.id).appendChild(badge);
+      card.appendChild(badge);
     }
     badge.innerText="₹"+horseBets[h.id];
   };
+
+  betPanel.appendChild(card);
+
+  const lane=document.createElement("div");
+  lane.className="lane";
+  lane.innerHTML=`<img id="horse${h.id}" src="images/horses/horse${h.id}.png">`;
+  track.appendChild(lane);
  });
 }
-build();
 
 /* CHIPS */
 document.querySelectorAll(".chip").forEach(c=>{
@@ -171,62 +180,74 @@ document.querySelectorAll(".chip").forEach(c=>{
  };
 });
 
-/* TIMER */
+/* TIMER (100% FIXED) */
 function startTimer(){
  clearInterval(timerInterval);
- time=15; betting=true; betClose.innerText="";
+ time=15;
+ betting=true;
  timeEl.innerText=time;
 
  timerInterval=setInterval(()=>{
-  time--; timeEl.innerText=time;
-  if(time<=3){betting=false;betClose.innerText="Bet Closed";}
+  time--;
+  timeEl.innerText=time;
+
+  if(time<=3){
+    betting=false;
+    betClose.innerText="Bet Closed";
+  }
   if(time<=0){
     clearInterval(timerInterval);
     startRace();
   }
  },1000);
 }
-startTimer();
 
 /* RACE */
 function startRace(){
- let pos={};horses.forEach(h=>pos[h.id]=0);
+ let pos={};
+ horses.forEach(h=>pos[h.id]=0);
+
  const race=setInterval(()=>{
   horses.forEach(h=>{
-   pos[h.id]+=Math.random()*3.5;
-   horse=document.getElementById("horse"+h.id);
-   horse.style.left=pos[h.id]+"%";
+   pos[h.id]+=Math.random()*3.2;
+   document.getElementById("horse"+h.id).style.left=pos[h.id]+"%";
    if(pos[h.id]>=90){
-     clearInterval(race);
-     finish(h.id);
+    clearInterval(race);
+    finishRace(h.id);
    }
   });
  },60);
 }
 
 /* FINISH */
-function finish(winId){
+function finishRace(winId){
  overlay.style.display="flex";
- let winAmt=horseBets[winId]*horses.find(h=>h.id===winId).odds;
 
- if(winAmt>0){
-  balance+=winAmt;
+ const horse=horses.find(h=>h.id===winId);
+ const winAmount=horseBets[winId]*horse.odds;
+
+ if(winAmount>0){
+  balance+=winAmount;
   popup.className="popup win";
-  popupText.innerText="🎉 You Win ₹"+winAmt;
+  popupText.innerText="🎉 You Win ₹"+winAmount.toFixed(2);
  }else{
   popup.className="popup lose";
   popupText.innerText="❌ You Lose";
  }
 
  localStorage.setItem("wallet",balance);
- wallet.innerText=balance;
+ walletEl.innerText=balance;
 
  setTimeout(()=>{
   overlay.style.display="none";
-  build();
+  buildRound();
   startTimer();
  },2000);
 }
+
+/* START */
+buildRound();
+startTimer();
 </script>
 </body>
 </html>
