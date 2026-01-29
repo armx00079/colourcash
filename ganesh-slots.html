@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>🔥 Ganesh Slots</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:#120404;
+  color:#fff;
+  text-align:center;
+}
+
+.game{
+  background:url("images/bg/bg-main.jpg") center/cover no-repeat;
+  min-height:100vh;
+  padding:10px;
+}
+
+/* HEADER */
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px;
+}
+.wallet{
+  background:rgba(0,0,0,.6);
+  padding:6px 14px;
+  border-radius:20px;
+  font-weight:bold;
+}
+
+/* REELS */
+.reels{
+  margin:20px auto;
+  width:92%;
+  max-width:360px;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  background:rgba(0,0,0,.55);
+  padding:10px;
+  border-radius:14px;
+}
+.cell{
+  height:90px;
+  border-radius:10px;
+  background:rgba(255,255,255,.1);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.cell img{
+  width:70px;
+}
+
+/* INFO */
+.info{
+  margin-top:8px;
+  font-size:14px;
+}
+
+/* CONTROLS */
+.controls{
+  margin-top:14px;
+}
+.bet{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:10px;
+  margin-bottom:10px;
+}
+.bet button{
+  width:36px;height:36px;
+  border:none;border-radius:50%;
+  font-size:18px;font-weight:bold;
+}
+.spin-btn{
+  width:120px;
+}
+.spin-btn img{
+  width:120px;
+}
+
+/* POPUP */
+.popup{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.7);
+  display:none;
+  align-items:center;
+  justify-content:center;
+}
+.popup-box{
+  background:#2e7d32;
+  padding:22px 30px;
+  border-radius:18px;
+  font-size:22px;
+  font-weight:bold;
+}
+.popup-box.lose{background:#b71c1c}
+</style>
+</head>
+
+<body>
+
+<div class="game">
+
+  <div class="header">
+    <div>🕉️ GANESH SLOTS</div>
+    <div class="wallet">₹ <span id="wallet">1000</span></div>
+  </div>
+
+  <!-- REELS -->
+  <div class="reels" id="reels"></div>
+
+  <div class="info" id="info">3 Wild = Multiplier Boost</div>
+
+  <!-- CONTROLS -->
+  <div class="controls">
+    <div class="bet">
+      <button onclick="changeBet(-1)">−</button>
+      <div>Bet: ₹ <span id="bet">10</span></div>
+      <button onclick="changeBet(1)">+</button>
+    </div>
+
+    <div class="spin-btn" onclick="spin()">
+      <img src="images/ui/spin.png">
+    </div>
+  </div>
+
+</div>
+
+<!-- POPUP -->
+<div class="popup" id="popup">
+  <div class="popup-box" id="popupBox"></div>
+</div>
+
+<script>
+/* SYMBOLS */
+const symbols = [
+ {name:"diya", img:"images/symbols/diya.png", pay:2},
+ {name:"flower", img:"images/symbols/flower.png", pay:3},
+ {name:"coin", img:"images/symbols/coin.png", pay:5},
+ {name:"wild", img:"images/symbols/wild.png", pay:0},
+ {name:"scatter", img:"images/symbols/scatter.png", pay:0}
+];
+
+let wallet = 1000;
+let bet = 10;
+let reelsEl = document.getElementById("reels");
+
+/* BUILD GRID */
+function buildGrid(){
+  reelsEl.innerHTML="";
+  for(let i=0;i<9;i++){
+    const d=document.createElement("div");
+    d.className="cell";
+    reelsEl.appendChild(d);
+  }
+}
+buildGrid();
+
+/* BET */
+function changeBet(v){
+  bet += v*10;
+  if(bet<10) bet=10;
+  if(bet>wallet) bet=wallet;
+  document.getElementById("bet").innerText=bet;
+}
+
+/* SPIN */
+function spin(){
+  if(bet>wallet) return alert("Low balance");
+
+  wallet -= bet;
+  updateWallet();
+
+  const cells=document.querySelectorAll(".cell");
+  let result=[];
+  let wildCount=0;
+  let scatterCount=0;
+
+  cells.forEach(c=>{
+    const s = symbols[Math.floor(Math.random()*symbols.length)];
+    c.innerHTML=`<img src="${s.img}">`;
+    result.push(s);
+    if(s.name==="wild") wildCount++;
+    if(s.name==="scatter") scatterCount++;
+  });
+
+  calculateWin(result,wildCount,scatterCount);
+}
+
+/* WIN LOGIC */
+function calculateWin(result,wildCount,scatterCount){
+  let win=0;
+
+  // SIMPLE PAY: same symbol count
+  const map={};
+  result.forEach(s=>{
+    if(s.pay>0){
+      map[s.name]=(map[s.name]||0)+1;
+    }
+  });
+
+  Object.keys(map).forEach(k=>{
+    if(map[k]>=3){
+      const sym=symbols.find(s=>s.name===k);
+      win += sym.pay * bet;
+    }
+  });
+
+  // WILD MULTIPLIER
+  if(wildCount>=3){
+    win *= 3;
+  }
+
+  // SCATTER BONUS
+  if(scatterCount>=3){
+    win += bet * 5;
+  }
+
+  showResult(win);
+}
+
+/* RESULT */
+function showResult(win){
+  const popup=document.getElementById("popup");
+  const box=document.getElementById("popupBox");
+
+  if(win>0){
+    wallet += win;
+    box.className="popup-box";
+    box.innerText="🎉 YOU WIN ₹"+win;
+  }else{
+    box.className="popup-box lose";
+    box.innerText="❌ YOU LOST";
+  }
+
+  updateWallet();
+  popup.style.display="flex";
+  setTimeout(()=>popup.style.display="none",1500);
+}
+
+function updateWallet(){
+  document.getElementById("wallet").innerText=wallet;
+}
+</script>
+
+</body>
+</html>
