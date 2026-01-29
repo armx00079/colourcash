@@ -119,7 +119,7 @@ body{margin:0;font-family:Arial;background:#1b5e20;color:#fff}
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
   getFirestore, getDocs, collection, query, where,
-  doc, getDoc, updateDoc, setDoc
+  doc, getDoc, updateDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 /* FIREBASE */
@@ -130,11 +130,22 @@ const app = initializeApp({
 });
 const db = getFirestore(app);
 
-/* USER (SAME AS SPIN) */
+/* USER */
 const userEmail = localStorage.getItem("userEmail");
 let uid="", balance=0;
 
-/* GAME */
+/* DOM FIX (🔥 IMPORTANT) */
+const walletEl = document.getElementById("wallet");
+const timeEl = document.getElementById("time");
+const betCloseEl = document.getElementById("betClose");
+const historyEl = document.getElementById("history");
+const betPanel = document.getElementById("betPanel");
+const track = document.getElementById("track");
+const overlay = document.getElementById("overlay");
+const popup = document.getElementById("popup");
+const popupText = document.getElementById("popupText");
+
+/* GAME DATA */
 const horses=[
  {id:1,odds:8.6},{id:2,odds:6.5},{id:3,odds:4.7},
  {id:4,odds:6.8},{id:5,odds:9.7},{id:6,odds:3.9}
@@ -144,13 +155,7 @@ let selectedChip=0, betting=true;
 let horseBets={}, timerInt=null;
 const ROUND_TIME=15000;
 
-/* ELEMENTS */
-const walletEl=wallet;
-const timeEl=time;
-const betCloseEl=betClose;
-const historyEl=history;
-
-/* LOAD WALLET (SPIN STYLE) */
+/* LOAD WALLET */
 async function loadWallet(){
  const q=query(collection(db,"users"),where("email","==",userEmail));
  const snap=await getDocs(q);
@@ -160,46 +165,37 @@ async function loadWallet(){
  });
  walletEl.innerText=balance;
 }
-
-/* GET USER REF */
 function userRef(){ return doc(db,"users",uid); }
 
-/* HISTORY */
+/* LOAD HISTORY */
 async function loadHistory(){
  const snap=await getDoc(userRef());
- const h=snap.data().horseHistory||[];
+ const h=snap.data()?.horseHistory||[];
  historyEl.innerHTML=h.map(n=>`<div class="ball">${n}</div>`).join("");
 }
 
-/* TIMER (REAL CONTINUE FIX) */
+/* TIMER */
 async function syncTimer(){
  const snap=await getDoc(userRef());
  let start=snap.data().roundStart;
-
  if(!start){
   start=Date.now();
   await updateDoc(userRef(),{roundStart:start});
  }
-
  clearInterval(timerInt);
  timerInt=setInterval(()=>{
   const left=ROUND_TIME-(Date.now()-start);
   const sec=Math.max(0,Math.ceil(left/1000));
   timeEl.innerText=sec;
-
   if(sec<=3){betting=false;betCloseEl.innerText="Bet Closed";}
-  if(sec<=0){
-   clearInterval(timerInt);
-   startRace();
-  }
+  if(sec<=0){clearInterval(timerInt);startRace();}
  },500);
 }
 
-/* BUILD ROUND */
+/* BUILD UI */
 function buildUI(){
  betPanel.innerHTML="";track.innerHTML="";
  horseBets={};betting=true;betCloseEl.innerText="";
-
  horses.forEach(h=>{
   horseBets[h.id]=0;
   const c=document.createElement("div");
@@ -226,17 +222,12 @@ function buildUI(){
 
 /* RACE */
 function startRace(){
- let pos={};
- horses.forEach(h=>pos[h.id]=0);
-
+ let pos={};horses.forEach(h=>pos[h.id]=0);
  const race=setInterval(()=>{
   horses.forEach(h=>{
    pos[h.id]+=Math.random()*3;
    document.getElementById("horse"+h.id).style.left=pos[h.id]+"%";
-   if(pos[h.id]>=90){
-    clearInterval(race);
-    finish(h.id);
-   }
+   if(pos[h.id]>=90){clearInterval(race);finish(h.id);}
   });
  },60);
 }
@@ -245,7 +236,6 @@ function startRace(){
 async function finish(win){
  overlay.style.display="flex";
  const bet=horseBets[win]||0;
-
  if(bet){
   const w=bet*horses.find(h=>h.id===win).odds;
   balance+=w;
@@ -263,7 +253,7 @@ async function finish(win){
  await updateDoc(userRef(),{
   balance,
   horseHistory:h,
-  roundStart:Date.now() // 👈 NEXT ROUND START
+  roundStart:Date.now()
  });
 
  walletEl.innerText=balance;
