@@ -113,9 +113,12 @@ const email=localStorage.getItem("userEmail");
 let uid="", balance=0;
 
 /* SYMBOLS */
-const symbols=[
- "diya","flower","coin","wild"
-];
+const symbols=["diya","flower","coin","wild"];
+
+/* STATE */
+let bet=10;
+let lossStreak=0;   // 🔑 IMPORTANT
+let spinIndex=0;
 
 /* ELEMENTS */
 const grid=document.getElementById("grid");
@@ -124,8 +127,6 @@ const betEl=document.getElementById("bet");
 const historyBox=document.getElementById("history");
 const popup=document.getElementById("popup");
 const popupBox=document.getElementById("popupBox");
-
-let bet=10;
 
 /* USER REF */
 function userRef(){return doc(db,"users",uid);}
@@ -158,29 +159,6 @@ function buildGrid(arr){
 plusBtn.onclick=()=>{bet+=10;betEl.innerText=bet};
 minusBtn.onclick=()=>{bet=Math.max(10,bet-10);betEl.innerText=bet};
 
-/* SMART PAYOUT */
-function getPayout(bet){
- const r=Math.random();
- if(bet<=10){
-  if(r<0.5) return 0;
-  if(r<0.65) return 3;
-  if(r<0.8) return 4;
-  if(r<0.9) return 5;
-  return 10;
- }
- if(bet<=100){
-  if(r<0.5) return 0;
-  if(r<0.65) return 20;
-  if(r<0.8) return 35;
-  if(r<0.9) return 40;
-  return 100;
- }
- if(r<0.55) return 0;
- if(r<0.75) return 100;
- if(r<0.9) return 430;
- return bet;
-}
-
 /* POPUP */
 function showPopup(text,cls){
  popupBox.className="popup-box "+cls;
@@ -197,50 +175,66 @@ function addHistory(t,a,c){
  historyBox.prepend(r);
 }
 
+/* 🎯 GUARANTEED PAYOUT ENGINE */
+function guaranteedPayout(){
+ // after 2 losses → forced win
+ if(lossStreak >= 2){
+   lossStreak = 0;
+
+   // mostly partial refund
+   const r = Math.random();
+   if(r < 0.05) return bet;              // 5% full refund
+   if(r < 0.40) return Math.round(bet*0.3);
+   if(r < 0.75) return Math.round(bet*0.5);
+   return Math.round(bet*0.8);
+ }
+
+ // normal spin (chance based)
+ const r = Math.random();
+ if(r < 0.55) return 0;                  // loss
+ if(r < 0.70) return Math.round(bet*0.3);
+ if(r < 0.85) return Math.round(bet*0.5);
+ if(r < 0.95) return Math.round(bet*0.8);
+ return bet;                             // rare full refund
+}
+
 /* SPIN */
 spinBtn.onclick=async ()=>{
- if(balance<bet) return alert("Low balance");
+ if(balance < bet) return alert("Low balance");
 
- balance-=bet;
+ spinIndex++;
+
+ balance -= bet;
  await updateDoc(userRef(),{balance});
 
+ // spin symbols (visual only)
  let res=[];
  for(let i=0;i<9;i++){
-  res.push(symbols[Math.floor(Math.random()*symbols.length)]);
+   res.push(symbols[Math.floor(Math.random()*symbols.length)]);
  }
  buildGrid(res);
 
- let win=false;
- const lines=[[0,1,2],[3,4,5],[6,7,8]];
- lines.forEach(l=>{
-  if(res[l[0]]===res[l[1]] && res[l[1]]===res[l[2]]){
-    win=true;
-  }
- });
+ // payout decision
+ const payout = guaranteedPayout();
 
- if(win){
-  const payout=getPayout(bet);
-  if(payout>0){
-    balance+=payout;
-    await updateDoc(userRef(),{balance});
-    addHistory("WIN","+₹"+payout,"win");
-    showPopup("🎉 YOU WIN ₹"+payout,"win");
-  }else{
-    addHistory("LOSE","-₹"+bet,"lose");
-    showPopup("❌ YOU LOSE","lose");
-  }
+ if(payout > 0){
+   balance += payout;
+   await updateDoc(userRef(),{balance});
+   addHistory("WIN","+₹"+payout,"win");
+   showPopup("🎉 YOU WIN ₹"+payout,"win");
  }else{
-  addHistory("LOSE","-₹"+bet,"lose");
-  showPopup("❌ YOU LOSE","lose");
+   lossStreak++;
+   addHistory("LOSE","-₹"+bet,"lose");
+   showPopup("❌ YOU LOSE","lose");
  }
 
- walletEl.innerText=balance;
+ walletEl.innerText = balance;
 };
 
 /* START */
 buildGrid(Array(9).fill("diya"));
 loadWallet();
-</script>
+  </script>
 
 </body>
 </html>
