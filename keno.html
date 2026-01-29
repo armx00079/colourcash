@@ -16,6 +16,7 @@ body{
 .header{
   display:flex;
   justify-content:space-between;
+  align-items:center;
   padding:14px;
   font-weight:bold;
 }
@@ -24,6 +25,19 @@ body{
   padding:6px 14px;
   border-radius:20px;
 }
+
+/* ? BUTTON */
+.info-btn{
+  width:28px;height:28px;
+  border-radius:50%;
+  border:none;
+  background:#333;
+  color:#fff;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+/* GRID */
 .grid{
   display:grid;
   grid-template-columns:repeat(8,1fr);
@@ -40,6 +54,7 @@ body{
 .num.active{background:#4caf50;color:#000}
 .num.hit{background:#ffeb3b;color:#000}
 
+/* BET */
 .bet-box{
   display:flex;
   justify-content:center;
@@ -66,6 +81,8 @@ body{
   cursor:pointer;
 }
 .auto{margin-bottom:10px}
+
+/* HISTORY */
 .history{
   margin:14px;
   background:#1b1b1b;
@@ -86,28 +103,49 @@ body{
 .popup{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.7);
+  background:rgba(0,0,0,.75);
   display:none;
   align-items:center;
   justify-content:center;
+  z-index:99;
 }
 .popup-box{
   background:#222;
-  padding:24px 36px;
-  border-radius:20px;
-  font-size:22px;
-  font-weight:bold;
+  padding:20px;
+  border-radius:16px;
+  max-width:90%;
+  text-align:left;
 }
-.popup-box.win{color:#4caf50}
-.popup-box.lose{color:#ff5252}
+.popup-box h3{
+  margin:0 0 10px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.popup-box table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:14px;
+}
+.popup-box th,.popup-box td{
+  padding:6px 4px;
+  border-bottom:1px solid #333;
+}
+.close{
+  cursor:pointer;
+}
 </style>
 </head>
 
 <body>
 
+<!-- HEADER -->
 <div class="header">
   <div>🔥 KENO</div>
-  <div class="wallet">₹ <span id="wallet">0</span></div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <button class="info-btn" id="infoBtn">?</button>
+    <div class="wallet">₹ <span id="wallet">0</span></div>
+  </div>
 </div>
 
 <div class="grid" id="grid"></div>
@@ -129,8 +167,24 @@ body{
   <div id="history"></div>
 </div>
 
-<div class="popup" id="popup">
-  <div class="popup-box" id="popupBox"></div>
+<!-- PAYOUT POPUP -->
+<div class="popup" id="infoPopup">
+  <div class="popup-box">
+    <h3>
+      PAYOUT TABLE
+      <span class="close" id="closeInfo">❌</span>
+    </h3>
+    <table>
+      <tr><th>Selected</th><th>Match</th><th>x</th></tr>
+      <tr><td>1</td><td>1</td><td>2.00x</td></tr>
+      <tr><td>2</td><td>2</td><td>3.80x</td></tr>
+      <tr><td>3</td><td>3</td><td>5.00x</td></tr>
+      <tr><td>5</td><td>4</td><td>6.00x</td></tr>
+      <tr><td>5</td><td>5</td><td>15.00x</td></tr>
+      <tr><td>10</td><td>7</td><td>15.00x</td></tr>
+      <tr><td>10</td><td>8</td><td>50.00x</td></tr>
+    </table>
+  </div>
 </div>
 
 <script type="module">
@@ -148,9 +202,17 @@ const db = getFirestore(app);
 
 const email = localStorage.getItem("userEmail");
 let uid="", balance=0;
-
-/* FIRST WIN FLAG */
 let firstWinDone = localStorage.getItem("kenoFirstWinDone")==="yes";
+
+/* UI */
+const walletEl=document.getElementById("wallet");
+const betEl=document.getElementById("bet");
+const grid=document.getElementById("grid");
+const historyBox=document.getElementById("history");
+
+/* INFO POPUP */
+infoBtn.onclick=()=>infoPopup.style.display="flex";
+closeInfo.onclick=()=>infoPopup.style.display="none";
 
 /* LOAD WALLET */
 async function loadWallet(){
@@ -163,14 +225,6 @@ async function loadWallet(){
  walletEl.innerText=balance;
 }
 function userRef(){return doc(db,"users",uid);}
-
-/* UI */
-const grid=document.getElementById("grid");
-const walletEl=document.getElementById("wallet");
-const betEl=document.getElementById("bet");
-const historyBox=document.getElementById("history");
-const popup=document.getElementById("popup");
-const popupBox=document.getElementById("popupBox");
 
 /* NUMBERS */
 let selected=[];
@@ -195,30 +249,6 @@ for(let i=1;i<=40;i++){
 let bet=10;
 plus.onclick=()=>{bet+=10;betEl.innerText=bet};
 minus.onclick=()=>{bet=Math.max(10,bet-10);betEl.innerText=bet};
-
-/* HISTORY */
-function saveHist(o){
- const h=JSON.parse(localStorage.getItem("kenoHist")||"[]");
- h.unshift(o);
- localStorage.setItem("kenoHist",JSON.stringify(h.slice(0,30)));
-}
-function loadHist(){
- const h=JSON.parse(localStorage.getItem("kenoHist")||"[]");
- h.forEach(x=>{
-  const r=document.createElement("div");
-  r.className="h-row";
-  r.innerHTML=`<span>${x.m}</span><span class="${x.c}">${x.a}</span>`;
-  historyBox.appendChild(r);
- });
-}
-
-/* POPUP */
-function pop(txt,cls){
- popupBox.className="popup-box "+cls;
- popupBox.innerText=txt;
- popup.style.display="flex";
- setTimeout(()=>popup.style.display="none",1500);
-}
 
 /* PAYOUT */
 function payout(matches,picks){
@@ -248,35 +278,29 @@ async function play(){
  }
 
  let matches=selected.filter(x=>drawn.includes(x)).length;
- let multi=payout(matches,selected.length);
- let win=bet*multi;
+ let win=bet*payout(matches,selected.length);
 
- /* 🔒 FIRST GAME GUARANTEED WIN (MAX 300) */
  if(!firstWinDone && win>0){
-   win=Math.min(win,300);
-   firstWinDone=true;
-   localStorage.setItem("kenoFirstWinDone","yes");
+  win=Math.min(win,300);
+  firstWinDone=true;
+  localStorage.setItem("kenoFirstWinDone","yes");
  }
 
- drawn.forEach(n=>{
-  document.querySelectorAll(".num")[n-1].classList.add("hit");
- });
+ drawn.forEach(n=>document.querySelectorAll(".num")[n-1].classList.add("hit"));
 
  if(win>0){
   balance+=win;
   await updateDoc(userRef(),{balance});
-  pop("🎉 WIN ₹"+win,"win");
-  saveHist({m:`Hit ${matches}`,a:"+₹"+win,c:"win"});
+  historyBox.innerHTML=`<div class="h-row"><span>Hit ${matches}</span><span class="win">+₹${win}</span></div>`+historyBox.innerHTML;
  }else{
-  pop("❌ LOSE","lose");
-  saveHist({m:`Hit ${matches}`,a:"-₹"+bet,c:"lose"});
+  historyBox.innerHTML=`<div class="h-row"><span>Hit ${matches}</span><span class="lose">-₹${bet}</span></div>`+historyBox.innerHTML;
  }
  walletEl.innerText=balance;
 }
 
 /* AUTO */
 spin.onclick=async ()=>{
- if(document.getElementById("auto").checked){
+ if(auto.checked){
   for(let i=0;i<10;i++){
     await play();
     await new Promise(r=>setTimeout(r,700));
@@ -284,9 +308,7 @@ spin.onclick=async ()=>{
  }else play();
 };
 
-/* START */
 loadWallet();
-loadHist();
 </script>
 
 </body>
