@@ -37,14 +37,13 @@ h1{color:#ffd56a;margin:14px 0}
  width:320px;
  height:320px;
  margin:10px auto 40px;
- position:relative;
 }
 .wheel{
  width:100%;
  height:100%;
  border-radius:50%;
  border:10px solid #ffd56a;
- transition:transform 4s ease-out;
+ transition:transform 4s cubic-bezier(.17,.67,.2,1);
  background:conic-gradient(
   #ff4fa3 0deg 24deg,
   #2ec7ff 24deg 48deg,
@@ -78,7 +77,7 @@ h1{color:#ffd56a;margin:14px 0}
  border-radius:16px;
  font-weight:bold;
  cursor:pointer;
- opacity:.6;
+ opacity:.5;
 }
 .mult.active{opacity:1;outline:3px solid #fff}
 .pink{background:#ff4fa3}
@@ -141,35 +140,38 @@ h1{color:#ffd56a;margin:14px 0}
  <div class="box" id="popupBox"></div>
 </div>
 
-<!-- 🔥 FIREBASE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const app = initializeApp({
- apiKey:"YOUR_API_KEY",
- authDomain:"YOUR_DOMAIN",
- projectId:"YOUR_PROJECT_ID"
+ apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
+ authDomain:"colourcash-ea60e.firebaseapp.com",
+ projectId:"colourcash-ea60e",
+ storageBucket:"colourcash-ea60e.firebasestorage.app",
+ messagingSenderId:"403688058646",
+ appId:"1:403688058646:web:f1753360471528f275ea37"
 });
 const db = getFirestore(app);
 
-let uid = localStorage.getItem("uid");
-let balance = 0;
-
+const uid = localStorage.getItem("uid");
 const bal = document.getElementById("bal");
 const wheel = document.getElementById("wheel");
 
+let balance=0;
+let bet=1;
+let selected=null;
+let rotation=0;
+
+let games = Number(localStorage.getItem("W_GAMES")||0);
+let wins  = Number(localStorage.getItem("W_WINS")||0);
+
 async function loadWallet(){
- const ref = doc(db,"users",uid);
- const snap = await getDoc(ref);
+ const snap = await getDoc(doc(db,"users",uid));
  balance = Number(snap.data().balance||0);
  bal.innerText = balance;
 }
 loadWallet();
-
-let bet=1;
-let selected=null;
-let rotation=0;
 
 document.querySelectorAll(".mult").forEach(b=>{
  b.onclick=()=>{
@@ -190,30 +192,44 @@ spin.onclick=async ()=>{
  bal.innerText=balance;
  await updateDoc(doc(db,"users",uid),{balance});
 
- let targetAngle;
+ games++;
+ localStorage.setItem("W_GAMES",games);
+
+ let guaranteed = (games===1 || games===3);
+ let winChance = bet<=50 ? 0.45 : bet<=200 ? 0.35 : 0.25;
+
+ let win = guaranteed || (Math.random()<winChance && wins<6);
+
  let payout=0;
+ let angle=0;
 
- if(selected==="pink"){
-  targetAngle = 60;
-  payout = bet*2;
- }
- if(selected==="blue"){
-  targetAngle = 120;
-  payout = bet*2;
- }
- if(selected==="gold"){
-  targetAngle = 350;
-  payout = bet*14;
+ if(win){
+  wins++;
+  localStorage.setItem("W_WINS",wins);
+
+  if(selected==="gold"){
+    payout=Math.min(bet*14,200);
+    angle=350;
+  }else{
+    payout=Math.min(bet*2,200);
+    angle= selected==="pink" ? 60 : 120;
+  }
+ }else{
+  angle=200; // force lose zone
  }
 
- rotation += 360*5 + targetAngle;
+ rotation += 360*6 + angle;
  wheel.style.transform="rotate("+rotation+"deg)";
 
  setTimeout(async ()=>{
-  balance += payout;
-  bal.innerText=balance;
-  await updateDoc(doc(db,"users",uid),{balance});
-  showPopup("YOU WIN ₹"+payout,true);
+  if(win){
+    balance+=payout;
+    bal.innerText=balance;
+    await updateDoc(doc(db,"users",uid),{balance});
+    showPopup("YOU WIN ₹"+payout,true);
+  }else{
+    showPopup("YOU LOSE",false);
+  }
  },4200);
 };
 
