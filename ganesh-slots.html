@@ -15,90 +15,59 @@ body{
   text-align:center;
 }
 .header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:14px;
-  font-weight:bold;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:14px;font-weight:bold
 }
 .wallet{
   background:rgba(0,0,0,.5);
-  padding:6px 14px;
-  border-radius:20px;
+  padding:6px 14px;border-radius:20px
 }
 .grid{
   display:grid;
   grid-template-columns:repeat(3,1fr);
-  gap:12px;
-  padding:20px;
+  gap:12px;padding:20px
 }
 .cell{
   background:rgba(0,0,0,.55);
-  border-radius:16px;
-  height:90px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  border-radius:16px;height:90px;
+  display:flex;align-items:center;justify-content:center
 }
 .cell img{max-width:70px}
 .bet-box{
-  display:flex;
-  justify-content:center;
-  gap:14px;
+  display:flex;justify-content:center;align-items:center;
+  gap:14px;margin-top:8px
 }
 .bet-box button{
-  width:44px;height:44px;
-  border-radius:50%;
-  font-size:22px;
-  cursor:pointer;
+  width:44px;height:44px;border-radius:50%;
+  font-size:22px;cursor:pointer;border:none
 }
 .spin-btn{
-  margin:16px auto;
-  width:180px;
-  padding:14px;
+  margin:16px auto;width:180px;padding:14px;
   border-radius:40px;
   background:linear-gradient(135deg,#ff9800,#ff5722);
-  font-size:22px;
-  font-weight:bold;
-  border:none;
-  color:#fff;
-  cursor:pointer;
+  font-size:22px;font-weight:bold;border:none;
+  color:#fff;cursor:pointer
 }
 .history{
-  margin:16px;
-  background:rgba(0,0,0,.4);
-  border-radius:12px;
-  padding:10px;
-  font-size:13px;
+  margin:16px;background:rgba(0,0,0,.4);
+  border-radius:12px;padding:10px;font-size:13px
 }
-.h-row{
-  display:flex;
-  justify-content:space-between;
-  padding:6px 0;
-}
-.win{color:#4caf50}
-.lose{color:#ff5252}
-.free{color:#ffeb3b}
+.h-row{display:flex;justify-content:space-between;padding:6px 0}
+.win{color:#4caf50}.lose{color:#ff5252}.free{color:#ffeb3b}
 
 /* POPUP */
 .popup{
-  position:fixed;
-  inset:0;
+  position:fixed;inset:0;
   background:rgba(0,0,0,.7);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  z-index:99;
+  display:none;align-items:center;justify-content:center;z-index:99
 }
 .popup-box{
-  background:#222;
-  padding:26px 40px;
-  border-radius:20px;
-  font-size:22px;
-  font-weight:bold;
+  background:#222;padding:26px 40px;
+  border-radius:20px;font-size:22px;font-weight:bold
 }
 .popup-box.win{color:#4caf50}
 .popup-box.lose{color:#ff5252}
+.popup-box.free{color:#ffeb3b}
 </style>
 </head>
 
@@ -155,9 +124,7 @@ const symbols={
  scatter:{img:"images/symbols/scatter.png",multi:0}
 };
 
-let bet=10;
-let freeSpins=0;
-let spinCount=0, winCount=0;
+let bet=10, freeSpins=0, spinCount=0, winCount=0;
 
 /* ELEMENTS */
 const grid=document.getElementById("grid");
@@ -187,27 +154,23 @@ function buildGrid(res){
  res.forEach(s=>{
   const d=document.createElement("div");
   d.className="cell";
-  const img=document.createElement("img");
-  img.src=s.img;
-  d.appendChild(img);
+  if(s){
+    const img=document.createElement("img");
+    img.src=s.img;
+    d.appendChild(img);
+  }
   grid.appendChild(d);
  });
 }
 
-/* BET BUTTONS FIXED */
-document.getElementById("plusBtn").onclick=()=>{
- bet+=10;
- betEl.innerText=bet;
-};
-document.getElementById("minusBtn").onclick=()=>{
- bet=Math.max(10,bet-10);
- betEl.innerText=bet;
-};
+/* BET BUTTONS */
+plusBtn.onclick=()=>{bet+=10;betEl.innerText=bet};
+minusBtn.onclick=()=>{bet=Math.max(10,bet-10);betEl.innerText=bet};
 
 /* RISK */
 function allowWin(){
  spinCount++;
- if(spinCount>10){spinCount=1;winCount=0;}
+ if(spinCount>10){spinCount=1;winCount=0}
  if(winCount>=4) return false;
  let chance=0.35;
  if(bet/balance>0.3) chance=0.22;
@@ -225,17 +188,34 @@ function showPopup(text,cls){
  setTimeout(()=>popup.style.display="none",1600);
 }
 
+/* HISTORY (PERSIST) */
+function loadHistory(){
+ const h=JSON.parse(localStorage.getItem("slotHistory")||"[]");
+ h.forEach(x=>addHistory(x.t,x.a,x.c,false));
+}
+function saveHistory(t,a,c){
+ const h=JSON.parse(localStorage.getItem("slotHistory")||"[]");
+ h.unshift({t,a,c});
+ localStorage.setItem("slotHistory",JSON.stringify(h.slice(0,30)));
+}
+function addHistory(t,a,c,save=true){
+ const r=document.createElement("div");
+ r.className="h-row";
+ r.innerHTML=`<span>${t}</span><span class="${c}">${a}</span>`;
+ historyBox.prepend(r);
+ if(save) saveHistory(t,a,c);
+}
+
 /* SPIN */
-document.getElementById("spinBtn").onclick=async ()=>{
+spinBtn.onclick=async ()=>{
  if(freeSpins<=0){
   if(balance<bet) return alert("Low balance");
   balance-=bet;
   await updateDoc(userRef(),{balance});
  }
 
- let result=[], scat=0;
  const keys=Object.keys(symbols);
-
+ let result=[], scat=0;
  for(let i=0;i<9;i++){
   let k=keys[Math.floor(Math.random()*keys.length)];
   if(k==="scatter") scat++;
@@ -246,12 +226,11 @@ document.getElementById("spinBtn").onclick=async ()=>{
  if(scat>=3 && freeSpins===0){
   freeSpins=10;
   addHistory("FREE SPINS","+10","free");
-  showPopup("🎁 10 FREE SPINS","win");
+  showPopup("🎁 10 FREE SPINS","free");
  }
 
  let winAmt=0;
- const rows=[[0,1,2],[3,4,5],[6,7,8]];
- rows.forEach(r=>{
+ [[0,1,2],[3,4,5],[6,7,8]].forEach(r=>{
   const a=result[r[0]],b=result[r[1]],c=result[r[2]];
   if(a.name===b.name && b.name===c.name && a.name!=="scatter" && allowWin()){
     winAmt=Math.max(winAmt,bet*a.multi);
@@ -272,17 +251,10 @@ document.getElementById("spinBtn").onclick=async ()=>{
  walletEl.innerText=balance;
 };
 
-/* HISTORY FIXED */
-function addHistory(t,amt,cls){
- const r=document.createElement("div");
- r.className="h-row";
- r.innerHTML=`<span>${t}</span><span class="${cls}">${amt}</span>`;
- historyBox.prepend(r);
-}
-
 /* START */
-buildGrid(Array(9).fill({img:""}));
+buildGrid(Array(9).fill(null));
 loadWallet();
+loadHistory();
 </script>
 
 </body>
