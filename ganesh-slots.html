@@ -53,7 +53,7 @@ body{
   border-radius:12px;padding:10px;font-size:13px
 }
 .h-row{display:flex;justify-content:space-between;padding:6px 0}
-.win{color:#4caf50}.lose{color:#ff5252}.free{color:#ffeb3b}
+.win{color:#4caf50}.lose{color:#ff5252}
 
 /* POPUP */
 .popup{
@@ -67,7 +67,6 @@ body{
 }
 .popup-box.win{color:#4caf50}
 .popup-box.lose{color:#ff5252}
-.popup-box.free{color:#ffeb3b}
 </style>
 </head>
 
@@ -79,8 +78,6 @@ body{
 </div>
 
 <div class="grid" id="grid"></div>
-
-<div>3 Scatter = 🎁 10 Free Spins</div>
 
 <div class="bet-box">
   <button id="minusBtn">−</button>
@@ -116,15 +113,9 @@ const email=localStorage.getItem("userEmail");
 let uid="", balance=0;
 
 /* SYMBOLS */
-const symbols={
- diya:{img:"images/symbols/diya.png"},
- flower:{img:"images/symbols/flower.png"},
- coin:{img:"images/symbols/coin.png"},
- wild:{img:"images/symbols/wild.png"},
- scatter:{img:"images/symbols/scatter.png"}
-};
-
-let bet=10, freeSpins=0;
+const symbols=[
+ "diya","flower","coin","wild"
+];
 
 /* ELEMENTS */
 const grid=document.getElementById("grid");
@@ -133,6 +124,8 @@ const betEl=document.getElementById("bet");
 const historyBox=document.getElementById("history");
 const popup=document.getElementById("popup");
 const popupBox=document.getElementById("popupBox");
+
+let bet=10;
 
 /* USER REF */
 function userRef(){return doc(db,"users",uid);}
@@ -149,16 +142,14 @@ async function loadWallet(){
 }
 
 /* GRID */
-function buildGrid(res){
+function buildGrid(arr){
  grid.innerHTML="";
- res.forEach(s=>{
+ arr.forEach(n=>{
   const d=document.createElement("div");
   d.className="cell";
-  if(s){
-    const img=document.createElement("img");
-    img.src=s.img;
-    d.appendChild(img);
-  }
+  const img=document.createElement("img");
+  img.src="images/symbols/"+n+".png";
+  d.appendChild(img);
   grid.appendChild(d);
  });
 }
@@ -168,25 +159,25 @@ plusBtn.onclick=()=>{bet+=10;betEl.innerText=bet};
 minusBtn.onclick=()=>{bet=Math.max(10,bet-10);betEl.innerText=bet};
 
 /* SMART PAYOUT */
-function getSmartPayout(bet){
+function getPayout(bet){
  const r=Math.random();
  if(bet<=10){
-  if(r<0.4) return 0;
-  if(r<0.55) return 3;
-  if(r<0.7) return 4;
-  if(r<0.85) return 5;
+  if(r<0.5) return 0;
+  if(r<0.65) return 3;
+  if(r<0.8) return 4;
+  if(r<0.9) return 5;
   return 10;
  }
  if(bet<=100){
-  if(r<0.45) return 0;
-  if(r<0.6) return 20;
-  if(r<0.75) return 35;
-  if(r<0.85) return 40;
+  if(r<0.5) return 0;
+  if(r<0.65) return 20;
+  if(r<0.8) return 35;
+  if(r<0.9) return 40;
   return 100;
  }
- if(r<0.5) return 0;
- if(r<0.7) return 100;
- if(r<0.85) return 430;
+ if(r<0.55) return 0;
+ if(r<0.75) return 100;
+ if(r<0.9) return 430;
  return bet;
 }
 
@@ -195,7 +186,7 @@ function showPopup(text,cls){
  popupBox.className="popup-box "+cls;
  popupBox.innerText=text;
  popup.style.display="flex";
- setTimeout(()=>popup.style.display="none",1600);
+ setTimeout(()=>popup.style.display="none",1400);
 }
 
 /* HISTORY */
@@ -208,51 +199,46 @@ function addHistory(t,a,c){
 
 /* SPIN */
 spinBtn.onclick=async ()=>{
- if(freeSpins<=0){
-  if(balance<bet) return alert("Low balance");
-  balance-=bet;
-  await updateDoc(userRef(),{balance});
- }
+ if(balance<bet) return alert("Low balance");
 
- const keys=Object.keys(symbols);
- let result=[], scat=0;
+ balance-=bet;
+ await updateDoc(userRef(),{balance});
+
+ let res=[];
  for(let i=0;i<9;i++){
-  let k=keys[Math.floor(Math.random()*keys.length)];
-  if(k==="scatter") scat++;
-  result.push({name:k,img:symbols[k].img});
+  res.push(symbols[Math.floor(Math.random()*symbols.length)]);
  }
- buildGrid(result);
+ buildGrid(res);
 
- if(scat>=3 && freeSpins===0){
-  freeSpins=10;
-  addHistory("FREE SPINS","+10","free");
-  showPopup("🎁 10 FREE SPINS","free");
- }
-
- let payout=0;
- [[0,1,2],[3,4,5],[6,7,8]].forEach(r=>{
-  const a=result[r[0]],b=result[r[1]],c=result[r[2]];
-  if(a.name===b.name && b.name===c.name && a.name!=="scatter"){
-    payout=Math.max(payout,getSmartPayout(bet));
+ let win=false;
+ const lines=[[0,1,2],[3,4,5],[6,7,8]];
+ lines.forEach(l=>{
+  if(res[l[0]]===res[l[1]] && res[l[1]]===res[l[2]]){
+    win=true;
   }
  });
 
- if(payout>0){
-  balance+=payout;
-  await updateDoc(userRef(),{balance});
-  addHistory("WIN","+₹"+payout,"win");
-  showPopup("🎉 YOU WIN ₹"+payout,"win");
+ if(win){
+  const payout=getPayout(bet);
+  if(payout>0){
+    balance+=payout;
+    await updateDoc(userRef(),{balance});
+    addHistory("WIN","+₹"+payout,"win");
+    showPopup("🎉 YOU WIN ₹"+payout,"win");
+  }else{
+    addHistory("LOSE","-₹"+bet,"lose");
+    showPopup("❌ YOU LOSE","lose");
+  }
  }else{
   addHistory("LOSE","-₹"+bet,"lose");
   showPopup("❌ YOU LOSE","lose");
  }
 
- if(freeSpins>0) freeSpins--;
  walletEl.innerText=balance;
 };
 
 /* START */
-buildGrid(Array(9).fill(null));
+buildGrid(Array(9).fill("diya"));
 loadWallet();
 </script>
 
