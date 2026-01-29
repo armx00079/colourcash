@@ -74,6 +74,7 @@ body{margin:0;font-family:Arial;background:#1b5e20;color:#fff}
 
 <body>
 <div class="stage">
+
 <div class="header">
  🐎 Horse Race
  <div class="wallet">₹ <span id="wallet">0</span></div>
@@ -83,7 +84,7 @@ body{margin:0;font-family:Arial;background:#1b5e20;color:#fff}
 
 <div class="timer-box">
  <img src="images/ui/timer.png">
- <span id="time">15</span>s
+ <span id="time">0</span>s
 </div>
 <div class="bet-close" id="betClose"></div>
 
@@ -109,7 +110,7 @@ import {
  getDocs, doc, updateDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-/* FIREBASE CONFIG (AS YOU GAVE) */
+/* FIREBASE */
 const app = initializeApp({
  apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
  authDomain:"colourcash-ea60e.firebaseapp.com",
@@ -117,23 +118,22 @@ const app = initializeApp({
 });
 const db = getFirestore(app);
 
-/* USER (EMAIL BASED – SAME AS SPIN STOP) */
+/* USER */
 const userEmail = localStorage.getItem("userEmail");
 let uid="", balance=0, roundStart=0, history=[];
 
-/* HORSES */
+/* DATA */
 const horses=[
  {id:1,odds:8.6},{id:2,odds:6.5},{id:3,odds:4.7},
  {id:4,odds:6.8},{id:5,odds:9.7},{id:6,odds:3.9}
 ];
-
 let selectedChip=0, betting=true, horseBets={};
 const ROUND_TIME=15000;
 
 /* ELEMENTS */
-const walletEl=wallet,timeEl=time,betCloseEl=betClose;
-const betPanelEl=betPanel,trackEl=track,historyEl=history;
-const overlayEl=overlay,popupEl=popup,popupTextEl=popupText;
+const walletEl=wallet, timeEl=time, betCloseEl=betClose;
+const betPanelEl=betPanel, trackEl=track, historyEl=history;
+const overlayEl=overlay, popupEl=popup, popupTextEl=popupText;
 
 /* LOAD USER */
 async function loadUser(){
@@ -155,12 +155,10 @@ function renderHistory(){
  historyEl.innerHTML=history.map(n=>`<div class="ball">${n}</div>`).join("");
 }
 
-/* BUILD ROUND */
-async function buildRound(){
+/* BUILD ROUND (NO roundStart RESET) */
+function buildRound(){
  betting=true; betCloseEl.innerText="";
  horseBets={}; betPanelEl.innerHTML=""; trackEl.innerHTML="";
- await updateDoc(doc(db,"users",uid),{roundStart:Date.now()});
-
  horses.forEach(h=>{
   horseBets[h.id]=0;
   const c=document.createElement("div");
@@ -186,10 +184,8 @@ async function buildRound(){
  });
 }
 
-/* TIMER SYNC */
-setInterval(async()=>{
- const snap=await getDocs(query(collection(db,"users"),where("email","==",userEmail)));
- snap.forEach(d=>roundStart=d.data().roundStart);
+/* TIMER (TRUE CONTINUE) */
+setInterval(()=>{
  const left=ROUND_TIME-(Date.now()-roundStart);
  const sec=Math.max(0,Math.ceil(left/1000));
  timeEl.innerText=sec;
@@ -199,11 +195,11 @@ setInterval(async()=>{
 
 /* RACE */
 function startRace(){
- let pos={},total=0;
+ let pos={}, total=0;
  Object.values(horseBets).forEach(v=>total+=v);
  const betH=Object.keys(horseBets).filter(h=>horseBets[h]>0);
- const winChance = total/balance>0.5?0.15:0.35;
- const winHorse = (betH.length && Math.random()<winChance)
+ const winChance=total/balance>0.5?0.15:0.35;
+ const winHorse=(betH.length&&Math.random()<winChance)
  ? +betH[Math.floor(Math.random()*betH.length)]
  : horses[Math.floor(Math.random()*horses.length)].id;
 
@@ -231,7 +227,8 @@ async function finish(win){
   popupTextEl.innerText="❌ You Lose";
  }
  history.unshift(win); history=history.slice(0,10);
- await updateDoc(doc(db,"users",uid),{balance,raceHistory:history});
+ roundStart=Date.now();
+ await updateDoc(doc(db,"users",uid),{balance,raceHistory:history,roundStart});
  walletEl.innerText=balance; renderHistory();
  setTimeout(()=>{overlayEl.style.display="none";buildRound()},2000);
 }
@@ -246,7 +243,7 @@ document.querySelectorAll(".chip").forEach(c=>{
 
 /* START */
 await loadUser();
-await buildRound();
+buildRound();
 </script>
 </body>
 </html>
