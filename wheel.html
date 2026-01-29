@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Wheel Game</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:#1e3c72;
+  background:linear-gradient(180deg,#1e3c72,#2a5298);
+  color:#fff;
+  text-align:center;
+}
+
+/* ===== WALLET ===== */
+#walletBox{
+  position:fixed;
+  bottom:12px;right:12px;
+  background:#000;
+  padding:10px 16px;
+  border-radius:22px;
+  font-weight:bold;
+  font-size:18px;
+}
+
+/* ===== WHEEL AREA ===== */
+.wheel-wrap{
+  position:relative;
+  width:300px;
+  height:300px;
+  margin:30px auto 10px;
+}
+.wheel{
+  width:100%;
+  height:100%;
+  border-radius:50%;
+  border:8px solid #ffd56a;
+  background:
+    conic-gradient(
+      #ff4fa3 0deg 60deg,
+      #2ec7ff 60deg 120deg,
+      #ff4fa3 120deg 180deg,
+      #2ec7ff 180deg 240deg,
+      #ff4fa3 240deg 300deg,
+      #ffd56a 300deg 360deg
+    );
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:transform 4s cubic-bezier(.17,.67,.2,1);
+}
+.wheel span{
+  position:absolute;
+  font-size:22px;
+  font-weight:bold;
+}
+
+/* labels */
+.l1{top:20px}
+.l2{right:20px}
+.l3{bottom:20px}
+.l4{left:20px}
+.l5{top:50%;right:50%}
+.l6{top:50%;left:50%}
+
+/* ===== POINTER ===== */
+.pointer{
+  width:0;height:0;
+  border-left:12px solid transparent;
+  border-right:12px solid transparent;
+  border-bottom:22px solid #ff9800;
+  margin:auto;
+}
+
+/* ===== BET CONTROLS ===== */
+.bet-row{
+  display:flex;
+  justify-content:center;
+  gap:12px;
+  margin:15px 0;
+}
+.bet-btn{
+  padding:10px 18px;
+  border-radius:30px;
+  background:#ffd56a;
+  color:#000;
+  font-weight:bold;
+}
+
+/* ===== MULTIPLIERS ===== */
+.multi-row{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin-top:10px;
+}
+.multi{
+  padding:10px 18px;
+  border-radius:16px;
+  font-weight:bold;
+}
+.pink{background:#ff4fa3}
+.blue{background:#2ec7ff}
+.chest{background:#ffd56a;color:#000}
+
+/* ===== SPIN BUTTON ===== */
+#spinBtn{
+  margin:20px auto;
+  width:200px;
+  padding:14px;
+  border-radius:40px;
+  background:#ff9800;
+  color:#000;
+  font-size:20px;
+  font-weight:bold;
+  cursor:pointer;
+}
+#spinBtn:disabled{opacity:.5}
+
+/* ===== RESULT ===== */
+#result{
+  font-size:22px;
+  font-weight:bold;
+  margin-top:10px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="walletBox">💰 ₹<span id="walletAmt">0</span></div>
+
+<div class="pointer"></div>
+
+<div class="wheel-wrap">
+  <div class="wheel" id="wheel">
+    <span class="l1">💎</span>
+    <span class="l2">💎</span>
+    <span class="l3">💎</span>
+    <span class="l4">💎</span>
+    <span class="l5">🧰</span>
+    <span class="l6">💎</span>
+  </div>
+</div>
+
+<div class="bet-row">
+  <button class="bet-btn" onclick="changeBet(-1)">−</button>
+  <div class="bet-btn">Bet ₹<span id="betAmt">1</span></div>
+  <button class="bet-btn" onclick="changeBet(1)">+</button>
+</div>
+
+<div class="multi-row">
+  <div class="multi pink">💎 2x</div>
+  <div class="multi chest">🧰 14x</div>
+  <div class="multi blue">💎 2x</div>
+</div>
+
+<button id="spinBtn" onclick="spin()">SPIN</button>
+
+<div id="result"></div>
+
+<!-- ===== FIREBASE + GAME LOGIC ===== -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, getDocs, collection, query, where, doc, updateDoc }
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+/* 🔥 FIREBASE CONFIG (same as your system) */
+const app = initializeApp({
+  apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
+  authDomain:"colourcash-ea60e.firebaseapp.com",
+  projectId:"colourcash-ea60e"
+});
+const db = getFirestore(app);
+
+const email = localStorage.getItem("userEmail");
+let uid="", wallet=0;
+
+async function loadWallet(){
+  const q=query(collection(db,"users"),where("email","==",email));
+  const s=await getDocs(q);
+  s.forEach(d=>{
+    uid=d.id;
+    wallet=Number(d.data().balance||0);
+  });
+  walletAmt.innerText=wallet;
+}
+function userRef(){return doc(db,"users",uid);}
+loadWallet();
+
+/* ===== GAME ===== */
+let bet=1;
+let spinning=false;
+const wheel=document.getElementById("wheel");
+
+function changeBet(v){
+  bet=Math.max(1,bet+v);
+  betAmt.innerText=bet;
+}
+
+async function spin(){
+  if(spinning) return;
+  if(wallet<bet){alert("Low balance");return;}
+
+  spinning=true;
+  spinBtn.disabled=true;
+  result.innerText="";
+
+  wallet-=bet;
+  walletAmt.innerText=wallet;
+  await updateDoc(userRef(),{balance:wallet});
+
+  const rand=Math.random();
+  let deg=0, multi=2, label="💎 2x";
+
+  if(rand<0.12){
+    deg=330; multi=14; label="🧰 14x";
+  }else{
+    deg=60+Math.random()*240;
+  }
+
+  const rotate=360*5+deg;
+  wheel.style.transform=`rotate(${rotate}deg)`;
+
+  setTimeout(async ()=>{
+    const win=Math.floor(bet*multi);
+    wallet+=win;
+    walletAmt.innerText=wallet;
+    await updateDoc(userRef(),{balance:wallet});
+
+    result.innerText=`WIN ${label} → ₹${win}`;
+    spinning=false;
+    spinBtn.disabled=false;
+  },4200);
+}
+</script>
+
+</body>
+</html>
