@@ -62,50 +62,39 @@ body{
   background:linear-gradient(135deg,#f5c76a 0%,#f5c76a 50%,#cfd3d6 50%,#cfd3d6 100%);
   color:#111;
 }
-.dice{
-  background:linear-gradient(135deg,#ff3b3b,#b30000);
-  color:#fff;
-}
-.spinstop{
-  background:linear-gradient(135deg,#ff5fa2,#ff2f92);
-  color:#fff;
-}
+.dice{background:linear-gradient(135deg,#ff3b3b,#b30000)}
+.spinstop{background:linear-gradient(135deg,#ff5fa2,#ff2f92)}
 
-/* 🐎 HORSE RACE */
-.horserace{
-  background:linear-gradient(135deg,#0f9b6c,#0a6b4a);
-  color:#fff;
-}
+/* HORSE RACE */
+.horserace{background:linear-gradient(135deg,#0f9b6c,#0a6b4a)}
 
-/* 🏎️ DRAX TURBO DRIVE */
+/* DRAX TURBO */
 .draxturbo{
   background:linear-gradient(135deg,#ff4fd8,#8f2bff);
-  color:#fff;
-  justify-content:center;
   padding-top:18px;
 }
 .drax-logo{
   width:46px;
   height:46px;
-  object-fit:contain;
   margin:0 auto 6px;
 }
 
-/* ⚡ FATE SHIFT */
-.fateshift{
-  background:linear-gradient(135deg,#6a00ff,#b100ff);
-  color:#fff;
-}
+/* FATE SHIFT */
+.fateshift{background:linear-gradient(135deg,#6a00ff,#b100ff)}
 
-/* 🕉️ GANESH SLOTS */
+/* GANESH SLOTS */
 .ganeshslots{
   background:linear-gradient(135deg,#8e0000,#ff4d4d);
-  color:#fff;
 }
 .ganeshslots img{
   width:42px;
   height:42px;
   margin:0 auto 6px;
+}
+
+/* 🔥 KENO */
+.keno{
+  background:linear-gradient(135deg,#111,#333);
 }
 
 /* BOTTOM NAV */
@@ -219,11 +208,17 @@ body{
     <p>High Risk • High Reward</p>
   </div>
 
-  <!-- 🕉️ GANESH SLOTS (NEW) -->
   <div class="game-card ganeshslots" onclick="location.href='ganesh-slots.html'">
     <img src="images/symbols/scatter.png">
     <h3>GANESH SLOTS</h3>
     <p>Lucky Lines • Multipliers</p>
+  </div>
+
+  <!-- 🔥 KENO (NEW GAME ADDED) -->
+  <div class="game-card keno" onclick="location.href='keno.html'">
+    <div class="icon">🔥</div>
+    <h3>KENO</h3>
+    <p>Select Numbers • Big Multipliers</p>
   </div>
 
   <div class="game-card fateshift" onclick="location.href='fate-shift.html'">
