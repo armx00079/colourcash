@@ -108,6 +108,16 @@ body{margin:0;font-family:Arial;background:#1b5e20;color:#fff}
 </div>
 
 <script>
+/* DOM */
+const timeEl=document.getElementById("time");
+const betClose=document.getElementById("betClose");
+const betPanel=document.getElementById("betPanel");
+const track=document.getElementById("track");
+const overlay=document.getElementById("overlay");
+const popup=document.getElementById("popup");
+const popupText=document.getElementById("popupText");
+const walletEl=document.getElementById("wallet");
+
 /* DATA */
 const horses=[
  {id:1,odds:8.6},{id:2,odds:6.5},{id:3,odds:4.7},
@@ -118,14 +128,12 @@ let selectedChip=0;
 let time=15;
 let betting=true;
 let timerInterval=null;
-
-let balance=Number(localStorage.getItem("wallet")||400);
 let horseBets={};
 
-const walletEl=document.getElementById("wallet");
+let balance=Number(localStorage.getItem("wallet")||400);
 walletEl.innerText=balance;
 
-/* BUILD UI */
+/* BUILD ROUND */
 function buildRound(){
  betPanel.innerHTML="";
  track.innerHTML="";
@@ -180,12 +188,14 @@ document.querySelectorAll(".chip").forEach(c=>{
  };
 });
 
-/* TIMER (100% FIXED) */
+/* TIMER — FINAL FIX */
 function startTimer(){
- clearInterval(timerInterval);
+ if(timerInterval) clearInterval(timerInterval);
+
  time=15;
  betting=true;
  timeEl.innerText=time;
+ betClose.innerText="";
 
  timerInterval=setInterval(()=>{
   time--;
@@ -195,8 +205,10 @@ function startTimer(){
     betting=false;
     betClose.innerText="Bet Closed";
   }
+
   if(time<=0){
     clearInterval(timerInterval);
+    timerInterval=null;
     startRace();
   }
  },1000);
@@ -245,7 +257,7 @@ function finishRace(winId){
  },2000);
 }
 
-/* START */
+/* START GAME */
 buildRound();
 startTimer();
 </script>
