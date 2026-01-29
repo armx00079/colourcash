@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>🔥 KENO</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:#0f0f0f;
+  color:#fff;
+  text-align:center;
+}
+.header{
+  display:flex;
+  justify-content:space-between;
+  padding:14px;
+  font-weight:bold;
+}
+.wallet{
+  background:#1c1c1c;
+  padding:6px 14px;
+  border-radius:20px;
+}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(8,1fr);
+  gap:8px;
+  padding:14px;
+}
+.num{
+  background:#222;
+  border-radius:8px;
+  padding:12px 0;
+  cursor:pointer;
+  font-weight:bold;
+}
+.num.active{background:#4caf50;color:#000}
+.num.hit{background:#ffeb3b;color:#000}
+
+.bet-box{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:12px;
+}
+.bet-box button{
+  width:40px;height:40px;
+  border-radius:50%;
+  font-size:20px;
+  border:none;
+  cursor:pointer;
+}
+.spin-btn{
+  margin:14px auto;
+  width:200px;
+  padding:14px;
+  border-radius:40px;
+  background:linear-gradient(135deg,#ff9800,#ff5722);
+  font-size:20px;
+  font-weight:bold;
+  border:none;
+  color:#fff;
+  cursor:pointer;
+}
+.auto{
+  margin-bottom:10px;
+}
+.history{
+  margin:14px;
+  background:#1b1b1b;
+  border-radius:12px;
+  padding:10px;
+  font-size:13px;
+  text-align:left;
+}
+.h-row{
+  display:flex;
+  justify-content:space-between;
+  padding:4px 0;
+}
+.win{color:#4caf50}
+.lose{color:#ff5252}
+
+/* POPUP */
+.popup{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.7);
+  display:none;
+  align-items:center;
+  justify-content:center;
+}
+.popup-box{
+  background:#222;
+  padding:24px 36px;
+  border-radius:20px;
+  font-size:22px;
+  font-weight:bold;
+}
+.popup-box.win{color:#4caf50}
+.popup-box.lose{color:#ff5252}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <div>🔥 KENO</div>
+  <div class="wallet">₹ <span id="wallet">0</span></div>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<div class="bet-box">
+  <button id="minus">−</button>
+  Bet ₹ <span id="bet">10</span>
+  <button id="plus">+</button>
+</div>
+
+<div class="auto">
+  <label><input type="checkbox" id="auto"> Auto Play (10)</label>
+</div>
+
+<button class="spin-btn" id="spin">PLAY</button>
+
+<div class="history">
+  <b>MY BETS</b>
+  <div id="history"></div>
+</div>
+
+<div class="popup" id="popup">
+  <div class="popup-box" id="popupBox"></div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, getDocs, collection, query, where, doc, updateDoc }
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+/* FIREBASE */
+const app = initializeApp({
+  apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
+  authDomain:"colourcash-ea60e.firebaseapp.com",
+  projectId:"colourcash-ea60e"
+});
+const db = getFirestore(app);
+
+const email = localStorage.getItem("userEmail");
+let uid="", balance=0;
+
+/* LOAD WALLET */
+async function loadWallet(){
+ const q=query(collection(db,"users"),where("email","==",email));
+ const snap=await getDocs(q);
+ snap.forEach(d=>{
+  uid=d.id;
+  balance=Number(d.data().balance||0);
+ });
+ walletEl.innerText=balance;
+}
+function userRef(){return doc(db,"users",uid);}
+
+/* UI */
+const grid=document.getElementById("grid");
+const walletEl=document.getElementById("wallet");
+const betEl=document.getElementById("bet");
+const historyBox=document.getElementById("history");
+const popup=document.getElementById("popup");
+const popupBox=document.getElementById("popupBox");
+
+/* NUMBERS */
+let selected=[];
+for(let i=1;i<=40;i++){
+ const d=document.createElement("div");
+ d.className="num";
+ d.innerText=i;
+ d.onclick=()=>{
+  if(selected.includes(i)){
+    selected=selected.filter(x=>x!==i);
+    d.classList.remove("active");
+  }else{
+    if(selected.length>=10) return;
+    selected.push(i);
+    d.classList.add("active");
+  }
+ };
+ grid.appendChild(d);
+}
+
+/* BET */
+let bet=10;
+plus.onclick=()=>{bet+=10;betEl.innerText=bet};
+minus.onclick=()=>{bet=Math.max(10,bet-10);betEl.innerText=bet};
+
+/* HISTORY */
+function saveHist(t){
+ const h=JSON.parse(localStorage.getItem("kenoHist")||"[]");
+ h.unshift(t);
+ localStorage.setItem("kenoHist",JSON.stringify(h.slice(0,30)));
+}
+function loadHist(){
+ const h=JSON.parse(localStorage.getItem("kenoHist")||"[]");
+ h.forEach(x=>{
+  const r=document.createElement("div");
+  r.className="h-row";
+  r.innerHTML=`<span>${x.m}</span><span class="${x.c}">${x.a}</span>`;
+  historyBox.appendChild(r);
+ });
+}
+
+/* POPUP */
+function pop(txt,cls){
+ popupBox.className="popup-box "+cls;
+ popupBox.innerText=txt;
+ popup.style.display="flex";
+ setTimeout(()=>popup.style.display="none",1500);
+}
+
+/* CONTROL LOGIC (3–4 win / 10) */
+let spinCount=0, winCount=0;
+function shouldWin(){
+ spinCount++;
+ if(spinCount>10){spinCount=1;winCount=0}
+ if(winCount>=4) return false;
+ if(spinCount%2===0) return true;
+ return Math.random()<0.35;
+}
+
+/* PAYOUT TABLE */
+function payout(matches, picks){
+ if(picks===1 && matches===1) return 2;
+ if(picks===2 && matches===2) return 3.8;
+ if(picks===3 && matches===3) return 5;
+ if(picks===5 && matches===5) return 15;
+ if(picks===10 && matches>=7) return [0,0,0,0,0,0,15,50][matches];
+ return 0;
+}
+
+/* PLAY */
+async function play(){
+ if(selected.length===0) return alert("Select numbers");
+ if(balance<bet) return alert("Low balance");
+
+ balance-=bet;
+ await updateDoc(userRef(),{balance});
+ walletEl.innerText=balance;
+
+ document.querySelectorAll(".num").forEach(n=>n.classList.remove("hit"));
+
+ let drawn=[];
+ while(drawn.length<10){
+  let r=Math.floor(Math.random()*40)+1;
+  if(!drawn.includes(r)) drawn.push(r);
+ }
+
+ let matches=selected.filter(x=>drawn.includes(x)).length;
+ let multi=shouldWin()?payout(matches,selected.length):0;
+ let win=bet*multi;
+
+ drawn.forEach(n=>{
+  document.querySelectorAll(".num")[n-1].classList.add("hit");
+ });
+
+ if(win>0){
+  balance+=win;
+  winCount++;
+  await updateDoc(userRef(),{balance});
+  pop("🎉 WIN ₹"+win.toFixed(2),"win");
+  saveHist({m:`Hit ${matches}`,a:"+₹"+win,c:"win"});
+ }else{
+  pop("❌ LOSE","lose");
+  saveHist({m:`Hit ${matches}`,a:"-₹"+bet,c:"lose"});
+ }
+ walletEl.innerText=balance;
+}
+
+/* AUTO PLAY */
+spin.onclick=async ()=>{
+ if(document.getElementById("auto").checked){
+  for(let i=0;i<10;i++){
+    await play();
+    await new Promise(r=>setTimeout(r,800));
+  }
+ }else{
+  play();
+ }
+};
+
+/* START */
+loadWallet();
+loadHist();
+</script>
+
+</body>
+</html>
