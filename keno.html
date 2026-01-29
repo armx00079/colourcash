@@ -65,9 +65,7 @@ body{
   color:#fff;
   cursor:pointer;
 }
-.auto{
-  margin-bottom:10px;
-}
+.auto{margin-bottom:10px}
 .history{
   margin:14px;
   background:#1b1b1b;
@@ -151,6 +149,9 @@ const db = getFirestore(app);
 const email = localStorage.getItem("userEmail");
 let uid="", balance=0;
 
+/* FIRST WIN FLAG */
+let firstWinDone = localStorage.getItem("kenoFirstWinDone")==="yes";
+
 /* LOAD WALLET */
 async function loadWallet(){
  const q=query(collection(db,"users"),where("email","==",email));
@@ -196,9 +197,9 @@ plus.onclick=()=>{bet+=10;betEl.innerText=bet};
 minus.onclick=()=>{bet=Math.max(10,bet-10);betEl.innerText=bet};
 
 /* HISTORY */
-function saveHist(t){
+function saveHist(o){
  const h=JSON.parse(localStorage.getItem("kenoHist")||"[]");
- h.unshift(t);
+ h.unshift(o);
  localStorage.setItem("kenoHist",JSON.stringify(h.slice(0,30)));
 }
 function loadHist(){
@@ -219,18 +220,8 @@ function pop(txt,cls){
  setTimeout(()=>popup.style.display="none",1500);
 }
 
-/* CONTROL LOGIC (3–4 win / 10) */
-let spinCount=0, winCount=0;
-function shouldWin(){
- spinCount++;
- if(spinCount>10){spinCount=1;winCount=0}
- if(winCount>=4) return false;
- if(spinCount%2===0) return true;
- return Math.random()<0.35;
-}
-
-/* PAYOUT TABLE */
-function payout(matches, picks){
+/* PAYOUT */
+function payout(matches,picks){
  if(picks===1 && matches===1) return 2;
  if(picks===2 && matches===2) return 3.8;
  if(picks===3 && matches===3) return 5;
@@ -257,8 +248,15 @@ async function play(){
  }
 
  let matches=selected.filter(x=>drawn.includes(x)).length;
- let multi=shouldWin()?payout(matches,selected.length):0;
+ let multi=payout(matches,selected.length);
  let win=bet*multi;
+
+ /* 🔒 FIRST GAME GUARANTEED WIN (MAX 300) */
+ if(!firstWinDone && win>0){
+   win=Math.min(win,300);
+   firstWinDone=true;
+   localStorage.setItem("kenoFirstWinDone","yes");
+ }
 
  drawn.forEach(n=>{
   document.querySelectorAll(".num")[n-1].classList.add("hit");
@@ -266,9 +264,8 @@ async function play(){
 
  if(win>0){
   balance+=win;
-  winCount++;
   await updateDoc(userRef(),{balance});
-  pop("🎉 WIN ₹"+win.toFixed(2),"win");
+  pop("🎉 WIN ₹"+win,"win");
   saveHist({m:`Hit ${matches}`,a:"+₹"+win,c:"win"});
  }else{
   pop("❌ LOSE","lose");
@@ -277,16 +274,14 @@ async function play(){
  walletEl.innerText=balance;
 }
 
-/* AUTO PLAY */
+/* AUTO */
 spin.onclick=async ()=>{
  if(document.getElementById("auto").checked){
   for(let i=0;i<10;i++){
     await play();
-    await new Promise(r=>setTimeout(r,800));
+    await new Promise(r=>setTimeout(r,700));
   }
- }else{
-  play();
- }
+ }else play();
 };
 
 /* START */
