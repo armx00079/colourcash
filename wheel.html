@@ -140,38 +140,45 @@ h1{color:#ffd56a;margin:14px 0}
  <div class="box" id="popupBox"></div>
 </div>
 
+<!-- 🔥 FIREBASE (KENO STYLE WALLET) -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { 
+  getFirestore, collection, query, where, getDocs, doc, updateDoc 
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const app = initializeApp({
- apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
- authDomain:"colourcash-ea60e.firebaseapp.com",
- projectId:"colourcash-ea60e",
- storageBucket:"colourcash-ea60e.firebasestorage.app",
- messagingSenderId:"403688058646",
- appId:"1:403688058646:web:f1753360471528f275ea37"
+  apiKey: "AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
+  authDomain: "colourcash-ea60e.firebaseapp.com",
+  projectId: "colourcash-ea60e",
+  storageBucket: "colourcash-ea60e.firebasestorage.app",
+  messagingSenderId: "403688058646",
+  appId: "1:403688058646:web:f1753360471528f275ea37"
 });
 const db = getFirestore(app);
 
-const uid = localStorage.getItem("uid");
-const bal = document.getElementById("bal");
-const wheel = document.getElementById("wheel");
+const email = localStorage.getItem("userEmail");
+let uid="", balance=0;
 
-let balance=0;
-let bet=1;
-let selected=null;
-let rotation=0;
-
-let games = Number(localStorage.getItem("W_GAMES")||0);
-let wins  = Number(localStorage.getItem("W_WINS")||0);
+const bal=document.getElementById("bal");
+const wheel=document.getElementById("wheel");
 
 async function loadWallet(){
- const snap = await getDoc(doc(db,"users",uid));
- balance = Number(snap.data().balance||0);
- bal.innerText = balance;
+ const q=query(collection(db,"users"),where("email","==",email));
+ const snap=await getDocs(q);
+ snap.forEach(d=>{
+   uid=d.id;
+   balance=Number(d.data().balance||0);
+ });
+ bal.innerText=balance;
 }
-loadWallet();
+function userRef(){ return doc(db,"users",uid); }
+await loadWallet();
+
+/* ===== GAME LOGIC (UNCHANGED) ===== */
+let bet=1, selected=null, rotation=0;
+let games=Number(localStorage.getItem("W_GAMES")||0);
+let wins =Number(localStorage.getItem("W_WINS")||0);
 
 document.querySelectorAll(".mult").forEach(b=>{
  b.onclick=()=>{
@@ -190,54 +197,40 @@ spin.onclick=async ()=>{
 
  balance-=bet;
  bal.innerText=balance;
- await updateDoc(doc(db,"users",uid),{balance});
+ await updateDoc(userRef(),{balance});
 
- games++;
- localStorage.setItem("W_GAMES",games);
+ games++; localStorage.setItem("W_GAMES",games);
 
- let guaranteed = (games===1 || games===3);
- let winChance = bet<=50 ? 0.45 : bet<=200 ? 0.35 : 0.25;
+ let guaranteed=(games===1||games===3);
+ let winChance=bet<=50?0.45:bet<=200?0.35:0.25;
+ let win=guaranteed||(Math.random()<winChance&&wins<6);
 
- let win = guaranteed || (Math.random()<winChance && wins<6);
-
- let payout=0;
- let angle=0;
+ let payout=0, angle=0;
 
  if(win){
-  wins++;
-  localStorage.setItem("W_WINS",wins);
+  wins++; localStorage.setItem("W_WINS",wins);
+  if(selected==="gold"){payout=Math.min(bet*14,200);angle=350;}
+  else{payout=Math.min(bet*2,200);angle=selected==="pink"?60:120;}
+ }else angle=200;
 
-  if(selected==="gold"){
-    payout=Math.min(bet*14,200);
-    angle=350;
-  }else{
-    payout=Math.min(bet*2,200);
-    angle= selected==="pink" ? 60 : 120;
-  }
- }else{
-  angle=200; // force lose zone
- }
-
- rotation += 360*6 + angle;
+ rotation+=360*6+angle;
  wheel.style.transform="rotate("+rotation+"deg)";
 
  setTimeout(async ()=>{
   if(win){
     balance+=payout;
     bal.innerText=balance;
-    await updateDoc(doc(db,"users",uid),{balance});
+    await updateDoc(userRef(),{balance});
     showPopup("YOU WIN ₹"+payout,true);
-  }else{
-    showPopup("YOU LOSE",false);
-  }
+  }else showPopup("YOU LOSE",false);
  },4200);
 };
 
-function showPopup(txt,isWin){
+function showPopup(t,w){
  const p=document.getElementById("popup");
  const b=document.getElementById("popupBox");
- b.className="box "+(isWin?"win":"loss");
- b.innerText=txt;
+ b.className="box "+(w?"win":"loss");
+ b.innerText=t;
  p.style.display="flex";
  setTimeout(()=>p.style.display="none",2000);
 }
