@@ -9,7 +9,9 @@
 body{
   margin:0;
   font-family:Arial, sans-serif;
-  background:url("images/bg/bg-main.jpg") center/cover no-repeat;
+  background:
+    url("images/bg/bg-main.jpg") center/cover no-repeat,
+    radial-gradient(circle at top,#3b0a0a,#140404);
   color:#fff;
   text-align:center;
 }
@@ -39,30 +41,16 @@ body{
   align-items:center;
   justify-content:center;
 }
-.cell img{
-  max-width:70px;
-}
-.bet-box{
-  margin-top:10px;
-}
+.cell img{max-width:70px}
+
+.bet-box{margin-top:10px}
 .bet-box button{
   width:40px;height:40px;border-radius:50%;
-  border:none;font-size:20px;
+  border:none;font-size:20px
 }
-.spin-btn{
-  margin-top:14px;
-}
-.spin-btn img{
-  width:90px;
-}
-.spin-btn button{
-  padding:14px 40px;
-  font-size:22px;
-  border:none;
-  border-radius:40px;
-  background:#ff9800;
-  font-weight:bold;
-}
+.spin-btn{margin-top:14px}
+.spin-btn img{width:90px}
+
 .history{
   margin:16px;
   background:rgba(0,0,0,.4);
@@ -88,6 +76,7 @@ body{
   <div class="wallet">₹ <span id="wallet">0</span></div>
 </div>
 
+<!-- ✅ GRID ALWAYS VISIBLE -->
 <div class="grid" id="grid"></div>
 
 <div>3 Wild = Multiplier Boost</div>
@@ -99,8 +88,7 @@ body{
 </div>
 
 <div class="spin-btn">
-  <img src="images/ui/spin.png" onerror="this.style.display='none';document.getElementById('spinText').style.display='inline-block'">
-  <button id="spinText" style="display:none" onclick="spin()">SPIN</button>
+  <img src="images/ui/spin.png" onclick="spin()">
 </div>
 
 <div class="history">
@@ -139,11 +127,18 @@ let bet=10;
 let spinCount=0;
 let winInCycle=0;
 
-/* UI */
 const grid=document.getElementById("grid");
 const walletEl=document.getElementById("wallet");
 const betEl=document.getElementById("bet");
 const historyBox=document.getElementById("history");
+
+/* INIT EMPTY GRID */
+function buildEmptyGrid(){
+ grid.innerHTML="";
+ for(let i=0;i<9;i++){
+  grid.innerHTML+=`<div class="cell"></div>`;
+ }
+}
 
 /* LOAD WALLET */
 async function loadWallet(){
@@ -163,15 +158,14 @@ function changeBet(v){
  betEl.innerText=bet;
 }
 
-/* RISK + WIN LOGIC */
+/* WIN LOGIC */
 function shouldWin(){
  spinCount++;
  if(spinCount>10){spinCount=1;winInCycle=0;}
-
- let maxWins=3+Math.floor(Math.random()*2); // 3–4
+ let maxWins=3+Math.floor(Math.random()*2);
  if(winInCycle>=maxWins) return false;
 
- let risk=bet/balance;
+ let risk=bet/Math.max(balance,1);
  let chance=0.4;
  if(risk>0.3) chance=0.22;
  if(risk>0.5) chance=0.12;
@@ -183,7 +177,7 @@ function shouldWin(){
 
 /* SPIN */
 async function spin(){
- if(balance<bet)return alert("Low balance");
+ if(balance<bet) return alert("Low balance");
 
  balance-=bet;
  await updateDoc(userRef(),{balance});
@@ -192,31 +186,28 @@ async function spin(){
  grid.innerHTML="";
  let result=[];
  for(let i=0;i<9;i++){
-  let s;
-  if(Math.random()<0.06) s=symbols[4]; // scatter rare
-  else s=symbols[Math.floor(Math.random()*4)];
+  let s=Math.random()<0.06?symbols[4]:symbols[Math.floor(Math.random()*4)];
   result.push(s);
   grid.innerHTML+=`<div class="cell"><img src="${s.img}"></div>`;
  }
 
- let win=false, winAmt=0;
- const wilds=result.filter(x=>x.name==="wild").length;
- const scatters=result.filter(x=>x.name==="scatter").length;
+ let wilds=result.filter(x=>x.name==="wild").length;
+ let scatters=result.filter(x=>x.name==="scatter").length;
 
- if(scatters>=3){ win=true; winAmt=bet*5; }
- else if(wilds>=3 && shouldWin()){ win=true; winAmt=bet*(1+wilds); }
+ let win=false, winAmt=0;
+ if(scatters>=3){win=true;winAmt=bet*5;}
+ else if(wilds>=3 && shouldWin()){win=true;winAmt=bet*(1+wilds);}
 
  if(win){
   balance+=winAmt;
   await updateDoc(userRef(),{balance});
  }
-
  walletEl.innerText=balance;
  addHistory(win, win?winAmt:bet);
 }
 
 /* HISTORY */
-async function addHistory(win,amt){
+function addHistory(win,amt){
  const row=document.createElement("div");
  row.className="h-row";
  row.innerHTML=`<span>${win?"WIN":"LOSE"}</span>
@@ -224,6 +215,8 @@ async function addHistory(win,amt){
  historyBox.prepend(row);
 }
 
+/* START */
+buildEmptyGrid();
 loadWallet();
 </script>
 
