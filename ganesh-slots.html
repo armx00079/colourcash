@@ -9,17 +9,13 @@
 body{
   margin:0;
   font-family:Arial,sans-serif;
-  background:url("images/bg/bg-main.jpg") center/cover no-repeat,
-             radial-gradient(circle,#3b0a0a,#140404);
+  background:radial-gradient(circle,#3b0a0a,#140404);
   color:#fff;
   text-align:center;
 }
-
-/* HEADER */
 .header{
   display:flex;
   justify-content:space-between;
-  align-items:center;
   padding:14px;
   font-weight:bold;
 }
@@ -28,8 +24,6 @@ body{
   padding:6px 14px;
   border-radius:20px;
 }
-
-/* GRID */
 .grid{
   display:grid;
   grid-template-columns:repeat(3,1fr);
@@ -44,30 +38,17 @@ body{
   align-items:center;
   justify-content:center;
 }
-.cell img{
-  max-width:70px;
-  max-height:70px;
-}
-
-/* BET */
+.cell img{max-width:70px}
 .bet-box{
   display:flex;
   justify-content:center;
-  align-items:center;
   gap:14px;
-  margin-top:10px;
 }
 .bet-box button{
-  width:44px;
-  height:44px;
+  width:44px;height:44px;
   border-radius:50%;
-  border:none;
   font-size:22px;
-  font-weight:bold;
-  cursor:pointer;
 }
-
-/* SPIN */
 .spin-btn{
   margin:16px auto;
   width:180px;
@@ -76,12 +57,9 @@ body{
   background:linear-gradient(135deg,#ff9800,#ff5722);
   font-size:22px;
   font-weight:bold;
-  color:#fff;
   border:none;
-  cursor:pointer;
+  color:#fff;
 }
-
-/* HISTORY */
 .history{
   margin:16px;
   background:rgba(0,0,0,.4);
@@ -92,7 +70,6 @@ body{
 .h-row{
   display:flex;
   justify-content:space-between;
-  border-bottom:1px solid rgba(255,255,255,.15);
   padding:6px 0;
 }
 .win{color:#4caf50}
@@ -110,15 +87,15 @@ body{
 
 <div class="grid" id="grid"></div>
 
-<div>3 Scatter = 🎁 10 Free Spins</div>
+<div>3 Scatter = 🎁 5 Free Spins</div>
 
 <div class="bet-box">
-  <button id="minusBtn">−</button>
-  Bet: ₹ <span id="bet">10</span>
-  <button id="plusBtn">+</button>
+  <button id="minus">−</button>
+  Bet ₹ <span id="bet">10</span>
+  <button id="plus">+</button>
 </div>
 
-<button class="spin-btn" id="spinBtn">SPIN</button>
+<button class="spin-btn" id="spin">SPIN</button>
 
 <div class="history">
   <h3>MY BETS</h3>
@@ -130,7 +107,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getFirestore, getDocs, collection, query, where, doc, updateDoc }
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-/* FIREBASE */
 const app = initializeApp({
   apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
   authDomain:"colourcash-ea60e.firebaseapp.com",
@@ -141,45 +117,25 @@ const db=getFirestore(app);
 const email=localStorage.getItem("userEmail");
 let uid="", balance=0;
 
-/* SYMBOLS */
 const symbols=[
- {n:"diya",i:"images/symbols/diya.png"},
- {n:"flower",i:"images/symbols/flower.png"},
- {n:"coin",i:"images/symbols/coin.png"},
- {n:"wild",i:"images/symbols/wild.png"},
- {n:"scatter",i:"images/symbols/scatter.png"}
+ {n:"coin",i:"images/symbols/coin.png",m:3.5},
+ {n:"wild",i:"images/symbols/wild.png",m:6.0},
+ {n:"diya",i:"images/symbols/diya.png",m:1.5},
+ {n:"flower",i:"images/symbols/flower.png",m:2.2},
+ {n:"scatter",i:"images/symbols/scatter.png",m:0}
 ];
 
 let bet=10;
-let spinCount=0, winCount=0;
 let freeSpins=0;
+let spinCount=0, winCount=0;
 
-/* ELEMENTS */
 const grid=document.getElementById("grid");
-const walletEl=document.getElementById("wallet");
-const betEl=document.getElementById("bet");
-const historyBox=document.getElementById("history");
-const spinBtn=document.getElementById("spinBtn");
-const plusBtn=document.getElementById("plusBtn");
-const minusBtn=document.getElementById("minusBtn");
+const walletEl=wallet;
+const betEl=bet;
+const historyBox=history;
 
-/* GRID */
-function buildGrid(res=null){
- grid.innerHTML="";
- for(let i=0;i<9;i++){
-  const s=res?res[i]:null;
-  const d=document.createElement("div");
-  d.className="cell";
-  if(s){
-    const img=document.createElement("img");
-    img.src=s.i;
-    d.appendChild(img);
-  }
-  grid.appendChild(d);
- }
-}
+function userRef(){return doc(db,"users",uid);}
 
-/* LOAD WALLET */
 async function loadWallet(){
  const q=query(collection(db,"users"),where("email","==",email));
  const snap=await getDocs(q);
@@ -189,36 +145,34 @@ async function loadWallet(){
  });
  walletEl.innerText=balance;
 }
-function userRef(){return doc(db,"users",uid);}
 
-/* BET BUTTONS */
-plusBtn.addEventListener("click",()=>{
- bet+=10;
- betEl.innerText=bet;
-});
-minusBtn.addEventListener("click",()=>{
- bet=Math.max(10,bet-10);
- betEl.innerText=bet;
-});
+function buildGrid(res){
+ grid.innerHTML="";
+ res.forEach(s=>{
+  const d=document.createElement("div");
+  d.className="cell";
+  const img=document.createElement("img");
+  img.src=s.i;
+  d.appendChild(img);
+  grid.appendChild(d);
+ });
+}
 
-/* WIN CONTROL */
-function allowWin(){
+function addHistory(t,amt,cls){
+ const r=document.createElement("div");
+ r.className="h-row";
+ r.innerHTML=`<span>${t}</span><span class="${cls}">${amt}</span>`;
+ historyBox.prepend(r);
+}
+
+function canWin(){
  spinCount++;
  if(spinCount>10){spinCount=1;winCount=0;}
  if(winCount>=4) return false;
-
- let risk=bet/Math.max(balance,1);
- let chance=0.35;
- if(risk>0.3) chance=0.22;
- if(risk>0.5) chance=0.12;
-
- const w=Math.random()<chance;
- if(w) winCount++;
- return w;
+ return true;
 }
 
-/* SPIN */
-spinBtn.addEventListener("click", async ()=>{
+spin.onclick=async ()=>{
  if(freeSpins<=0){
   if(balance<bet) return alert("Low balance");
   balance-=bet;
@@ -226,50 +180,47 @@ spinBtn.addEventListener("click", async ()=>{
  }
  walletEl.innerText=balance;
 
- let result=[];
+ let res=[];
  for(let i=0;i<9;i++){
-  let s=Math.random()<0.04?symbols[4]:symbols[Math.floor(Math.random()*4)];
-  result.push(s);
+  res.push(symbols[Math.floor(Math.random()*symbols.length)]);
  }
- buildGrid(result);
+ buildGrid(res);
 
- const scat=result.filter(x=>x.n==="scatter").length;
- const wild=result.filter(x=>x.n==="wild").length;
-
- let win=false,winAmt=0;
-
+ // scatter logic
+ const scat=res.filter(x=>x.n==="scatter").length;
  if(scat>=3 && freeSpins===0){
-  freeSpins=10;
-  addHistory("FREE SPINS",10,"free");
- }
- else if(wild>=3 && allowWin()){
-  win=true;
-  winAmt=bet*(1+wild);
+  freeSpins=5;
+  addHistory("FREE SPINS","+5","free");
  }
 
- if(win){
+ // row check
+ let winAmt=0;
+ const rows=[[0,1,2],[3,4,5],[6,7,8]];
+ rows.forEach(r=>{
+  const a=res[r[0]],b=res[r[1]],c=res[r[2]];
+  if(a.n===b.n && b.n===c.n && a.n!=="scatter" && canWin()){
+    winAmt=Math.max(winAmt, bet*a.m);
+  }
+ });
+
+ if(winAmt>0){
   balance+=winAmt;
+  winCount++;
   await updateDoc(userRef(),{balance});
+  addHistory("WIN","+₹"+winAmt.toFixed(2),"win");
+ }else{
+  addHistory("LOSE","-₹"+bet,"lose");
  }
 
  if(freeSpins>0) freeSpins--;
-
  walletEl.innerText=balance;
- addHistory(win?"WIN":"LOSE", win?winAmt:bet, win?"win":"lose");
-});
+};
 
-/* HISTORY */
-function addHistory(t,amt,cls){
- const r=document.createElement("div");
- r.className="h-row";
- r.innerHTML=`<span>${t}</span><span class="${cls}">
- ${t==="LOSE"?"-":"+"}₹${amt}</span>`;
- historyBox.prepend(r);
-}
+plus.onclick=()=>{bet+=10;betEl.innerText=bet;}
+minus.onclick=()=>{bet=Math.max(10,bet-10);betEl.innerText=bet;}
 
-/* START */
-buildGrid();
 loadWallet();
+buildGrid(Array(9).fill(symbols[0]));
 </script>
 
 </body>
