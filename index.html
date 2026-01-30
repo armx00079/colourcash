@@ -88,6 +88,17 @@ body{margin:0;font-family:Arial;background:#ffeb3b;color:#fff}
 
 <body>
 
+<!-- 🔥 REFERRAL → REGISTER REDIRECT (ONLY ADDITION) -->
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const ref = params.get("ref");
+  const isLoggedIn = localStorage.getItem("userEmail");
+
+  if (ref && !isLoggedIn) {
+    window.location.replace("register.html");
+  }
+</script>
+
 <div class="header">🏦DraxBet🏦</div>
 
 <div class="top-banner">
@@ -136,7 +147,7 @@ body{margin:0;font-family:Arial;background:#ffeb3b;color:#fff}
   </div>
 </div>
 
-<!-- 🔥 FIREBASE WALLET CHECK -->
+<!-- 🔥 FIREBASE WALLET CHECK (UNCHANGED) -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, getDocs, collection, query, where }
