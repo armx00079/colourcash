@@ -6,44 +6,39 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
+*{box-sizing:border-box}
 body{
   margin:0;
-  font-family:Arial, sans-serif;
-  background:#0b1220;
+  font-family:Arial,Helvetica,sans-serif;
+  background:linear-gradient(180deg,#0b1220,#020617);
   color:#fff;
   text-align:center;
 }
+
+/* HEADER */
 .header{
-  padding:14px;
+  padding:16px;
   font-size:22px;
   font-weight:bold;
-}
-.top-bar{
   display:flex;
   justify-content:space-between;
-  padding:10px 14px;
   align-items:center;
 }
-#wallet{
-  background:#000;
-  padding:8px 14px;
-  border-radius:20px;
-  font-weight:bold;
-}
+.header span{font-size:26px}
 
-/* MODES */
+/* MODE */
 .modes{
   display:flex;
+  gap:8px;
   justify-content:center;
-  gap:10px;
-  margin:10px;
+  margin:8px 0 14px;
 }
 .mode{
   padding:8px 14px;
-  border-radius:18px;
-  background:#222;
-  cursor:pointer;
+  border-radius:20px;
+  background:#111827;
   opacity:.6;
+  cursor:pointer;
 }
 .mode.active{
   background:#22c55e;
@@ -52,121 +47,128 @@ body{
   font-weight:bold;
 }
 
-/* GRID */
+/* MULTI */
+.multi{
+  margin:10px 0;
+  font-size:18px;
+  font-weight:bold;
+}
+
+/* TOWER */
+.tower-wrap{
+  display:flex;
+  justify-content:center;
+  margin-top:10px;
+}
 .grid{
-  width:260px;
-  margin:14px auto;
+  width:280px;
   display:grid;
   grid-template-columns:repeat(3,1fr);
-  gap:10px;
+  gap:12px;
 }
 .box{
-  height:60px;
-  border-radius:10px;
-  background:#1e293b;
+  height:64px;
+  border-radius:12px;
+  background:#1f2937;
   cursor:pointer;
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:20px;
+  font-size:26px;
+  transition:.2s;
 }
+.box:hover{transform:scale(1.04)}
 .box.open.safe{background:#22c55e;color:#000}
 .box.open.bomb{background:#dc2626}
 
-/* INFO */
-.info{
-  margin:10px;
-  font-size:16px;
-}
+/* BET */
 .bet-row{
   display:flex;
   justify-content:center;
   gap:10px;
-  margin:10px;
+  margin:16px 0 10px;
 }
 .btn{
-  background:#111;
-  padding:12px 18px;
+  background:#111827;
+  padding:10px 18px;
   border-radius:20px;
   cursor:pointer;
 }
-.bet{
-  background:#111;
-  padding:12px 22px;
-  border-radius:20px;
-}
+
+/* CASHOUT */
 .cashout{
-  margin:10px;
-  padding:14px 60px;
+  position:sticky;
+  bottom:10px;
+  margin:10px auto;
+  width:90%;
+  max-width:360px;
   background:#22c55e;
   color:#000;
+  padding:14px;
   border-radius:28px;
   font-size:18px;
   font-weight:bold;
   cursor:pointer;
 }
 
-/* LIVE FEED */
+/* FAKE FEED */
 .feed{
   margin:14px auto;
   width:90%;
-  max-width:320px;
-  height:110px;
-  overflow:hidden;
+  max-width:360px;
   background:#020617;
   border-radius:14px;
   padding:10px;
-  font-size:13px;
+  font-size:14px;
+  opacity:.85;
 }
-.feed div{padding:4px 0;opacity:.85}
+.feed div{padding:4px 0}
 
 /* POPUP */
 .popup{
-  position:fixed;
-  inset:0;
+  position:fixed;inset:0;
   background:rgba(0,0,0,.6);
   display:none;
   align-items:center;
   justify-content:center;
 }
 .popup-box{
-  background:#fff;
-  color:#000;
+  background:#111827;
   padding:30px 50px;
   border-radius:20px;
   font-size:26px;
   font-weight:bold;
 }
+.win{color:#22c55e}
+.loss{color:#dc2626}
 </style>
 </head>
 
 <body>
 
-<div class="header">🐉 DRAGON TOWER</div>
-
-<div class="top-bar">
-  <div>Mode</div>
-  <div id="wallet">💰 ₹<span id="bal">0</span></div>
+<div class="header">
+  <span>🐉 DRAGON TOWER</span>
+  <div>💰 ₹51763</div>
 </div>
 
 <div class="modes">
-  <div class="mode active" data-risk="easy">Easy</div>
-  <div class="mode" data-risk="medium">Medium</div>
-  <div class="mode" data-risk="hard">Hard</div>
-  <div class="mode" data-risk="expert">Expert</div>
-  <div class="mode" data-risk="master">Master</div>
+  <div class="mode active" data-r="easy">Easy</div>
+  <div class="mode" data-r="medium">Medium</div>
+  <div class="mode" data-r="hard">Hard</div>
+  <div class="mode" data-r="expert">Expert</div>
+  <div class="mode" data-r="master">Master</div>
 </div>
 
-<div class="info">
- Multiplier: <b id="multi">1.20x</b>
-</div>
+<div class="multi">Multiplier: <span id="multi">1.50x</span></div>
 
-<div class="grid" id="grid"></div>
+<div class="tower-wrap">
+  <div class="grid" id="grid"></div>
+</div>
 
 <div class="bet-row">
- <div class="btn" id="minus">-</div>
- <div class="bet" id="bet">Bet ₹10</div>
- <div class="btn" id="plus">+</div>
+  <div class="btn" id="minus">-</div>
+  <div class="btn" id="betText">Bet ₹10</div>
+  <div class="btn" id="plus">+</div>
 </div>
 
 <div class="cashout" id="cashout">CASHOUT</div>
@@ -174,136 +176,110 @@ body{
 <div class="feed" id="feed"></div>
 
 <div class="popup" id="popup">
- <div class="popup-box" id="popupBox"></div>
+  <div class="popup-box" id="popupBox"></div>
 </div>
 
-<!-- 🔥 FIREBASE -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import {
- getFirestore, collection, query, where, getDocs, doc, updateDoc
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-/* FIREBASE CONFIG (FIXED) */
-const app = initializeApp({
- apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
- authDomain:"colourcash-ea60e.firebaseapp.com",
- projectId:"colourcash-ea60e",
- storageBucket:"colourcash-ea60e.firebasestorage.app",
- messagingSenderId:"403688058646",
- appId:"1:403688058646:web:f1753360471528f275ea37"
-});
-const db=getFirestore(app);
-
-/* WALLET (EMAIL BASED) */
-const email=localStorage.getItem("userEmail");
-let uid="",balance=0;
-const bal=document.getElementById("bal");
-
-async function loadWallet(){
- const q=query(collection(db,"users"),where("email","==",email));
- const snap=await getDocs(q);
- snap.forEach(d=>{
-  uid=d.id;
-  balance=Number(d.data().balance||0);
- });
- bal.innerText=balance;
-}
-loadWallet();
-
-/* GAME */
-let bet=10;
-let step=0;
-let opened=true;
-let risk="easy";
-
+<script>
+/* CONFIG */
 const risks={
- easy:{bombs:1,m:[1.2,1.5,1.9,2.4,3]},
- medium:{bombs:1,m:[1.3,1.7,2.3,3.1,4.2]},
- hard:{bombs:2,m:[1.5,2.2,3.1,4.5,6.5]},
- expert:{bombs:2,m:[1.8,2.9,4.6,7.2,11]},
- master:{bombs:3,m:[2.2,3.8,6.8,12,20]}
+ easy:{bombs:1,m:[1.5,2,2.6,3.2,4,5,6,7]},
+ medium:{bombs:1,m:[1.7,2.4,3.2,4.4,6,8,11,15]},
+ hard:{bombs:2,m:[2,3,4.8,7,10,14,20,30]},
+ expert:{bombs:2,m:[2.4,4,6.8,11,18,30,50,80]},
+ master:{bombs:3,m:[3,6,12,24,48,96,200,400]}
 };
 
+let risk="easy";
+let step=0;
+let bet=10;
+let opened=true;
+
+/* ELEMENTS */
 const grid=document.getElementById("grid");
 const multi=document.getElementById("multi");
+const betText=document.getElementById("betText");
 
-function buildRow(){
+/* BUILD TOWER */
+function buildTower(){
  grid.innerHTML="";
- opened=true;
- let safe=3-risks[risk].bombs;
- let arr=[...Array(safe).fill("safe"),...Array(risks[risk].bombs).fill("bomb")]
- arr.sort(()=>Math.random()-.5);
- arr.forEach(t=>{
-  const d=document.createElement("div");
-  d.className="box";
-  d.onclick=()=>openBox(d,t);
-  grid.appendChild(d);
- });
+ for(let r=0;r<8;r++){
+  let safe=3-risks[risk].bombs;
+  let arr=[...Array(safe).fill("safe"),...Array(risks[risk].bombs).fill("bomb")];
+  arr.sort(()=>Math.random()-.5);
+  arr.forEach(t=>{
+    const d=document.createElement("div");
+    d.className="box";
+    d.onclick=()=>openBox(d,t,r);
+    grid.appendChild(d);
+  });
+ }
  multi.innerText=risks[risk].m[step].toFixed(2)+"x";
 }
-buildRow();
+buildTower();
 
-function openBox(el,type){
- if(!opened)return;
+/* OPEN */
+function openBox(el,type,row){
+ if(row!==step||!opened)return;
  opened=false;
  el.classList.add("open",type);
  el.innerText=type==="safe"?"💎":"🐉";
+
  if(type==="safe"){
-  step++;
-  if(step<5)setTimeout(buildRow,600);
+   step++;
+   if(step>=8){winGame();return;}
+   multi.innerText=risks[risk].m[step].toFixed(2)+"x";
+   opened=true;
  }else{
-  showPopup("YOU LOSE ❌");
-  reset();
+   showPopup("YOU LOSE",false);
+   reset();
  }
 }
 
-cashout.onclick=async ()=>{
+/* CASHOUT */
+cashout.onclick=()=>{
  if(step===0)return;
- const win=Math.floor(bet*risks[risk].m[step-1]);
- balance+=win;
- bal.innerText=balance;
- await updateDoc(doc(db,"users",uid),{balance});
- showPopup("WIN ₹"+win);
+ showPopup("YOU WIN x"+risks[risk].m[step].toFixed(2),true);
  reset();
 };
 
+/* RESET */
 function reset(){
  step=0;
- setTimeout(buildRow,800);
+ opened=true;
+ setTimeout(buildTower,600);
 }
 
 /* BET */
-minus.onclick=()=>{if(bet>10){bet-=10;bet.innerText="Bet ₹"+bet}}
-plus.onclick=()=>{bet+=10;bet.innerText="Bet ₹"+bet}
+minus.onclick=()=>{if(bet>10){bet-=10;betText.innerText="Bet ₹"+bet}}
+plus.onclick=()=>{bet+=10;betText.innerText="Bet ₹"+bet}
 
-/* MODES */
+/* MODE */
 document.querySelectorAll(".mode").forEach(m=>{
  m.onclick=()=>{
   document.querySelectorAll(".mode").forEach(x=>x.classList.remove("active"));
   m.classList.add("active");
-  risk=m.dataset.risk;
+  risk=m.dataset.r;
   reset();
  };
 });
 
 /* POPUP */
-function showPopup(t){
+function showPopup(t,w){
  popup.style.display="flex";
+ popupBox.className="popup-box "+(w?"win":"loss");
  popupBox.innerText=t;
  setTimeout(()=>popup.style.display="none",2000);
 }
 
-/* FAKE LIVE FEED */
-const feed=document.getElementById("feed");
+/* FAKE FEED */
 setInterval(()=>{
- const amt=[850,1200,3500,7800,12500][Math.floor(Math.random()*5)];
+ const amt=[850,1200,3850,8000,12500][Math.floor(Math.random()*5)];
  const d=document.createElement("div");
  d.innerText="User won ₹"+amt;
  feed.prepend(d);
- if(feed.children.length>6)feed.removeChild(feed.lastChild);
-},1000);
+ if(feed.children.length>5)feed.lastChild.remove();
+},1500);
 </script>
 
 </body>
-  </html>
+</html>
