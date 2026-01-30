@@ -13,129 +13,53 @@ body{
   text-align:center;
   color:#000;
 }
+.header{padding:14px;font-size:26px;font-weight:bold}
+.history{font-size:14px;opacity:.8;margin-top:6px}
 
-/* HEADER */
-.header{
-  padding:14px;
-  font-size:26px;
-  font-weight:bold;
-}
-.history{
-  font-size:14px;
-  opacity:.8;
-  margin-top:6px;
-}
-
-/* CARD AREA */
-.card-area{
-  display:flex;
-  justify-content:center;
-  gap:40px;
-  margin-top:30px;
-}
+.card-area{display:flex;justify-content:center;gap:40px;margin-top:30px}
 .card{
-  width:110px;
-  height:150px;
-  border-radius:14px;
-  background:#fff;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:48px;
-  font-weight:bold;
-  box-shadow:0 6px 14px rgba(0,0,0,.25);
+  width:110px;height:150px;border-radius:14px;background:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-size:48px;font-weight:bold;
+  box-shadow:0 6px 14px rgba(0,0,0,.25)
 }
-.deck{
-  width:110px;
-  height:150px;
-  border-radius:14px;
-  background:#1e3a8a;
-}
+.deck{width:110px;height:150px;border-radius:14px;background:#1e3a8a}
 
-/* REFRESH */
-.refresh{
-  margin-top:8px;
-  font-size:18px;
-  cursor:pointer;
-}
+.refresh{margin-top:8px;font-size:18px;cursor:pointer}
 
-/* MULTI */
-.multi{
-  margin:18px 0;
-  font-size:20px;
-  font-weight:bold;
-}
+.multi{margin:18px 0;font-size:20px;font-weight:bold}
 
-/* CONTROLS */
-.controls{
-  display:flex;
-  justify-content:center;
-  gap:16px;
-  margin-bottom:14px;
-}
+.controls{display:flex;justify-content:center;gap:16px;margin-bottom:14px}
 .ctrl{
-  padding:14px 26px;
-  border-radius:26px;
-  background:#000;
-  color:#fff;
-  font-weight:bold;
-  cursor:pointer;
+  padding:14px 26px;border-radius:26px;
+  background:#000;color:#fff;font-weight:bold;cursor:pointer
 }
 
-/* BET */
-.bet-row{
-  display:flex;
-  justify-content:center;
-  gap:10px;
-}
+.bet-row{display:flex;justify-content:center;gap:10px}
 .bet-btn{
-  padding:12px 18px;
-  background:#000;
-  color:#fff;
-  border-radius:20px;
-  font-weight:bold;
-  cursor:pointer;
+  padding:12px 18px;background:#000;color:#fff;
+  border-radius:20px;font-weight:bold;cursor:pointer
 }
 
-/* CASHOUT */
 .cashout{
-  margin-top:14px;
-  padding:14px 60px;
-  background:#16a34a;
-  color:#fff;
-  border-radius:30px;
-  font-size:18px;
-  font-weight:bold;
-  cursor:pointer;
+  margin-top:14px;padding:14px 60px;
+  background:#16a34a;color:#fff;
+  border-radius:30px;font-size:18px;font-weight:bold;cursor:pointer
 }
 
-/* WALLET */
 #wallet{
-  position:fixed;
-  bottom:12px;
-  right:12px;
-  background:#000;
-  color:#fff;
-  padding:10px 18px;
-  border-radius:22px;
-  font-weight:bold;
+  position:fixed;bottom:12px;right:12px;
+  background:#000;color:#fff;
+  padding:10px 18px;border-radius:22px;font-weight:bold
 }
 
-/* POPUP */
 .popup{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.6);
-  display:none;
-  align-items:center;
-  justify-content:center;
+  position:fixed;inset:0;background:rgba(0,0,0,.6);
+  display:none;align-items:center;justify-content:center
 }
 .popup-box{
-  background:#fff;
-  padding:30px 50px;
-  border-radius:20px;
-  font-size:26px;
-  font-weight:bold;
+  background:#fff;padding:30px 50px;
+  border-radius:20px;font-size:26px;font-weight:bold
 }
 .win{color:#16a34a}
 .loss{color:#dc2626}
@@ -181,9 +105,11 @@ body{
 <!-- 🔥 FIREBASE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  getFirestore, collection, query, where,
+  getDocs, doc, updateDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-/* 🔐 FIREBASE CONFIG (AS YOU SAID – SAME ALWAYS) */
 const app = initializeApp({
  apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
  authDomain:"colourcash-ea60e.firebaseapp.com",
@@ -194,14 +120,18 @@ const app = initializeApp({
 });
 const db = getFirestore(app);
 
-/* WALLET */
-const uid = localStorage.getItem("uid");
+/* ✅ WALLET FIX (EMAIL BASED – SAME AS KENO) */
+const email = localStorage.getItem("userEmail");
 const bal = document.getElementById("bal");
-let balance=0;
+let uid="", balance=0;
 
 async function loadWallet(){
- const snap = await getDoc(doc(db,"users",uid));
- balance = Number(snap.data().balance||0);
+ const q=query(collection(db,"users"),where("email","==",email));
+ const snap=await getDocs(q);
+ snap.forEach(d=>{
+   uid=d.id;
+   balance=Number(d.data().balance||0);
+ });
  bal.innerText=balance;
 }
 loadWallet();
@@ -214,7 +144,6 @@ let step=0;
 let multipliers=[1.10,1.25,1.45,1.70,2.00,2.40,2.90];
 let history=[];
 
-/* UI */
 const currentCard=document.getElementById("currentCard");
 const multi=document.getElementById("multi");
 const historyBox=document.getElementById("history");
@@ -226,7 +155,7 @@ function render(){
 }
 render();
 
-/* REFRESH FIRST CARD */
+/* REFRESH */
 refresh.onclick=()=>{
  if(step>0) return;
  currentIndex=Math.floor(Math.random()*cards.length);
@@ -237,7 +166,7 @@ refresh.onclick=()=>{
 minus.onclick=()=>{ if(bet>10){bet-=10;betText.innerText="Bet ₹"+bet;} }
 plus.onclick=()=>{ bet+=10;betText.innerText="Bet ₹"+bet; }
 
-/* GUESS */
+/* PLAY */
 async function play(isHigh){
  if(balance<bet) return;
 
@@ -246,7 +175,7 @@ async function play(isHigh){
  await updateDoc(doc(db,"users",uid),{balance});
 
  const next=Math.floor(Math.random()*cards.length);
- const win = isHigh ? next>currentIndex : next<currentIndex;
+ const win=isHigh? next>currentIndex : next<currentIndex;
 
  if(win){
   step++;
@@ -259,7 +188,6 @@ async function play(isHigh){
  }
 }
 
-/* BUTTONS */
 high.onclick=()=>play(true);
 low.onclick=()=>play(false);
 
@@ -279,7 +207,7 @@ function reset(){
  step=0;
  history=[];
  currentIndex=Math.floor(Math.random()*cards.length);
- setTimeout(render,500);
+ setTimeout(render,400);
 }
 
 /* POPUP */
