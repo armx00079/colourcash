@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Redirecting...</title>
+  <script>
+    // redirect any 404 URL to index.html with full path preserved
+    var redirectTo = "/index.html" + window.location.search + window.location.hash;
+    window.location.replace(redirectTo);
+  </script>
+</head>
+<body>
+</body>
+</html>
