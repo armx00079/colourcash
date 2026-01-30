@@ -6,138 +6,73 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-*{box-sizing:border-box}
 body{
   margin:0;
-  font-family:Arial,Helvetica,sans-serif;
-  background:linear-gradient(180deg,#0b1220,#020617);
+  font-family:Arial;
+  background:linear-gradient(180deg,#020617,#0b1220);
   color:#fff;
   text-align:center;
 }
-
-/* HEADER */
-.header{
-  padding:16px;
-  font-size:22px;
-  font-weight:bold;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
+.header{padding:14px;font-size:20px;font-weight:bold}
+.wallet{
+  position:fixed;top:12px;right:12px;
+  background:#000;padding:8px 14px;
+  border-radius:20px;font-weight:bold
 }
-.header span{font-size:26px}
-
-/* MODE */
-.modes{
-  display:flex;
-  gap:8px;
-  justify-content:center;
-  margin:8px 0 14px;
-}
-.mode{
-  padding:8px 14px;
-  border-radius:20px;
-  background:#111827;
-  opacity:.6;
-  cursor:pointer;
-}
-.mode.active{
-  background:#22c55e;
-  color:#000;
-  opacity:1;
-  font-weight:bold;
-}
-
-/* MULTI */
-.multi{
-  margin:10px 0;
-  font-size:18px;
-  font-weight:bold;
-}
-
-/* TOWER */
-.tower-wrap{
-  display:flex;
-  justify-content:center;
-  margin-top:10px;
-}
-.grid{
-  width:280px;
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:12px;
+.multi{margin:6px 0 10px;font-size:16px;font-weight:bold}
+.tower{
+  width:240px;margin:0 auto;
+  display:grid;grid-template-columns:repeat(3,1fr);gap:10px
 }
 .box{
-  height:64px;
-  border-radius:12px;
+  height:52px;border-radius:10px;
   background:#1f2937;
-  cursor:pointer;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:26px;
-  transition:.2s;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;cursor:pointer
 }
-.box:hover{transform:scale(1.04)}
-.box.open.safe{background:#22c55e;color:#000}
-.box.open.bomb{background:#dc2626}
-
-/* BET */
-.bet-row{
-  display:flex;
-  justify-content:center;
-  gap:10px;
-  margin:16px 0 10px;
-}
-.btn{
-  background:#111827;
-  padding:10px 18px;
-  border-radius:20px;
-  cursor:pointer;
-}
-
-/* CASHOUT */
+.safe{background:#22c55e;color:#000}
+.bomb{background:#dc2626}
 .cashout{
-  position:sticky;
-  bottom:10px;
-  margin:10px auto;
-  width:90%;
-  max-width:360px;
-  background:#22c55e;
-  color:#000;
-  padding:14px;
-  border-radius:28px;
-  font-size:18px;
-  font-weight:bold;
-  cursor:pointer;
+  margin:14px auto 8px;
+  width:90%;max-width:320px;
+  background:#22c55e;color:#000;
+  padding:12px;border-radius:26px;
+  font-weight:bold;cursor:pointer
 }
-
-/* FAKE FEED */
-.feed{
-  margin:14px auto;
-  width:90%;
-  max-width:360px;
-  background:#020617;
-  border-radius:14px;
-  padding:10px;
-  font-size:14px;
-  opacity:.85;
+.bet-row{display:flex;justify-content:center;gap:10px;margin-bottom:6px}
+.bet-btn{
+  background:#000;color:#fff;
+  padding:8px 14px;border-radius:18px;
+  cursor:pointer;font-weight:bold
 }
-.feed div{padding:4px 0}
-
-/* POPUP */
+.mode-btn{
+  margin:6px auto 12px;
+  width:140px;background:#111827;
+  padding:8px;border-radius:18px;cursor:pointer
+}
+.mode-popup{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.6);
+  display:none;align-items:center;justify-content:center
+}
+.mode-box{
+  background:#020617;padding:20px;
+  border-radius:16px;width:220px
+}
+.mode-item{
+  padding:10px;border-radius:12px;
+  margin:6px 0;background:#1f2937;
+  cursor:pointer
+}
+.mode-item.active{background:#22c55e;color:#000}
 .popup{
   position:fixed;inset:0;
   background:rgba(0,0,0,.6);
-  display:none;
-  align-items:center;
-  justify-content:center;
+  display:none;align-items:center;justify-content:center
 }
-.popup-box{
-  background:#111827;
-  padding:30px 50px;
-  border-radius:20px;
-  font-size:26px;
-  font-weight:bold;
+.popup div{
+  background:#111827;padding:24px 40px;
+  border-radius:16px;font-size:22px;font-weight:bold
 }
 .win{color:#22c55e}
 .loss{color:#dc2626}
@@ -146,107 +81,133 @@ body{
 
 <body>
 
-<div class="header">
-  <span>🐉 DRAGON TOWER</span>
-  <div>💰 ₹51763</div>
-</div>
+<div class="header">🐉 DRAGON TOWER</div>
+<div class="wallet">💰 ₹<span id="bal">0</span></div>
 
-<div class="modes">
-  <div class="mode active" data-r="easy">Easy</div>
-  <div class="mode" data-r="medium">Medium</div>
-  <div class="mode" data-r="hard">Hard</div>
-  <div class="mode" data-r="expert">Expert</div>
-  <div class="mode" data-r="master">Master</div>
-</div>
+<div class="multi">Multiplier: <span id="multi">1.12x</span></div>
 
-<div class="multi">Multiplier: <span id="multi">1.50x</span></div>
-
-<div class="tower-wrap">
-  <div class="grid" id="grid"></div>
-</div>
+<div class="tower" id="tower"></div>
 
 <div class="bet-row">
-  <div class="btn" id="minus">-</div>
-  <div class="btn" id="betText">Bet ₹10</div>
-  <div class="btn" id="plus">+</div>
+ <div class="bet-btn" id="minus">-</div>
+ <div class="bet-btn" id="betText">Bet ₹10</div>
+ <div class="bet-btn" id="plus">+</div>
 </div>
 
 <div class="cashout" id="cashout">CASHOUT</div>
+<div class="mode-btn" id="modeBtn">Easy ▾</div>
 
-<div class="feed" id="feed"></div>
-
-<div class="popup" id="popup">
-  <div class="popup-box" id="popupBox"></div>
+<div class="mode-popup" id="modePopup">
+ <div class="mode-box">
+  <div class="mode-item active" data-m="easy">Easy</div>
+  <div class="mode-item" data-m="medium">Medium</div>
+  <div class="mode-item" data-m="hard">Hard</div>
+  <div class="mode-item" data-m="expert">Expert</div>
+  <div class="mode-item" data-m="master">Master</div>
+ </div>
 </div>
 
-<script>
-/* CONFIG */
-const risks={
- easy:{bombs:1,m:[1.5,2,2.6,3.2,4,5,6,7]},
- medium:{bombs:1,m:[1.7,2.4,3.2,4.4,6,8,11,15]},
- hard:{bombs:2,m:[2,3,4.8,7,10,14,20,30]},
- expert:{bombs:2,m:[2.4,4,6.8,11,18,30,50,80]},
- master:{bombs:3,m:[3,6,12,24,48,96,200,400]}
+<div class="popup" id="popup"><div id="popupText"></div></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getFirestore, collection, query, where,
+  getDocs, doc, updateDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+/* 🔥 FIREBASE (SAME CONFIG ALWAYS) */
+const app=initializeApp({
+ apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
+ authDomain:"colourcash-ea60e.firebaseapp.com",
+ projectId:"colourcash-ea60e",
+ storageBucket:"colourcash-ea60e.firebasestorage.app",
+ messagingSenderId:"403688058646",
+ appId:"1:403688058646:web:f1753360471528f275ea37"
+});
+const db=getFirestore(app);
+
+/* WALLET */
+const email=localStorage.getItem("userEmail");
+let uid="", balance=0;
+const bal=document.getElementById("bal");
+
+async function loadWallet(){
+ const q=query(collection(db,"users"),where("email","==",email));
+ const s=await getDocs(q);
+ s.forEach(d=>{uid=d.id;balance=+d.data().balance||0});
+ bal.innerText=balance;
+}
+loadWallet();
+
+/* GAME CONFIG */
+const cfg={
+ easy:{bombs:1,m:[1.12,1.28,1.50,1.85,2.30]},
+ medium:{bombs:1,m:[1.25,1.55,2.00,2.80,4.00]},
+ hard:{bombs:2,m:[1.60,2.30,3.50,6.00,10]},
+ expert:{bombs:2,m:[2.00,3.50,6.50,12,25]},
+ master:{bombs:3,m:[3.00,6.00,15,40,120]}
 };
 
-let risk="easy";
-let step=0;
-let bet=10;
-let opened=true;
-
-/* ELEMENTS */
-const grid=document.getElementById("grid");
+let mode="easy", step=0, bet=10, open=true;
+const tower=document.getElementById("tower");
 const multi=document.getElementById("multi");
-const betText=document.getElementById("betText");
 
-/* BUILD TOWER */
-function buildTower(){
- grid.innerHTML="";
- for(let r=0;r<8;r++){
-  let safe=3-risks[risk].bombs;
-  let arr=[...Array(safe).fill("safe"),...Array(risks[risk].bombs).fill("bomb")];
-  arr.sort(()=>Math.random()-.5);
+function build(){
+ tower.innerHTML="";
+ for(let r=0;r<5;r++){
+  let arr=[
+   ...Array(3-cfg[mode].bombs).fill("safe"),
+   ...Array(cfg[mode].bombs).fill("bomb")
+  ].sort(()=>Math.random()-.5);
+
   arr.forEach(t=>{
-    const d=document.createElement("div");
-    d.className="box";
-    d.onclick=()=>openBox(d,t,r);
-    grid.appendChild(d);
+   const d=document.createElement("div");
+   d.className="box";
+   d.onclick=()=>openBox(d,t,r);
+   tower.appendChild(d);
   });
  }
- multi.innerText=risks[risk].m[step].toFixed(2)+"x";
+ multi.innerText=cfg[mode].m[step].toFixed(2)+"x";
 }
-buildTower();
+build();
 
-/* OPEN */
-function openBox(el,type,row){
- if(row!==step||!opened)return;
- opened=false;
- el.classList.add("open",type);
+async function openBox(el,type,row){
+ if(row!==step||!open||balance<bet)return;
+ open=false;
+
+ balance-=bet;
+ bal.innerText=balance;
+ await updateDoc(doc(db,"users",uid),{balance});
+
+ el.classList.add(type);
  el.innerText=type==="safe"?"💎":"🐉";
 
  if(type==="safe"){
-   step++;
-   if(step>=8){winGame();return;}
-   multi.innerText=risks[risk].m[step].toFixed(2)+"x";
-   opened=true;
+  step++;
+  if(step>=5){cashout.click();return;}
+  multi.innerText=cfg[mode].m[step].toFixed(2)+"x";
+  open=true;
  }else{
-   showPopup("YOU LOSE",false);
-   reset();
+  show("YOU LOSE",false);
+  reset();
  }
 }
 
 /* CASHOUT */
-cashout.onclick=()=>{
+cashout.onclick=async ()=>{
  if(step===0)return;
- showPopup("YOU WIN x"+risks[risk].m[step].toFixed(2),true);
+ const win=Math.floor(bet*cfg[mode].m[step-1]);
+ balance+=win;
+ bal.innerText=balance;
+ await updateDoc(doc(db,"users",uid),{balance});
+ show("YOU WIN ₹"+win,true);
  reset();
 };
 
-/* RESET */
 function reset(){
- step=0;
- opened=true;
- setTimeout(buildTower,600);
+ step=0;open=true;
+ setTimeout(build,400);
 }
 
 /* BET */
@@ -254,31 +215,27 @@ minus.onclick=()=>{if(bet>10){bet-=10;betText.innerText="Bet ₹"+bet}}
 plus.onclick=()=>{bet+=10;betText.innerText="Bet ₹"+bet}
 
 /* MODE */
-document.querySelectorAll(".mode").forEach(m=>{
- m.onclick=()=>{
-  document.querySelectorAll(".mode").forEach(x=>x.classList.remove("active"));
-  m.classList.add("active");
-  risk=m.dataset.r;
+modeBtn.onclick=()=>modePopup.style.display="flex";
+modePopup.onclick=()=>modePopup.style.display="none";
+document.querySelectorAll(".mode-item").forEach(i=>{
+ i.onclick=e=>{
+  e.stopPropagation();
+  document.querySelectorAll(".mode-item").forEach(x=>x.classList.remove("active"));
+  i.classList.add("active");
+  mode=i.dataset.m;
+  modeBtn.innerText=i.innerText+" ▾";
   reset();
+  modePopup.style.display="none";
  };
 });
 
 /* POPUP */
-function showPopup(t,w){
+function show(t,w){
  popup.style.display="flex";
- popupBox.className="popup-box "+(w?"win":"loss");
- popupBox.innerText=t;
- setTimeout(()=>popup.style.display="none",2000);
+ popupText.className=w?"win":"loss";
+ popupText.innerText=t;
+ setTimeout(()=>popup.style.display="none",1800);
 }
-
-/* FAKE FEED */
-setInterval(()=>{
- const amt=[850,1200,3850,8000,12500][Math.floor(Math.random()*5)];
- const d=document.createElement("div");
- d.innerText="User won ₹"+amt;
- feed.prepend(d);
- if(feed.children.length>5)feed.lastChild.remove();
-},1500);
 </script>
 
 </body>
