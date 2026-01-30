@@ -16,43 +16,69 @@ body{
 .header{padding:14px;font-size:26px;font-weight:bold}
 .history{font-size:14px;opacity:.8;margin-top:6px}
 
+/* ===== CARD FLIP ===== */
 .card-area{display:flex;justify-content:center;gap:40px;margin-top:30px}
-.card{
-  width:110px;height:150px;border-radius:14px;background:#fff;
+.card-flip{perspective:800px}
+.card-inner{
+  width:110px;height:150px;
+  position:relative;
+  transform-style:preserve-3d;
+  transition:transform .2s linear;
+}
+.card-inner.flip{transform:rotateY(180deg)}
+.card-face{
+  position:absolute;inset:0;
+  border-radius:14px;
   display:flex;align-items:center;justify-content:center;
   font-size:48px;font-weight:bold;
-  box-shadow:0 6px 14px rgba(0,0,0,.25)
+  backface-visibility:hidden;
+  box-shadow:0 6px 14px rgba(0,0,0,.25);
 }
+.card-front{background:#fff}
+.card-back{background:#1e3a8a;transform:rotateY(180deg)}
 .deck{width:110px;height:150px;border-radius:14px;background:#1e3a8a}
-
 .refresh{margin-top:8px;font-size:18px;cursor:pointer}
 
+/* MULTI */
 .multi{margin:18px 0;font-size:20px;font-weight:bold}
 
+/* CONTROLS */
 .controls{display:flex;justify-content:center;gap:16px;margin-bottom:14px}
 .ctrl{
   padding:14px 26px;border-radius:26px;
   background:#000;color:#fff;font-weight:bold;cursor:pointer
 }
+.ctrl.active{background:#16a34a}
 
+/* BET */
 .bet-row{display:flex;justify-content:center;gap:10px}
 .bet-btn{
   padding:12px 18px;background:#000;color:#fff;
   border-radius:20px;font-weight:bold;cursor:pointer
 }
 
+/* CASHOUT */
 .cashout{
   margin-top:14px;padding:14px 60px;
   background:#16a34a;color:#fff;
   border-radius:30px;font-size:18px;font-weight:bold;cursor:pointer
 }
 
+/* WALLET */
 #wallet{
   position:fixed;bottom:12px;right:12px;
   background:#000;color:#fff;
   padding:10px 18px;border-radius:22px;font-weight:bold
 }
 
+/* FAKE FEED */
+#fakeFeed{
+  margin-top:22px;
+  font-size:14px;
+  opacity:.85;
+}
+
+/* POPUP */
 .popup{
   position:fixed;inset:0;background:rgba(0,0,0,.6);
   display:none;align-items:center;justify-content:center
@@ -75,7 +101,12 @@ body{
 
 <div class="card-area">
  <div>
-   <div class="card" id="currentCard">?</div>
+   <div class="card-flip">
+     <div class="card-inner" id="cardInner">
+       <div class="card-face card-front" id="currentCard">?</div>
+       <div class="card-face card-back"></div>
+     </div>
+   </div>
    <div class="refresh" id="refresh">🔄</div>
  </div>
  <div class="deck"></div>
@@ -96,6 +127,8 @@ body{
 
 <div class="cashout" id="cashout">CASHOUT</div>
 
+<div id="fakeFeed">🟢 User won ₹1050</div>
+
 <div id="wallet">💰 ₹<span id="bal">0</span></div>
 
 <div class="popup" id="popup">
@@ -105,10 +138,8 @@ body{
 <!-- 🔥 FIREBASE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import {
-  getFirestore, collection, query, where,
-  getDocs, doc, updateDoc
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, query, where, getDocs, doc, updateDoc }
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const app = initializeApp({
  apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
@@ -120,7 +151,7 @@ const app = initializeApp({
 });
 const db = getFirestore(app);
 
-/* ✅ WALLET FIX (EMAIL BASED – SAME AS KENO) */
+/* WALLET */
 const email = localStorage.getItem("userEmail");
 const bal = document.getElementById("bal");
 let uid="", balance=0;
@@ -128,15 +159,12 @@ let uid="", balance=0;
 async function loadWallet(){
  const q=query(collection(db,"users"),where("email","==",email));
  const snap=await getDocs(q);
- snap.forEach(d=>{
-   uid=d.id;
-   balance=Number(d.data().balance||0);
- });
+ snap.forEach(d=>{uid=d.id;balance=Number(d.data().balance||0);});
  bal.innerText=balance;
 }
 loadWallet();
 
-/* GAME DATA */
+/* GAME */
 const cards=["2","3","4","5","6","7","8","9","10","J","Q","K","A"];
 let currentIndex=Math.floor(Math.random()*cards.length);
 let bet=10;
@@ -147,6 +175,7 @@ let history=[];
 const currentCard=document.getElementById("currentCard");
 const multi=document.getElementById("multi");
 const historyBox=document.getElementById("history");
+const cardInner=document.getElementById("cardInner");
 
 function render(){
  currentCard.innerText=cards[currentIndex];
@@ -163,29 +192,35 @@ refresh.onclick=()=>{
 };
 
 /* BET */
-minus.onclick=()=>{ if(bet>10){bet-=10;betText.innerText="Bet ₹"+bet;} }
-plus.onclick=()=>{ bet+=10;betText.innerText="Bet ₹"+bet; }
+minus.onclick=()=>{if(bet>10){bet-=10;betText.innerText="Bet ₹"+bet;}}
+plus.onclick=()=>{bet+=10;betText.innerText="Bet ₹"+bet;}
 
 /* PLAY */
 async function play(isHigh){
  if(balance<bet) return;
+
+ high.classList.remove("active");
+ low.classList.remove("active");
+ (isHigh?high:low).classList.add("active");
+
+ cardInner.classList.add("flip");
 
  balance-=bet;
  bal.innerText=balance;
  await updateDoc(doc(db,"users",uid),{balance});
 
  const next=Math.floor(Math.random()*cards.length);
- const win=isHigh? next>currentIndex : next<currentIndex;
+ const win=isHigh?next>currentIndex:next<currentIndex;
 
- if(win){
-  step++;
-  history.push(cards[currentIndex]);
-  currentIndex=next;
-  render();
- }else{
-  showPopup("YOU LOSE",false);
-  reset();
- }
+ setTimeout(()=>{
+  cardInner.classList.remove("flip");
+  if(win){
+    step++;history.push(cards[currentIndex]);
+    currentIndex=next;render();
+  }else{
+    showPopup("YOU LOSE",false);reset();
+  }
+ },150);
 }
 
 high.onclick=()=>play(true);
@@ -204,10 +239,9 @@ cashout.onclick=async ()=>{
 
 /* RESET */
 function reset(){
- step=0;
- history=[];
+ step=0;history=[];
  currentIndex=Math.floor(Math.random()*cards.length);
- setTimeout(render,400);
+ setTimeout(render,300);
 }
 
 /* POPUP */
@@ -217,6 +251,13 @@ function showPopup(t,w){
  popupBox.innerText=t;
  setTimeout(()=>popup.style.display="none",2000);
 }
+
+/* FAKE FEED */
+const feed=document.getElementById("fakeFeed");
+setInterval(()=>{
+ const arr=[1050,12300,8000,3850,7200,5400];
+ feed.innerText="🟢 User won ₹"+arr[Math.floor(Math.random()*arr.length)];
+},1000);
 </script>
 
 </body>
