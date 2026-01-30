@@ -2,70 +2,127 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Admin Panel – draxbet </title>
+<title>Admin Panel – draxbet</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <style>
-body{margin:0;font-family:Arial;background:linear-gradient(180deg,#e3f2fd,#bbdefb);
+body{
+  margin:0;
+  font-family:Arial;
+  background:linear-gradient(180deg,#e3f2fd,#bbdefb);
+  color:#111;
+}
+
 header{
   background:linear-gradient(135deg,#ff6a6a,#ff8e8e);
   padding:18px;
   text-align:center;
   font-size:22px;
-  font-weight:bold
+  font-weight:bold;
+  color:#fff;
 }
+
 .dashboard{
   display:grid;
   grid-template-columns:repeat(3,1fr);
   gap:12px;
-  padding:15px
+  padding:15px;
 }
+
 .d-card{
   background:#1c1c1c;
   border-radius:14px;
   padding:14px;
-  text-align:center
+  text-align:center;
 }
+
 .d-card h2{margin:0;font-size:22px;color:#ff8e8e}
 .d-card span{font-size:12px;color:#aaa}
+
 .profit{
   display:grid;
   grid-template-columns:repeat(3,1fr);
   gap:12px;
-  padding:0 15px 15px
+  padding:0 15px 15px;
 }
+
 .p-card{
   background:#121212;
   border-radius:14px;
   padding:14px;
   text-align:center;
-  border:1px solid #222
+  border:1px solid #222;
 }
+
 .p-card h3{margin:0;font-size:18px}
 .p-card span{font-size:12px;color:#aaa}
+
 .tabs{display:flex;background:#111}
 .tab{
-  flex:1;padding:14px;text-align:center;
-  cursor:pointer;color:#aaa;font-weight:bold
+  flex:1;
+  padding:14px;
+  text-align:center;
+  cursor:pointer;
+  color:#aaa;
+  font-weight:bold;
 }
 .tab.active{background:#1c1c1c;color:#ff8e8e}
+
 .section{display:none;padding:15px}
 .section.active{display:block}
+
 .card{
   background:#1c1c1c;
   border-radius:16px;
   padding:16px;
-  margin-bottom:14px
+  margin-bottom:14px;
 }
-.row{display:flex;justify-content:space-between;font-size:14px;margin:6px 0}
+
+.row{
+  display:flex;
+  justify-content:space-between;
+  font-size:14px;
+  margin:6px 0;
+}
+
 .btn{
   padding:6px 10px;
   border:none;
   border-radius:8px;
   font-weight:bold;
-  cursor:pointer
+  cursor:pointer;
 }
 .plus{background:#2e7d32;color:#fff}
 .minus{background:#c62828;color:#fff}
+
+/* 🔥 SHOW-OFF EDGE PANEL */
+.edge-panel{
+  background:#ffffff;
+  border-radius:16px;
+  padding:16px;
+  margin:15px;
+  border:2px dashed #ff8e8e;
+}
+
+.edge-title{
+  font-weight:bold;
+  margin-bottom:12px;
+  color:#ff6a6a;
+  text-align:center;
+}
+
+.edge-card{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin:8px 0;
+}
+
+.edge-card span{font-size:14px;font-weight:bold}
+.edge-card input{flex:1}
+.edge-card b{width:40px;text-align:right}
+
 @media(max-width:600px){
   .dashboard,.profit{grid-template-columns:1fr}
 }
@@ -74,7 +131,7 @@ header{
 
 <body>
 
-<header>🛠️ draxbet 🧑‍💼– Admin Panel</header>
+<header>🛠️ draxbet – Admin Panel</header>
 
 <div class="dashboard">
   <div class="d-card"><h2 id="totalUsers">0</h2><span>Total Users</span></div>
@@ -88,167 +145,36 @@ header{
   <div class="p-card"><h3 id="netProfit">₹0</h3><span>Net Profit</span></div>
 </div>
 
-<div class="tabs">
-  <div class="tab active" onclick="openTab(0)">Deposits</div>
-  <div class="tab" onclick="openTab(1)">Withdraws</div>
-  <div class="tab" onclick="openTab(2)">Users</div>
+<!-- 🔥 SHOW-OFF ONLY HOUSE EDGE -->
+<div class="edge-panel">
+  <div class="edge-title">🎛 Game Risk / House Edge (SHOW-OFF ONLY)</div>
+
+  <div class="edge-card"><span>🎨 WIN GO</span><input type="range" min="0" max="50" value="20"><b>20%</b></div>
+  <div class="edge-card"><span>💣 MINES</span><input type="range" min="0" max="50" value="25"><b>25%</b></div>
+  <div class="edge-card"><span>✈️ AVIATOR</span><input type="range" min="0" max="50" value="30"><b>30%</b></div>
+  <div class="edge-card"><span>🐉 DRAGON TIGER</span><input type="range" min="0" max="50" value="22"><b>22%</b></div>
+  <div class="edge-card"><span>🎡 ROULETTE</span><input type="range" min="0" max="50" value="18"><b>18%</b></div>
+  <div class="edge-card"><span>✈️💯 AVIATOR REAL</span><input type="range" min="0" max="50" value="35"><b>35%</b></div>
+  <div class="edge-card"><span>🪙 COIN FLIP</span><input type="range" min="0" max="50" value="10"><b>10%</b></div>
+  <div class="edge-card"><span>💎 TREASURE</span><input type="range" min="0" max="50" value="40"><b>40%</b></div>
+  <div class="edge-card"><span>🐔 CHICKEN ROAD</span><input type="range" min="0" max="50" value="28"><b>28%</b></div>
+  <div class="edge-card"><span>🎲 DICE ROLL</span><input type="range" min="0" max="50" value="12"><b>12%</b></div>
+  <div class="edge-card"><span>⚪ PLINKO</span><input type="range" min="0" max="50" value="18"><b>18%</b></div>
+  <div class="edge-card"><span>🚗 DRAX TURBO</span><input type="range" min="0" max="50" value="45"><b>45%</b></div>
+  <div class="edge-card"><span>⏹️ SPIN STOP</span><input type="range" min="0" max="50" value="15"><b>15%</b></div>
+  <div class="edge-card"><span>🐎 HORSE RACE</span><input type="range" min="0" max="50" value="33"><b>33%</b></div>
+  <div class="edge-card"><span>🙏 GANESH SLOTS</span><input type="range" min="0" max="50" value="27"><b>27%</b></div>
+  <div class="edge-card"><span>🔥 KENO</span><input type="range" min="0" max="50" value="21"><b>21%</b></div>
+  <div class="edge-card"><span>⚡ FATE SHIFT</span><input type="range" min="0" max="50" value="26"><b>26%</b></div>
+  <div class="edge-card"><span>⬆️⬇️ HILO</span><input type="range" min="0" max="50" value="22"><b>22%</b></div>
+  <div class="edge-card"><span>🐲 DRAGON TOWER</span><input type="range" min="0" max="50" value="38"><b>38%</b></div>
+  <div class="edge-card"><span>🎈 BALLOON CRASH</span><input type="range" min="0" max="50" value="35"><b>35%</b></div>
 </div>
 
-<div class="section active" id="sec0"></div>
-<div class="section" id="sec1"></div>
-<div class="section" id="sec2"></div>
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, getDocs, updateDoc, doc } from
-"https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-const app = initializeApp({
-  apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
-  authDomain:"colourcash-ea60e.firebaseapp.com",
-  projectId:"colourcash-ea60e"
+<script>
+document.querySelectorAll(".edge-card input").forEach(slider=>{
+  slider.oninput=()=>slider.nextElementSibling.innerText=slider.value+"%";
 });
-const db = getFirestore(app);
-
-window.openTab=i=>{
-  document.querySelectorAll(".tab").forEach((t,n)=>t.classList.toggle("active",n===i));
-  document.querySelectorAll(".section").forEach((s,n)=>s.classList.toggle("active",n===i));
-};
-
-async function loadDashboard(){
-  const users=await getDocs(collection(db,"users"));
-  const dep=await getDocs(collection(db,"deposits"));
-  const wd=await getDocs(collection(db,"withdraws"));
-
-  totalUsers.innerText=users.size;
-  pendingDeposits.innerText=dep.docs.filter(d=>d.data().status==="PENDING").length;
-  pendingWithdraws.innerText=wd.docs.filter(d=>d.data().status==="PENDING").length;
-
-  let depSum=0, wdSum=0;
-  dep.docs.forEach(d=>{ if(d.data().status==="APPROVED") depSum+=d.data().amount });
-  wd.docs.forEach(d=>{ if(d.data().status==="APPROVED") wdSum+=d.data().amount });
-
-  totalDepositAmt.innerText="₹"+depSum;
-  totalWithdrawAmt.innerText="₹"+wdSum;
-  netProfit.innerText="₹"+(depSum-wdSum);
-}
-
-/* USERS */
-async function loadUsers(){
-  const box=sec2;
-  const snap=await getDocs(collection(db,"users"));
-  box.innerHTML="";
-  snap.forEach(d=>{
-    const u=d.data();
-    box.innerHTML+=`
-      <div class="card">
-        <div class="row"><span>${u.email}</span><span>₹${u.balance||0}</span></div>
-        <div class="row"><span>Password</span><span>${u.password || "N/A"}</span></div>
-        <div class="row">
-          <button class="btn plus" onclick="updateBal('${d.id}',100)">+100</button>
-          <button class="btn minus" onclick="updateBal('${d.id}',-100)">-100</button>
-        </div>
-      </div>`;
-  });
-}
-
-window.updateBal=async(id,amt)=>{
-  const ref=doc(db,"users",id);
-  const snap=await getDocs(collection(db,"users"));
-  snap.forEach(async d=>{
-    if(d.id===id){
-      await updateDoc(ref,{balance:(d.data().balance||0)+amt});
-      loadUsers();loadDashboard();
-    }
-  });
-};
-
-/* DEPOSITS */
-async function loadDeposits(){
-  const box=sec0;
-  const snap=await getDocs(collection(db,"deposits"));
-  box.innerHTML="";
-  snap.forEach(d=>{
-    const x=d.data();
-    if(x.status!=="PENDING")return;
-    box.innerHTML+=`
-      <div class="card">
-        <div class="row"><span>${x.email}</span><span>₹${x.amount}</span></div>
-        <div class="row"><span>UTR</span><span>${x.utr}</span></div>
-        <div class="row">
-          <button class="btn plus" onclick="approveDeposit('${d.id}','${x.email}',${x.amount})">Approve</button>
-          <button class="btn minus" onclick="rejectDeposit('${d.id}')">Reject</button>
-        </div>
-      </div>`;
-  });
-}
-
-window.approveDeposit=async(id,email,amt)=>{
-  await updateDoc(doc(db,"deposits",id),{status:"APPROVED"});
-  const users=await getDocs(collection(db,"users"));
-  users.forEach(async u=>{
-    if(u.data().email===email){
-      await updateDoc(doc(db,"users",u.id),{
-        balance:(u.data().balance||0)+amt
-      });
-    }
-  });
-  loadDeposits();loadDashboard();
-};
-
-window.rejectDeposit=async id=>{
-  await updateDoc(doc(db,"deposits",id),{status:"REJECTED"});
-  loadDeposits();loadDashboard();
-};
-
-/* WITHDRAWS */
-async function loadWithdraws(){
-  const box=sec1;
-  const snap=await getDocs(collection(db,"withdraws"));
-  box.innerHTML="";
-  snap.forEach(d=>{
-    const w=d.data();
-    if(w.status!=="PENDING")return;
-
-    let details = "";
-    if(w.method==="UPI"){
-      details = `<div class="row"><span>UPI</span><span>${w.upiId}</span></div>`;
-    }else{
-      details = `
-        <div class="row"><span>Holder</span><span>${w.bankDetails.holder}</span></div>
-        <div class="row"><span>Bank</span><span>${w.bankDetails.bank}</span></div>
-        <div class="row"><span>Account</span><span>${w.bankDetails.account}</span></div>
-        <div class="row"><span>IFSC</span><span>${w.bankDetails.ifsc}</span></div>`;
-    }
-
-    box.innerHTML+=`
-      <div class="card">
-        <div class="row"><span>${w.email}</span><span>₹${w.amount}</span></div>
-        <div class="row"><span>Order ID</span><span>${w.orderId || "N/A"}</span></div>
-        <div class="row"><span>Time</span><span>${w.time || "N/A"}</span></div>
-        ${details}
-        <div class="row">
-          <button class="btn plus" onclick="approveWithdraw('${d.id}')">Approve</button>
-          <button class="btn minus" onclick="rejectWithdraw('${d.id}')">Reject</button>
-        </div>
-      </div>`;
-  });
-}
-
-window.approveWithdraw=async id=>{
-  await updateDoc(doc(db,"withdraws",id),{status:"APPROVED"});
-  loadWithdraws();loadDashboard();
-};
-
-window.rejectWithdraw=async id=>{
-  await updateDoc(doc(db,"withdraws",id),{status:"REJECTED"});
-  loadWithdraws();loadDashboard();
-};
-
-loadDashboard();
-loadUsers();
-loadDeposits();
-loadWithdraws();
 </script>
 
 </body>
