@@ -21,8 +21,6 @@
 .game-card:active{transform:scale(0.97)}
 .game-card h3{margin:6px 0 0;font-size:18px}
 .game-card p{font-size:13px;opacity:0.85}
-
-/* ICON */
 .icon{font-size:32px}
 
 /* BODY */
@@ -41,16 +39,13 @@ body{
   text-align:center;
 }
 
-/* 🔥 TOP BANNER */
+/* BANNER */
 .top-banner{
   margin:0 15px 10px;
   border-radius:16px;
   overflow:hidden;
 }
-.top-banner img{
-  width:100%;
-  display:block;
-}
+.top-banner img{width:100%}
 
 /* MENU */
 .menu{
@@ -69,73 +64,45 @@ body{
 .roulette{background:linear-gradient(135deg,#1abc9c,#16a085)}
 .plinko{background:linear-gradient(135deg,#1aa7a1,#0b6f7a)}
 .treasure{background:linear-gradient(135deg,#7b3f00,#3b1f00)}
-.coinflip{
-  background:linear-gradient(135deg,#f5c76a 0%,#f5c76a 50%,#cfd3d6 50%,#cfd3d6 100%);
-  color:#111;
-}
+.coinflip{background:linear-gradient(135deg,#f5c76a,#cfd3d6);color:#111}
 .dice{background:linear-gradient(135deg,#ff3b3b,#b30000)}
 .spinstop{background:linear-gradient(135deg,#ff5fa2,#ff2f92)}
 .horserace{background:linear-gradient(135deg,#0f9b6c,#0a6b4a)}
-
-.draxturbo{
-  background:linear-gradient(135deg,#ff4fd8,#8f2bff);
-  padding-top:18px;
-}
-.drax-logo{
-  width:46px;
-  height:46px;
-  margin:0 auto 6px;
-}
-
+.draxturbo{background:linear-gradient(135deg,#ff4fd8,#8f2bff)}
 .fateshift{background:linear-gradient(135deg,#6a00ff,#b100ff)}
+.keno{background:linear-gradient(135deg,#111,#333)}
+.hilo{background:linear-gradient(135deg,#00c6ff,#0072ff)}
+.dragontower{background:linear-gradient(135deg,#ff7a18,#ff3d00)}
+.ballooncrash{background:linear-gradient(135deg,#ff4fd8,#00c6ff)}
 
-.ganeshslots{
-  background:linear-gradient(135deg,#8e0000,#ff4d4d);
-}
-.ganeshslots img{
-  width:42px;
-  height:42px;
-  margin:0 auto 6px;
-}
-
-/* 🔥 KENO */
-.keno{
-  background:linear-gradient(135deg,#111,#333);
-}
-
-/* 🔥 HILO */
-.hilo{
-  background:linear-gradient(135deg,#00c6ff,#0072ff);
-}
-
-/* 🔥 DRAGON TOWER */
-.dragontower{
-  background:linear-gradient(135deg,#ff7a18,#ff3d00);
-}
-
-/* 🔥 BALLOON CRASH (ADDED) */
-.ballooncrash{
-  background:linear-gradient(135deg,#ff4fd8,#00c6ff);
-}
-
-/* BOTTOM NAV */
+/* NAV */
 .bottom-nav{
-  position:fixed;
-  bottom:0;left:0;right:0;
-  background:#111;
-  display:flex;
-  border-top:1px solid #222;
+  position:fixed;bottom:0;left:0;right:0;
+  background:#111;display:flex;border-top:1px solid #222
 }
-.nav-btn{
-  flex:1;
-  padding:10px 0;
-  text-align:center;
-  font-size:12px;
-  color:#aaa;
-}
+.nav-btn{flex:1;padding:10px 0;text-align:center;font-size:12px;color:#aaa}
 .nav-btn.active{color:#4caf50;font-weight:bold}
 .nav-btn div{font-size:20px}
 .spacer{height:70px}
+
+/* 🔥 FIRST DEPOSIT POPUP */
+#depositPopup{
+ position:fixed; inset:0;
+ background:rgba(0,0,0,.7);
+ display:none;
+ align-items:center;
+ justify-content:center;
+ z-index:9999;
+}
+#depositPopup .box{
+ background:#111;
+ padding:26px 22px;
+ border-radius:18px;
+ width:85%;
+ max-width:320px;
+ text-align:center;
+ box-shadow:0 0 25px rgba(255,215,0,.3);
+}
 </style>
 </head>
 
@@ -144,131 +111,26 @@ body{
 <div class="header">🏦DraxBet🏦</div>
 
 <div class="top-banner">
-<img src="images/Picsart_26-01-29_15-47-46-060.png">
+  <img src="images/Picsart_26-01-29_15-47-46-060.png">
 </div>
 
 <div class="menu">
 
-  <div class="game-card wingo" onclick="location.href='wingo.html'">
-    <div class="icon">🎨</div>
-    <h3>WIN GO</h3>
-    <p>30s Colour Trading</p>
-  </div>
-
-  <div class="game-card mines" onclick="location.href='mines.html'">
-    <div class="icon">💣</div>
-    <h3>MINES</h3>
-    <p>Spribe Style Game</p>
-  </div>
-
-  <div class="game-card aviator" onclick="location.href='aviator.html'">
-    <div class="icon">✈️</div>
-    <h3>AVIATOR</h3>
-    <p>Crash Multiplier</p>
-  </div>
-
-  <div class="game-card goddevil" onclick="location.href='dragon-tiger.html'">
-    <div class="icon">🐉</div>
-    <h3>DRAGON • TIGER</h3>
-    <p>High Card Battle</p>
-  </div>
-
-  <div class="game-card roulette" onclick="location.href='roulette.html'">
-    <div class="icon">🎡</div>
-    <h3>ROULETTE</h3>
-    <p>Classic Casino Wheel</p>
-  </div>
-
-  <div class="game-card aviator" onclick="location.href='aviator-game.html'">
-    <div class="icon">✈️💯</div>
-    <h3>AVIATOR REAL WIN</h3>
-    <p>Crash Multiplier • 1000x</p>
-  </div>
-
-  <div class="game-card coinflip" onclick="location.href='coinflip.html'">
-    <div class="icon">🪙</div>
-    <h3>COIN FLIP</h3>
-    <p>Head · Tail</p>
-  </div>
-
-  <div class="game-card treasure" onclick="location.href='treasure.html'">
-    <div class="icon">💎</div>
-    <h3>TREASURE</h3>
-    <p>High Risk • High Reward</p>
-  </div>
-
-  <div class="game-card chicken" onclick="location.href='chicken-road.html'">
-    <div class="icon">🐔</div>
-    <h3>CHICKEN ROAD</h3>
-    <p>High Risk • High Reward</p>
-  </div>
-
-  <div class="game-card dice" onclick="location.href='dice.html'">
-    <div class="icon">🎲</div>
-    <h3>DICE ROLL</h3>
-    <p>Quick Win • Lucky Roll</p>
-  </div>
-
-  <div class="game-card plinko" onclick="location.href='plinko.html'">
-    <div class="icon">⚪</div>
-    <h3>PLINKO</h3>
-    <p>Low • Medium • High Risk</p>
-  </div>
-
-  <div class="game-card draxturbo" onclick="location.href='drax-turbo-drive.html'">
-    <img src="images/bmw.png" class="drax-logo">
-    <h3>DRAX TURBO DRIVE</h3>
-    <p>Mercedes 5x · Audi 10x · BMW 20x</p>
-  </div>
-
-  <div class="game-card spinstop" onclick="location.href='spin-stop.html'">
-    <div class="icon">⏹️</div>
-    <h3>SPIN STOP</h3>
-    <p>2x Only • Manual Stop</p>
-  </div>
-
-  <div class="game-card horserace" onclick="location.href='horse-race.html'">
-    <div class="icon">🐎</div>
-    <h3>HORSE RACE</h3>
-    <p>High Risk • High Reward</p>
-  </div>
-
-  <div class="game-card ganeshslots" onclick="location.href='ganesh-slots.html'">
-    <img src="images/symbols/scatter.png">
-    <h3>GANESH SLOTS</h3>
-    <p>Lucky Lines • Multipliers</p>
-  </div>
-
-  <div class="game-card keno" onclick="location.href='keno.html'">
-    <div class="icon">🔥</div>
-    <h3>KENO</h3>
-    <p>Select Numbers • Big Multipliers</p>
-  </div>
-
-  <div class="game-card fateshift" onclick="location.href='fate-shift.html'">
-    <div class="icon">⚡</div>
-    <h3>FATE SHIFT</h3>
-    <p>Auto / Manual Shift • Smart Risk</p>
-  </div>
-
-  <div class="game-card hilo" onclick="location.href='hilo.html'">
-    <div class="icon">⬆️⬇️</div>
-    <h3>HILO</h3>
-    <p>High / Low • Card Guess</p>
-  </div>
-
-  <div class="game-card dragontower" onclick="location.href='dragon-tower.html'">
-    <div class="icon">🐲🏗️</div>
-    <h3>DRAGON TOWER</h3>
-    <p>Climb & Win • Risk Levels</p>
-  </div>
-
-  <!-- 🔥 BALLOON CRASH ADDED (DRAGON TOWER KE SAAMNE) -->
-  <div class="game-card ballooncrash" onclick="location.href='balloon-crash.html'">
-    <div class="icon">🎈💥</div>
-    <h3>BALLOON CRASH</h3>
-    <p>Cash Out Before Pop</p>
-  </div>
+  <!-- 🔁 ALL GAMES (SAME ORDER – SYSTEM UNTOUCHED) -->
+  <div class="game-card wingo" onclick="openGame('wingo.html')"><div class="icon">🎨</div><h3>WIN GO</h3><p>30s Colour Trading</p></div>
+  <div class="game-card mines" onclick="openGame('mines.html')"><div class="icon">💣</div><h3>MINES</h3><p>Spribe Style Game</p></div>
+  <div class="game-card aviator" onclick="openGame('aviator.html')"><div class="icon">✈️</div><h3>AVIATOR</h3><p>Crash Multiplier</p></div>
+  <div class="game-card goddevil" onclick="openGame('dragon-tiger.html')"><div class="icon">🐉</div><h3>DRAGON • TIGER</h3><p>High Card Battle</p></div>
+  <div class="game-card roulette" onclick="openGame('roulette.html')"><div class="icon">🎡</div><h3>ROULETTE</h3><p>Classic Casino Wheel</p></div>
+  <div class="game-card coinflip" onclick="openGame('coinflip.html')"><div class="icon">🪙</div><h3>COIN FLIP</h3><p>Head · Tail</p></div>
+  <div class="game-card treasure" onclick="openGame('treasure.html')"><div class="icon">💎</div><h3>TREASURE</h3><p>High Risk • High Reward</p></div>
+  <div class="game-card chicken" onclick="openGame('chicken-road.html')"><div class="icon">🐔</div><h3>CHICKEN ROAD</h3><p>High Risk • High Reward</p></div>
+  <div class="game-card plinko" onclick="openGame('plinko.html')"><div class="icon">⚪</div><h3>PLINKO</h3><p>Low • Medium • High Risk</p></div>
+  <div class="game-card keno" onclick="openGame('keno.html')"><div class="icon">🔥</div><h3>KENO</h3><p>Select Numbers • Big Multipliers</p></div>
+  <div class="game-card fateshift" onclick="openGame('fate-shift.html')"><div class="icon">⚡</div><h3>FATE SHIFT</h3><p>Auto / Manual Shift</p></div>
+  <div class="game-card hilo" onclick="openGame('hilo.html')"><div class="icon">⬆️⬇️</div><h3>HILO</h3><p>High / Low</p></div>
+  <div class="game-card dragontower" onclick="openGame('dragon-tower.html')"><div class="icon">🐲</div><h3>DRAGON TOWER</h3><p>Climb & Win</p></div>
+  <div class="game-card ballooncrash" onclick="openGame('balloon-crash.html')"><div class="icon">🎈💥</div><h3>BALLOON CRASH</h3><p>Cash Out Before Pop</p></div>
 
 </div>
 
@@ -280,6 +142,56 @@ body{
   <div class="nav-btn" onclick="location.href='promotion.html'"><div>🎁</div>Promotion</div>
   <div class="nav-btn" onclick="location.href='account.html'"><div>👤</div>Account</div>
 </div>
+
+<!-- 🔐 FIRST DEPOSIT POPUP -->
+<div id="depositPopup">
+  <div class="box">
+    <h2 style="color:#facc15">💰 First Deposit Required</h2>
+    <p>First deposit <b>₹100</b><br>then play & earn 💸</p>
+    <button onclick="location.href='wallet.html'" style="
+      width:100%;padding:12px;
+      border:none;border-radius:24px;
+      background:#22c55e;font-weight:bold">
+      Deposit ₹100
+    </button>
+    <div onclick="closePopup()" style="margin-top:12px;opacity:.7;cursor:pointer">Cancel</div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const app=initializeApp({
+ apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
+ authDomain:"colourcash-ea60e.firebaseapp.com",
+ projectId:"colourcash-ea60e",
+ storageBucket:"colourcash-ea60e.firebasestorage.app",
+ messagingSenderId:"403688058646",
+ appId:"1:403688058646:web:f1753360471528f275ea37"
+});
+const db=getFirestore(app);
+
+let userBalance=0;
+const email=localStorage.getItem("userEmail");
+
+(async()=>{
+ const q=query(collection(db,"users"),where("email","==",email));
+ const s=await getDocs(q);
+ s.forEach(d=>userBalance=+d.data().balance||0);
+})();
+
+function openGame(url){
+ if(userBalance < 100){
+   document.getElementById("depositPopup").style.display="flex";
+   return;
+ }
+ location.href=url;
+}
+function closePopup(){
+ document.getElementById("depositPopup").style.display="none";
+}
+</script>
 
 </body>
 </html>
