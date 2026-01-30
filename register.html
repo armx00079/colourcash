@@ -186,7 +186,8 @@ window.register = () => {
     await setDoc(doc(db, "users", user.uid), {
       email: user.email,
       password: pass,
-      balance: 0,
+      balance: 51,            // 🎁 Signup bonus
+  signupBonus: true,      // ✅ repeat na ho
       role: "user",
       createdAt: new Date()
     });
