@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Balloon Crash</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  background:linear-gradient(180deg,#020617,#0b1220);
+  color:#fff;
+  text-align:center;
+}
+
+/* HEADER */
+.header{
+  padding:14px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-weight:bold;
+}
+.wallet{
+  background:#000;
+  padding:8px 14px;
+  border-radius:20px;
+}
+
+/* GAME */
+.game{
+  margin-top:20px;
+}
+.multiplier{
+  font-size:32px;
+  font-weight:bold;
+  margin-bottom:10px;
+}
+
+/* BALLOON */
+.balloon-wrap{
+  height:240px;
+  position:relative;
+  overflow:hidden;
+}
+.balloon{
+  width:80px;
+  height:100px;
+  background:#ff4fa3;
+  border-radius:50% 50% 50% 50%;
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  bottom:10px;
+  transition:bottom .1s linear;
+}
+.balloon:after{
+  content:"";
+  width:4px;
+  height:40px;
+  background:#ccc;
+  position:absolute;
+  bottom:-40px;
+  left:50%;
+  transform:translateX(-50%);
+}
+
+/* CONTROLS */
+.controls{
+  margin-top:10px;
+}
+.bet-row{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin-bottom:10px;
+}
+.bet-btn{
+  background:#000;
+  color:#fff;
+  padding:10px 18px;
+  border-radius:20px;
+  font-weight:bold;
+  cursor:pointer;
+}
+.main-btn{
+  width:90%;
+  max-width:320px;
+  margin:6px auto;
+  padding:14px;
+  border-radius:28px;
+  font-size:18px;
+  font-weight:bold;
+  cursor:pointer;
+}
+.bet{
+  background:#22c55e;
+  color:#000;
+}
+.cashout{
+  background:#facc15;
+  color:#000;
+}
+
+/* LIVE */
+.live{
+  margin:14px auto;
+  width:90%;
+  max-width:320px;
+  background:#020617;
+  padding:10px;
+  border-radius:14px;
+  font-size:14px;
+}
+
+/* POPUP */
+.popup{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.6);
+  display:none;
+  align-items:center;
+  justify-content:center;
+}
+.popup div{
+  background:#111827;
+  padding:24px 40px;
+  border-radius:16px;
+  font-size:22px;
+  font-weight:bold;
+}
+.win{color:#22c55e}
+.loss{color:#dc2626}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  🎈 BALLOON CRASH
+  <div class="wallet">💰 ₹<span id="bal">0</span></div>
+</div>
+
+<div class="game">
+  <div class="multiplier" id="multi">1.00x</div>
+
+  <div class="balloon-wrap">
+    <div class="balloon" id="balloon"></div>
+  </div>
+</div>
+
+<div class="controls">
+  <div class="bet-row">
+    <div class="bet-btn" id="minus">-</div>
+    <div class="bet-btn" id="betText">Bet ₹10</div>
+    <div class="bet-btn" id="plus">+</div>
+  </div>
+
+  <div class="main-btn bet" id="betBtn">BET</div>
+  <div class="main-btn cashout" id="cashoutBtn" style="display:none">CASHOUT</div>
+</div>
+
+<div class="live" id="liveHistory"></div>
+
+<div class="popup" id="popup">
+  <div id="popupText"></div>
+</div>
+
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getFirestore, collection, query, where,
+  getDocs, doc, updateDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const app=initializeApp({
+ apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
+ authDomain:"colourcash-ea60e.firebaseapp.com",
+ projectId:"colourcash-ea60e"
+});
+const db=getFirestore(app);
+
+/* WALLET */
+const email=localStorage.getItem("userEmail");
+let uid="", balance=0;
+const bal=document.getElementById("bal");
+
+async function loadWallet(){
+ const q=query(collection(db,"users"),where("email","==",email));
+ const s=await getDocs(q);
+ s.forEach(d=>{uid=d.id;balance=+d.data().balance||0});
+ bal.innerText=balance;
+}
+loadWallet();
+
+/* GAME LOGIC */
+let bet=10;
+let multi=1.00;
+let interval=null;
+let crashAt=0;
+let running=false;
+const multiBox=document.getElementById("multi");
+const balloon=document.getElementById("balloon");
+
+minus.onclick=()=>{if(bet>10){bet-=10;betText.innerText="Bet ₹"+bet}}
+plus.onclick=()=>{bet+=10;betText.innerText="Bet ₹"+bet}}
+
+betBtn.onclick=async ()=>{
+ if(running || balance<bet) return;
+
+ balance-=bet;
+ bal.innerText=balance;
+ await updateDoc(doc(db,"users",uid),{balance});
+
+ running=true;
+ betBtn.style.display="none";
+ cashoutBtn.style.display="block";
+
+ multi=1.00;
+ crashAt=(Math.random()*4+1.2).toFixed(2); // crash 1.2x – 5.2x
+ let height=10;
+
+ interval=setInterval(()=>{
+  multi+=0.01;
+  height+=2;
+  balloon.style.bottom=height+"px";
+  multiBox.innerText=multi.toFixed(2)+"x";
+
+  if(multi>=crashAt){
+    crash();
+  }
+ },80);
+};
+
+cashoutBtn.onclick=async ()=>{
+ if(!running) return;
+ clearInterval(interval);
+ running=false;
+
+ const win=Math.floor(bet*multi);
+ balance+=win;
+ bal.innerText=balance;
+ await updateDoc(doc(db,"users",uid),{balance});
+
+ show("YOU WIN ₹"+win,true);
+ reset();
+};
+
+function crash(){
+ clearInterval(interval);
+ running=false;
+ show("CRASH 💥",false);
+ reset();
+}
+
+function reset(){
+ betBtn.style.display="block";
+ cashoutBtn.style.display="none";
+ balloon.style.bottom="10px";
+ multiBox.innerText="1.00x";
+}
+
+/* POPUP */
+function show(t,w){
+ popup.style.display="flex";
+ popupText.className=w?"win":"loss";
+ popupText.innerText=t;
+ setTimeout(()=>popup.style.display="none",1800);
+}
+
+/* LIVE FAKE */
+const live=document.getElementById("liveHistory");
+const fake=[120,350,890,2100,4800,9600];
+setInterval(()=>{
+ const d=document.createElement("div");
+ d.innerText="User won ₹"+fake[Math.floor(Math.random()*fake.length)];
+ live.prepend(d);
+ if(live.children.length>5)
+   live.removeChild(live.lastChild);
+},1300);
+</script>
+
+</body>
+  </html>
