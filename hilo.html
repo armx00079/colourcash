@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>HILO</title>
@@ -8,105 +8,156 @@
 <style>
 body{
   margin:0;
-  font-family:Arial;
-  background:linear-gradient(180deg,#ffd56a,#ffb300);
+  font-family:Arial, sans-serif;
+  background:linear-gradient(180deg,#ffd56a,#f2b705);
   text-align:center;
   color:#000;
 }
-h1{margin:14px 0}
 
-/* WALLET */
-#wallet{
- position:fixed;
- right:12px;
- bottom:12px;
- background:#000;
- color:#fff;
- padding:10px 18px;
- border-radius:22px;
- font-weight:bold;
+/* HEADER */
+.header{
+  padding:14px;
+  font-size:26px;
+  font-weight:bold;
+}
+.history{
+  font-size:14px;
+  opacity:.8;
+  margin-top:6px;
 }
 
-/* CARD */
-.card-box{
- margin:30px auto 10px;
- width:120px;
- height:160px;
- background:#fff;
- border-radius:14px;
- display:flex;
- align-items:center;
- justify-content:center;
- font-size:46px;
- font-weight:bold;
- box-shadow:0 10px 25px rgba(0,0,0,.25);
+/* CARD AREA */
+.card-area{
+  display:flex;
+  justify-content:center;
+  gap:40px;
+  margin-top:30px;
 }
-.card-red{color:#e53935}
-.card-black{color:#000}
+.card{
+  width:110px;
+  height:150px;
+  border-radius:14px;
+  background:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:48px;
+  font-weight:bold;
+  box-shadow:0 6px 14px rgba(0,0,0,.25);
+}
+.deck{
+  width:110px;
+  height:150px;
+  border-radius:14px;
+  background:#1e3a8a;
+}
+
+/* REFRESH */
+.refresh{
+  margin-top:8px;
+  font-size:18px;
+  cursor:pointer;
+}
 
 /* MULTI */
 .multi{
- font-size:18px;
- margin:10px 0;
- font-weight:bold;
+  margin:18px 0;
+  font-size:20px;
+  font-weight:bold;
 }
 
 /* CONTROLS */
 .controls{
- display:flex;
- justify-content:center;
- gap:16px;
- margin:16px 0;
+  display:flex;
+  justify-content:center;
+  gap:16px;
+  margin-bottom:14px;
 }
 .ctrl{
- padding:14px 26px;
- border-radius:28px;
- background:#000;
- color:#fff;
- font-weight:bold;
- cursor:pointer;
+  padding:14px 26px;
+  border-radius:26px;
+  background:#000;
+  color:#fff;
+  font-weight:bold;
+  cursor:pointer;
 }
 
 /* BET */
 .bet-row{
- display:flex;
- justify-content:center;
- gap:10px;
- margin:14px 0;
+  display:flex;
+  justify-content:center;
+  gap:10px;
 }
-.btn{
- background:#000;
- color:#fff;
- padding:10px 18px;
- border-radius:18px;
- font-weight:bold;
- cursor:pointer;
+.bet-btn{
+  padding:12px 18px;
+  background:#000;
+  color:#fff;
+  border-radius:20px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+/* CASHOUT */
+.cashout{
+  margin-top:14px;
+  padding:14px 60px;
+  background:#16a34a;
+  color:#fff;
+  border-radius:30px;
+  font-size:18px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+/* WALLET */
+#wallet{
+  position:fixed;
+  bottom:12px;
+  right:12px;
+  background:#000;
+  color:#fff;
+  padding:10px 18px;
+  border-radius:22px;
+  font-weight:bold;
 }
 
 /* POPUP */
 .popup{
- position:fixed;inset:0;
- background:rgba(0,0,0,.6);
- display:none;
- align-items:center;justify-content:center;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.6);
+  display:none;
+  align-items:center;
+  justify-content:center;
 }
-.popup .box{
- padding:30px 50px;
- border-radius:20px;
- font-size:26px;
- font-weight:bold;
+.popup-box{
+  background:#fff;
+  padding:30px 50px;
+  border-radius:20px;
+  font-size:26px;
+  font-weight:bold;
 }
-.win{background:#4caf50;color:#000}
-.loss{background:#b00020;color:#fff}
+.win{color:#16a34a}
+.loss{color:#dc2626}
 </style>
 </head>
 
 <body>
 
-<h1>🃏 HILO</h1>
+<div class="header">
+ 🃏 HILO
+ <div class="history" id="history">History: -</div>
+</div>
 
-<div class="card-box" id="card">A</div>
-<div class="multi">Multiplier: <span id="multi">1.00x</span></div>
+<div class="card-area">
+ <div>
+   <div class="card" id="currentCard">?</div>
+   <div class="refresh" id="refresh">🔄</div>
+ </div>
+ <div class="deck"></div>
+</div>
+
+<div class="multi">Multiplier: <span id="multi">1.10x</span></div>
 
 <div class="controls">
  <div class="ctrl" id="low">⬇ LOW</div>
@@ -114,26 +165,25 @@ h1{margin:14px 0}
 </div>
 
 <div class="bet-row">
- <div class="btn" id="minus">-</div>
- <div class="btn" id="bet">Bet ₹10</div>
- <div class="btn" id="plus">+</div>
+ <div class="bet-btn" id="minus">-</div>
+ <div class="bet-btn" id="betText">Bet ₹10</div>
+ <div class="bet-btn" id="plus">+</div>
 </div>
 
-<div class="btn" id="cashout" style="display:none;background:#4caf50">CASHOUT</div>
+<div class="cashout" id="cashout">CASHOUT</div>
 
 <div id="wallet">💰 ₹<span id="bal">0</span></div>
 
 <div class="popup" id="popup">
- <div class="box" id="popupBox"></div>
+ <div class="popup-box" id="popupBox"></div>
 </div>
 
 <!-- 🔥 FIREBASE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, getDocs, collection, query, where, doc, updateDoc }
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-/* 🔥 FIREBASE CONFIG (TERA WALA) */
+/* 🔐 FIREBASE CONFIG (AS YOU SAID – SAME ALWAYS) */
 const app = initializeApp({
  apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
  authDomain:"colourcash-ea60e.firebaseapp.com",
@@ -144,118 +194,100 @@ const app = initializeApp({
 });
 const db = getFirestore(app);
 
-const email = localStorage.getItem("userEmail");
-let uid="", balance=0;
+/* WALLET */
+const uid = localStorage.getItem("uid");
+const bal = document.getElementById("bal");
+let balance=0;
 
-/* WALLET LOAD */
 async function loadWallet(){
- const q=query(collection(db,"users"),where("email","==",email));
- const s=await getDocs(q);
- s.forEach(d=>{uid=d.id;balance=Number(d.data().balance||0);});
+ const snap = await getDoc(doc(db,"users",uid));
+ balance = Number(snap.data().balance||0);
  bal.innerText=balance;
 }
-function userRef(){return doc(db,"users",uid);}
 loadWallet();
 
-/* CARDS */
-const cards=[
- {n:"A",v:14},{n:"K",v:13},{n:"Q",v:12},{n:"J",v:11},
- {n:"10",v:10},{n:"9",v:9},{n:"8",v:8},{n:"7",v:7},
- {n:"6",v:6},{n:"5",v:5},{n:"4",v:4},{n:"3",v:3},{n:"2",v:2}
-];
-
-let current = cards[Math.floor(Math.random()*cards.length)];
+/* GAME DATA */
+const cards=["2","3","4","5","6","7","8","9","10","J","Q","K","A"];
+let currentIndex=Math.floor(Math.random()*cards.length);
 let bet=10;
 let step=0;
-let multiplier=1.0;
-let playing=false;
-
-let games = Number(localStorage.getItem("H_GAMES")||0);
+let multipliers=[1.10,1.25,1.45,1.70,2.00,2.40,2.90];
+let history=[];
 
 /* UI */
-const cardEl=document.getElementById("card");
-const multiEl=document.getElementById("multi");
-cardEl.innerText=current.n;
+const currentCard=document.getElementById("currentCard");
+const multi=document.getElementById("multi");
+const historyBox=document.getElementById("history");
+
+function render(){
+ currentCard.innerText=cards[currentIndex];
+ multi.innerText=multipliers[step].toFixed(2)+"x";
+ historyBox.innerText="History: "+(history.join(" → ")||"-");
+}
+render();
+
+/* REFRESH FIRST CARD */
+refresh.onclick=()=>{
+ if(step>0) return;
+ currentIndex=Math.floor(Math.random()*cards.length);
+ render();
+};
 
 /* BET */
-minus.onclick=()=>{ if(bet>10){bet-=10;betBtn()} }
-plus.onclick=()=>{ bet+=10;betBtn() }
-function betBtn(){ betBtnEl.innerText="Bet ₹"+bet }
-const betBtnEl=document.getElementById("bet");
+minus.onclick=()=>{ if(bet>10){bet-=10;betText.innerText="Bet ₹"+bet;} }
+plus.onclick=()=>{ bet+=10;betText.innerText="Bet ₹"+bet; }
 
-/* GAME LOGIC */
-async function guess(type){
- if(playing) return;
- if(balance<bet && step===0) return;
+/* GUESS */
+async function play(isHigh){
+ if(balance<bet) return;
 
- if(step===0){
-  balance-=bet;
-  bal.innerText=balance;
-  await updateDoc(userRef(),{balance});
+ balance-=bet;
+ bal.innerText=balance;
+ await updateDoc(doc(db,"users",uid),{balance});
+
+ const next=Math.floor(Math.random()*cards.length);
+ const win = isHigh ? next>currentIndex : next<currentIndex;
+
+ if(win){
+  step++;
+  history.push(cards[currentIndex]);
+  currentIndex=next;
+  render();
+ }else{
+  showPopup("YOU LOSE",false);
+  reset();
  }
-
- playing=true;
-
- let next = cards[Math.floor(Math.random()*cards.length)];
- let win=false;
-
- if(type==="high" && next.v>current.v) win=true;
- if(type==="low" && next.v<current.v) win=true;
-
- /* FIRST GAME GUARANTEE */
- games++;
- localStorage.setItem("H_GAMES",games);
- if((games===1 || games===3) && win){
-   win=true;
- }
-
- setTimeout(async ()=>{
-  cardEl.innerText=next.n;
-  current=next;
-
-  if(win){
-    step++;
-    multiplier = +(multiplier + 0.5).toFixed(2);
-    multiEl.innerText=multiplier+"x";
-    document.getElementById("cashout").style.display="inline-block";
-    playing=false;
-  }else{
-    showPopup("YOU LOSE","loss");
-    resetGame();
-  }
- },600);
 }
 
-high.onclick=()=>guess("high");
-low.onclick=()=>guess("low");
+/* BUTTONS */
+high.onclick=()=>play(true);
+low.onclick=()=>play(false);
 
 /* CASHOUT */
 cashout.onclick=async ()=>{
- let winAmt=Math.min(bet*multiplier,200);
+ if(step===0) return;
+ const winAmt=Math.floor(bet*multipliers[step]);
  balance+=winAmt;
  bal.innerText=balance;
- await updateDoc(userRef(),{balance});
- showPopup("WIN ₹"+winAmt,"win");
- resetGame();
+ await updateDoc(doc(db,"users",uid),{balance});
+ showPopup("YOU WIN ₹"+winAmt,true);
+ reset();
 };
 
 /* RESET */
-function resetGame(){
+function reset(){
  step=0;
- multiplier=1;
- multiEl.innerText="1.00x";
- document.getElementById("cashout").style.display="none";
- playing=false;
- current = cards[Math.floor(Math.random()*cards.length)];
- cardEl.innerText=current.n;
+ history=[];
+ currentIndex=Math.floor(Math.random()*cards.length);
+ setTimeout(render,500);
 }
 
 /* POPUP */
-function showPopup(t,c){
- popupBox.className="box "+c;
- popupBox.innerText=t;
+function showPopup(t,w){
  popup.style.display="flex";
- setTimeout(()=>popup.style.display="none",1800);
+ popupBox.className="popup-box "+(w?"win":"loss");
+ popupBox.innerText=t;
+ setTimeout(()=>popup.style.display="none",2000);
 }
 </script>
 
