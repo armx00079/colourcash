@@ -188,21 +188,38 @@ window.startRace=async ()=>{
  },1600);
 };
 
-function decideWinner(bet){
- if(firstGame && bet<=300){
-  firstGame=false;
-  localStorage.setItem("playedOnce","yes");
-  return selected;
- }
- let chance=0.35;
- if(bet>500) chance=0.25;
- if(bet>1000) chance=0.15;
+let lastResult = localStorage.getItem("lastResult") || "LOSS";
 
- if(Math.random()<chance) return selected;
- return Object.keys(cars).filter(c=>c!==selected)
-  [Math.floor(Math.random()*2)];
+function decideWinner(bet){
+  let winChance = 0.22; // owner favour base
+
+  if(bet > 300) winChance = 0.18;
+  if(bet > 700) winChance = 0.12;
+  if(bet > 1200) winChance = 0.07;
+
+  // Agar pichhli baar jeeta → ab loss
+  if(lastResult === "WIN"){
+    lastResult = "LOSS";
+    localStorage.setItem("lastResult","LOSS");
+    return getOtherCar();
+  }
+
+  if(Math.random() < winChance){
+    lastResult = "WIN";
+    localStorage.setItem("lastResult","WIN");
+    return selected;
+  }else{
+    lastResult = "LOSS";
+    localStorage.setItem("lastResult","LOSS");
+    return getOtherCar();
+  }
 }
 
+function getOtherCar(){
+  return Object.keys(cars).filter(c=>c!==selected)
+    [Math.floor(Math.random()*2)];
+}
+  
 function addHistory(t){
  history.unshift(t);
  history=history.slice(0,10);
