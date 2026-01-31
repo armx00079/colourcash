@@ -96,7 +96,7 @@ header{background:linear-gradient(135deg,#ff6a6a,#ff8e8e);padding:18px;text-alig
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, getDocs, updateDoc, doc, deletDoc} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
@@ -203,18 +203,7 @@ window.rejectWithdraw=async id=>{
   await updateDoc(doc(db,"withdraws",id),{status:"REJECTED"});
   loadWithdraws();loadDashboard();
 };
-window.deleteUser = async (id, email) => {
-  const confirmDelete = confirm(
-    "Are you sure you want to delete user:\n" + email
-  );
-  if (!confirmDelete) return;
 
-  await deleteDoc(doc(db, "users", id));
-
-  alert("User deleted successfully ✅");
-  loadUsers();
-  loadDashboard();
-};
 /* ---------- USERS ---------- */
 async function loadUsers(){
   sec2.innerHTML="";
@@ -228,9 +217,6 @@ async function loadUsers(){
       <div class="row">
         <button class="btn approve" onclick="changeBal('${d.id}',100)">+100</button>
         <button class="btn reject" onclick="changeBal('${d.id}',-100)">-100</button>
-    <button class="btn minus" onclick="deleteUser('${d.id}','${u.email}')">
-  Delete User
-</button>
       </div>
     </div>`;
   });
