@@ -1,164 +1,226 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Draxbet Admin</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<style>
-body{margin:0;font-family:Arial;background:linear-gradient(180deg,#e3f2fd,#bbdefb)}
-header{background:linear-gradient(135deg,#ff6a6a,#ff8e8e);padding:18px;text-align:center;font-size:22px;font-weight:bold;color:#fff}
-
-.dashboard,.profit{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:15px}
-.box{background:#1c1c1c;color:#fff;border-radius:16px;padding:16px;text-align:center}
-.box h2{margin:0;color:#ff8e8e}
-.box span{font-size:13px;color:#bbb}
-
-.tabs{display:flex;background:#111}
-.tab{flex:1;padding:14px;text-align:center;color:#aaa;font-weight:bold;cursor:pointer}
-.tab.active{background:#1c1c1c;color:#ff8e8e}
-
-.section{display:none;padding:15px}
-.section.active{display:block}
-
-.card{background:#1c1c1c;color:#fff;border-radius:16px;padding:16px;margin-bottom:14px}
-.row{display:flex;justify-content:space-between;margin:6px 0;font-size:14px}
-
-.btn{padding:6px 12px;border:none;border-radius:8px;font-weight:bold;cursor:pointer}
-.approve{background:#2e7d32;color:#fff}
-.reject{background:#c62828;color:#fff}
-
-/* HOUSE EDGE */
-.edge-panel{background:#fff;border-radius:16px;padding:16px;border:2px dashed #ff8e8e}
-.edge-title{text-align:center;font-weight:bold;margin-bottom:14px;color:#d32f2f}
-.edge-item{display:flex;align-items:center;gap:10px;margin:8px 0}
-.edge-item input{flex:1}
-.edge-item span{width:40px;font-weight:bold;text-align:right}
-
-@media(max-width:600px){
-.dashboard,.profit{grid-template-columns:1fr}
-}
-</style>
-</head>
-
-<body>
-
-<header>🛠️ Draxbet – Admin Panel</header>
-
-<div class="dashboard">
-  <div class="box"><h2 id="totalUsers">0</h2><span>Total Users</span></div>
-  <div class="box"><h2 id="pendingDeposits">0</h2><span>Pending Deposits</span></div>
-  <div class="box"><h2 id="pendingWithdraws">0</h2><span>Pending Withdraws</span></div>
-</div>
-
-<div class="profit">
-  <div class="box"><h2 id="totalDeposit">₹0</h2><span>Total Deposit</span></div>
-  <div class="box"><h2 id="totalWithdraw">₹0</h2><span>Total Withdraw</span></div>
-  <div class="box"><h2 id="netProfit">₹0</h2><span>Net Profit</span></div>
-</div>
-
-<div class="tabs">
-  <div class="tab active" onclick="openTab(0)">Deposits</div>
-  <div class="tab" onclick="openTab(1)">Withdraws</div>
-  <div class="tab" onclick="openTab(2)">Users</div>
-  <div class="tab" onclick="openTab(3)">House Edge</div>
-</div>
-
-<div class="section active" id="sec0"></div>
-<div class="section" id="sec1"></div>
-<div class="section" id="sec2"></div>
-
-<div class="section" id="sec3">
-  <div class="edge-panel">
-    <div class="edge-title">🎮 House Edge (SHOW-OFF ONLY)</div>
-    <div class="edge-item">🎨 WIN GO <input type="range" value="20"><span>20%</span></div>
-    <div class="edge-item">💣 MINES <input type="range" value="25"><span>25%</span></div>
-    <div class="edge-item">✈️ AVIATOR <input type="range" value="50"><span>50%</span></div>
-    <div class="edge-item">🐉 DRAGON TIGER <input type="range" value="22"><span>22%</span></div>
-    <div class="edge-item">🎰 ROULETTE <input type="range" value="18"><span>18%</span></div>
-    <div class="edge-item">✈️ AVIATOR REAL <input type="range" value="35"><span>35%</span></div>
-    <div class="edge-item">🪙 COIN FLIP <input type="range" value="39"><span>39%</span></div>
-    <div class="edge-item">💎 TREASURE <input type="range" value="40"><span>40%</span></div>
-    <div class="edge-item">🐔 CHICKEN ROAD <input type="range" value="28"><span>28%</span></div>
-    <div class="edge-item">🎲 DICE ROLL <input type="range" value="12"><span>12%</span></div>
-    <div class="edge-item">⚪ PLINKO <input type="range" value="50"><span>50%</span></div>
-    <div class="edge-item">🚗 DRAX TURBO <input type="range" value="50"><span>50%</span></div>
-    <div class="edge-item">⏹️ SPIN STOP <input type="range" value="15"><span>15%</span></div>
-    <div class="edge-item">🐎 HORSE RACE <input type="range" value="33"><span>33%</span></div>
-    <div class="edge-item">🙏 GANESH SLOTS <input type="range" value="44"><span>44%</span></div>
-    <div class="edge-item">🔥 KENO <input type="range" value="50"><span>50%</span></div>
-    <div class="edge-item">⚡ FATE SHIFT <input type="range" value="26"><span>26%</span></div>
-    <div class="edge-item">⬆️⬇️ HILO <input type="range" value="22"><span>22%</span></div>
-    <div class="edge-item">🐲 DRAGON TOWER <input type="range" value="38"><span>38%</span></div>
-    <div class="edge-item">🎈 BALLOON CRASH <input type="range" value="35"><span>35%</span></div>
-  </div>
-</div>
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, getDocs, updateDoc, doc, deleteDoc } 
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-const app = initializeApp({
-  apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
-  authDomain:"colourcash-ea60e.firebaseapp.com",
-  projectId:"colourcash-ea60e"
-});
-const db = getFirestore(app);
-
-window.openTab=i=>{
-  document.querySelectorAll(".tab").forEach((t,n)=>t.classList.toggle("active",n===i));
-  document.querySelectorAll(".section").forEach((s,n)=>s.classList.toggle("active",n===i));
-};
-
-/* ---------- USERS (UNCHANGED + DELETE ADDED) ---------- */
-async function loadUsers(){
-  sec2.innerHTML="";
-  const snap=await getDocs(collection(db,"users"));
-  snap.forEach(d=>{
-    const u=d.data();
-    sec2.innerHTML+=`
-    <div class="card">
-      <div class="row"><span>${u.email}</span><span>₹${u.balance||0}</span></div>
-      <div class="row"><span>Password</span><span>${u.password||"N/A"}</span></div>
-      <div class="row">
-        <button class="btn approve" onclick="changeBal('${d.id}',100)">+100</button>
-        <button class="btn reject" onclick="changeBal('${d.id}',-100)">-100</button>
-        <button class="btn reject" onclick="deleteUser('${d.id}','${u.email}')">Delete</button>
-      </div>
-    </div>`;
-  });
-}
-
-window.changeBal=async(id,amt)=>{
-  const ref=doc(db,"users",id);
-  const snap=await getDocs(collection(db,"users"));
-  snap.forEach(d=>{
-    if(d.id===id){
-      updateDoc(ref,{balance:(d.data().balance||0)+amt});
-    }
-  });
-  loadUsers();loadDashboard();
-};
-
-/* ✅ USER DELETE – ONLY NEW PART */
-window.deleteUser = async (id,email)=>{
-  if(!confirm("Delete user?\n"+email)) return;
-  await deleteDoc(doc(db,"users",id));
-  alert("User deleted");
-  loadUsers();loadDashboard();
-};
-
-/* HOUSE EDGE SHOW */
-document.querySelectorAll(".edge-item input").forEach(r=>{
-  r.oninput=()=>r.nextElementSibling.innerText=r.value+"%";
-});
-
-loadDashboard();
-loadDeposits();
-loadWithdraws();
-loadUsers();
-</script>
-
-</body>
+<!DOCTYPE html>  <html lang="en">  
+<head>  
+<meta charset="UTF-8">  
+<title>Draxbet Admin</title>  
+<meta name="viewport" content="width=device-width, initial-scale=1">  <style>  
+body{margin:0;font-family:Arial;background:linear-gradient(180deg,#e3f2fd,#bbdefb)}  
+header{background:linear-gradient(135deg,#ff6a6a,#ff8e8e);padding:18px;text-align:center;font-size:22px;font-weight:bold;color:#fff}  
+  
+.dashboard,.profit{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:15px}  
+.box{background:#1c1c1c;color:#fff;border-radius:16px;padding:16px;text-align:center}  
+.box h2{margin:0;color:#ff8e8e}  
+.box span{font-size:13px;color:#bbb}  
+  
+.tabs{display:flex;background:#111}  
+.tab{flex:1;padding:14px;text-align:center;color:#aaa;font-weight:bold;cursor:pointer}  
+.tab.active{background:#1c1c1c;color:#ff8e8e}  
+  
+.section{display:none;padding:15px}  
+.section.active{display:block}  
+  
+.card{background:#1c1c1c;color:#fff;border-radius:16px;padding:16px;margin-bottom:14px}  
+.row{display:flex;justify-content:space-between;margin:6px 0;font-size:14px}  
+  
+.btn{padding:6px 12px;border:none;border-radius:8px;font-weight:bold;cursor:pointer}  
+.approve{background:#2e7d32;color:#fff}  
+.reject{background:#c62828;color:#fff}  
+  
+/* HOUSE EDGE */  
+.edge-panel{background:#fff;border-radius:16px;padding:16px;border:2px dashed #ff8e8e}  
+.edge-title{text-align:center;font-weight:bold;margin-bottom:14px;color:#d32f2f}  
+.edge-item{display:flex;align-items:center;gap:10px;margin:8px 0}  
+.edge-item input{flex:1}  
+.edge-item span{width:40px;font-weight:bold;text-align:right}  
+  
+@media(max-width:600px){  
+.dashboard,.profit{grid-template-columns:1fr}  
+}  
+</style>  </head>  <body>  <header>🛠️ Draxbet – Admin Panel</header>  <div class="dashboard">  
+  <div class="box"><h2 id="totalUsers">0</h2><span>Total Users</span></div>  
+  <div class="box"><h2 id="pendingDeposits">0</h2><span>Pending Deposits</span></div>  
+  <div class="box"><h2 id="pendingWithdraws">0</h2><span>Pending Withdraws</span></div>  
+</div>  <div class="profit">  
+  <div class="box"><h2 id="totalDeposit">₹0</h2><span>Total Deposit</span></div>  
+  <div class="box"><h2 id="totalWithdraw">₹0</h2><span>Total Withdraw</span></div>  
+  <div class="box"><h2 id="netProfit">₹0</h2><span>Net Profit</span></div>  
+</div>  <div class="tabs">  
+  <div class="tab active" onclick="openTab(0)">Deposits</div>  
+  <div class="tab" onclick="openTab(1)">Withdraws</div>  
+  <div class="tab" onclick="openTab(2)">Users</div>  
+  <div class="tab" onclick="openTab(3)">House Edge</div>  
+</div>  <div class="section active" id="sec0"></div>  
+<div class="section" id="sec1"></div>  
+<div class="section" id="sec2"></div>  <div class="section" id="sec3">  
+  <div class="edge-panel">  
+    <div class="edge-title">🎮 House Edge (SHOW-OFF ONLY)</div>  
+    <div class="edge-item">🎨 WIN GO <input type="range" value="20"><span>20%</span></div>  
+    <div class="edge-item">💣 MINES <input type="range" value="25"><span>25%</span></div>  
+    <div class="edge-item">✈️ AVIATOR <input type="range" value="50"><span>50%</span></div>  
+    <div class="edge-item">🐉 DRAGON TIGER <input type="range" value="22"><span>22%</span></div>  
+    <div class="edge-item">🎰 ROULETTE <input type="range" value="18"><span>18%</span></div>  
+    <div class="edge-item">✈️ AVIATOR REAL <input type="range" value="35"><span>35%</span></div>  
+    <div class="edge-item">🪙 COIN FLIP <input type="range" value="39"><span>39%</span></div>  
+    <div class="edge-item">💎 TREASURE <input type="range" value="40"><span>40%</span></div>  
+    <div class="edge-item">🐔 CHICKEN ROAD <input type="range" value="28"><span>28%</span></div>  
+    <div class="edge-item">🎲 DICE ROLL <input type="range" value="12"><span>12%</span></div>  
+    <div class="edge-item">⚪ PLINKO <input type="range" value="50"><span>50%</span></div>  
+    <div class="edge-item">🚗 DRAX TURBO <input type="range" value="50"><span>50%</span></div>  
+    <div class="edge-item">⏹️ SPIN STOP <input type="range" value="15"><span>15%</span></div>  
+    <div class="edge-item">🐎 HORSE RACE <input type="range" value="33"><span>33%</span></div>  
+    <div class="edge-item">🙏 GANESH SLOTS <input type="range" value="44"><span>44%</span></div>  
+    <div class="edge-item">🔥 KENO <input type="range" value="50"><span>50%</span></div>  
+    <div class="edge-item">⚡ FATE SHIFT <input type="range" value="26"><span>26%</span></div>  
+    <div class="edge-item">⬆️⬇️ HILO <input type="range" value="22"><span>22%</span></div>  
+    <div class="edge-item">🐲 DRAGON TOWER <input type="range" value="38"><span>38%</span></div>  
+    <div class="edge-item">🎈 BALLOON CRASH <input type="range" value="35"><span>35%</span></div>  
+  </div>  
+</div>  <script type="module">  
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";  
+import { getFirestore, collection, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";  
+  
+const app = initializeApp({  
+  apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",  
+  authDomain:"colourcash-ea60e.firebaseapp.com",  
+  projectId:"colourcash-ea60e"  
+});  
+const db = getFirestore(app);  
+  
+window.openTab=i=>{  
+  document.querySelectorAll(".tab").forEach((t,n)=>t.classList.toggle("active",n===i));  
+  document.querySelectorAll(".section").forEach((s,n)=>s.classList.toggle("active",n===i));  
+};  
+  
+/* ---------- LOAD DASHBOARD ---------- */  
+async function loadDashboard(){  
+  const users=await getDocs(collection(db,"users"));  
+  const dep=await getDocs(collection(db,"deposits"));  
+  const wd=await getDocs(collection(db,"withdraws"));  
+  
+  totalUsers.innerText=users.size;  
+  pendingDeposits.innerText=dep.docs.filter(d=>d.data().status==="PENDING").length;  
+  pendingWithdraws.innerText=wd.docs.filter(d=>d.data().status==="PENDING").length;  
+  
+  let dSum=0,wSum=0;  
+  dep.docs.forEach(d=>{if(d.data().status==="APPROVED")dSum+=d.data().amount});  
+  wd.docs.forEach(d=>{if(d.data().status==="APPROVED")wSum+=d.data().amount});  
+  
+  totalDeposit.innerText="₹"+dSum;  
+  totalWithdraw.innerText="₹"+wSum;  
+  netProfit.innerText="₹"+(dSum-wSum);  
+}  
+  
+/* ---------- DEPOSITS ---------- */  
+async function loadDeposits(){  
+  sec0.innerHTML="";  
+  const snap=await getDocs(collection(db,"deposits"));  
+  snap.forEach(d=>{  
+    const x=d.data();  
+    if(x.status!=="PENDING")return;  
+    sec0.innerHTML+=`  
+      <div class="card">  
+        <div class="row"><span>${x.email}</span><span>₹${x.amount}</span></div>  
+        <div class="row"><span>UTR</span><span>${x.utr}</span></div>  
+        <div class="row">  
+          <button class="btn approve" onclick="approveDeposit('${d.id}','${x.email}',${x.amount})">Approve</button>  
+          <button class="btn reject" onclick="rejectDeposit('${d.id}')">Reject</button>  
+        </div>  
+      </div>`;  
+  });  
+}  
+  
+window.approveDeposit=async(id,email,amt)=>{  
+  await updateDoc(doc(db,"deposits",id),{status:"APPROVED"});  
+  const users=await getDocs(collection(db,"users"));  
+  users.forEach(u=>{  
+    if(u.data().email===email){  
+      updateDoc(doc(db,"users",u.id),{balance:(u.data().balance||0)+amt});  
+    }  
+  });  
+  loadDeposits();loadDashboard();  
+};  
+window.rejectDeposit=async id=>{  
+  await updateDoc(doc(db,"deposits",id),{status:"REJECTED"});  
+  loadDeposits();loadDashboard();  
+};  
+  
+/* ---------- WITHDRAWS ---------- */  
+async function loadWithdraws(){  
+  sec1.innerHTML="";  
+  const snap=await getDocs(collection(db,"withdraws"));  
+  snap.forEach(d=>{  
+    const w=d.data();  
+    if(w.status!=="PENDING")return;  
+  
+    let extra="";  
+    if(w.method==="UPI"){  
+      extra=`<div class="row"><span>UPI</span><span>${w.upiId}</span></div>`;  
+    }else{  
+      extra=`  
+      <div class="row"><span>Holder</span><span>${w.bankDetails.holder}</span></div>  
+      <div class="row"><span>Bank</span><span>${w.bankDetails.bank}</span></div>  
+      <div class="row"><span>Account</span><span>${w.bankDetails.account}</span></div>  
+      <div class="row"><span>IFSC</span><span>${w.bankDetails.ifsc}</span></div>`;  
+    }  
+  
+    sec1.innerHTML+=`  
+    <div class="card">  
+      <div class="row"><span>${w.email}</span><span>₹${w.amount}</span></div>  
+      <div class="row"><span>Order ID</span><span>${w.orderId||"NA"}</span></div>  
+      ${extra}  
+      <div class="row">  
+        <button class="btn approve" onclick="approveWithdraw('${d.id}')">Approve</button>  
+        <button class="btn reject" onclick="rejectWithdraw('${d.id}')">Reject</button>  
+      </div>  
+    </div>`;  
+  });  
+}  
+  
+window.approveWithdraw=async id=>{  
+  await updateDoc(doc(db,"withdraws",id),{status:"APPROVED"});  
+  loadWithdraws();loadDashboard();  
+};  
+window.rejectWithdraw=async id=>{  
+  await updateDoc(doc(db,"withdraws",id),{status:"REJECTED"});  
+  loadWithdraws();loadDashboard();  
+};  
+  
+/* ---------- USERS ---------- */  
+async function loadUsers(){  
+  sec2.innerHTML="";  
+  const snap=await getDocs(collection(db,"users"));  
+  snap.forEach(d=>{  
+    const u=d.data();  
+    sec2.innerHTML+=`  
+    <div class="card">  
+      <div class="row"><span>${u.email}</span><span>₹${u.balance||0}</span></div>  
+      <div class="row"><span>Password</span><span>${u.password||"N/A"}</span></div>  
+      <div class="row">  
+        <button class="btn approve" onclick="changeBal('${d.id}',100)">+100</button>  
+        <button class="btn reject" onclick="changeBal('${d.id}',-100)">-100</button>  
+      </div>  
+    </div>`;  
+  });  
+}  
+  
+window.changeBal=async(id,amt)=>{  
+  const ref=doc(db,"users",id);  
+  const snap=await getDocs(collection(db,"users"));  
+  snap.forEach(d=>{  
+    if(d.id===id){  
+      updateDoc(ref,{balance:(d.data().balance||0)+amt});  
+    }  
+  });  
+  loadUsers();loadDashboard();  
+};  
+  
+/* HOUSE EDGE LIVE */  
+document.querySelectorAll(".edge-item input").forEach(r=>{  
+  r.oninput=()=>r.nextElementSibling.innerText=r.value+"%";  
+});  
+  
+loadDashboard();  
+loadDeposits();  
+loadWithdraws();  
+loadUsers();  
+</script>  </body>  
 </html>
