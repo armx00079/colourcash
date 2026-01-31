@@ -68,7 +68,24 @@ body{margin:0;font-family:Arial;background:#ffeb3b;color:#fff}
 .nav-btn.active{color:#4caf50;font-weight:bold}
 .nav-btn div{font-size:20px}
 .spacer{height:70px}
-
+  
+#supportIcon{
+  position: fixed;
+  right: 16px;
+  bottom: 90px;
+  width: 56px;
+  height: 56px;
+  background: #111;
+  color: #fff;
+  font-size: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.4);
+  cursor: pointer;
+  z-index: 9999;
+}
 /* POPUP */
 .deposit-popup{
   position:fixed;inset:0;background:rgba(0,0,0,.75);
@@ -181,6 +198,13 @@ document.addEventListener("click",e=>{
   }
 },true);
 </script>
-
+<div id="supportIcon" onclick="openSupportMail()">✉️</div>
+  <script>
+function openSupportMail(){
+  window.location.href =
+    "mailto:supirtx4@gmail.com?subject=DraxBet Support&body=Hello Support Team,";
+}
+  </script>
+  
 </body>
 </html>
