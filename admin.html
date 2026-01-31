@@ -111,7 +111,7 @@ window.openTab=i=>{
   document.querySelectorAll(".section").forEach((s,n)=>s.classList.toggle("active",n===i));
 };
 
-/* USERS */
+/* ---------- USERS (UNCHANGED + DELETE ADDED) ---------- */
 async function loadUsers(){
   sec2.innerHTML="";
   const snap=await getDocs(collection(db,"users"));
@@ -141,14 +141,15 @@ window.changeBal=async(id,amt)=>{
   loadUsers();loadDashboard();
 };
 
+/* ✅ USER DELETE – ONLY NEW PART */
 window.deleteUser = async (id,email)=>{
   if(!confirm("Delete user?\n"+email)) return;
   await deleteDoc(doc(db,"users",id));
-  alert("User deleted ✅");
+  alert("User deleted");
   loadUsers();loadDashboard();
 };
 
-/* HOUSE EDGE */
+/* HOUSE EDGE SHOW */
 document.querySelectorAll(".edge-item input").forEach(r=>{
   r.oninput=()=>r.nextElementSibling.innerText=r.value+"%";
 });
