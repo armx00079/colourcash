@@ -96,7 +96,8 @@ header{background:linear-gradient(135deg,#ff6a6a,#ff8e8e);padding:18px;text-alig
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, getDocs, updateDoc, doc, deleteDoc } 
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
@@ -110,101 +111,7 @@ window.openTab=i=>{
   document.querySelectorAll(".section").forEach((s,n)=>s.classList.toggle("active",n===i));
 };
 
-/* ---------- LOAD DASHBOARD ---------- */
-async function loadDashboard(){
-  const users=await getDocs(collection(db,"users"));
-  const dep=await getDocs(collection(db,"deposits"));
-  const wd=await getDocs(collection(db,"withdraws"));
-
-  totalUsers.innerText=users.size;
-  pendingDeposits.innerText=dep.docs.filter(d=>d.data().status==="PENDING").length;
-  pendingWithdraws.innerText=wd.docs.filter(d=>d.data().status==="PENDING").length;
-
-  let dSum=0,wSum=0;
-  dep.docs.forEach(d=>{if(d.data().status==="APPROVED")dSum+=d.data().amount});
-  wd.docs.forEach(d=>{if(d.data().status==="APPROVED")wSum+=d.data().amount});
-
-  totalDeposit.innerText="₹"+dSum;
-  totalWithdraw.innerText="₹"+wSum;
-  netProfit.innerText="₹"+(dSum-wSum);
-}
-
-/* ---------- DEPOSITS ---------- */
-async function loadDeposits(){
-  sec0.innerHTML="";
-  const snap=await getDocs(collection(db,"deposits"));
-  snap.forEach(d=>{
-    const x=d.data();
-    if(x.status!=="PENDING")return;
-    sec0.innerHTML+=`
-      <div class="card">
-        <div class="row"><span>${x.email}</span><span>₹${x.amount}</span></div>
-        <div class="row"><span>UTR</span><span>${x.utr}</span></div>
-        <div class="row">
-          <button class="btn approve" onclick="approveDeposit('${d.id}','${x.email}',${x.amount})">Approve</button>
-          <button class="btn reject" onclick="rejectDeposit('${d.id}')">Reject</button>
-        </div>
-      </div>`;
-  });
-}
-
-window.approveDeposit=async(id,email,amt)=>{
-  await updateDoc(doc(db,"deposits",id),{status:"APPROVED"});
-  const users=await getDocs(collection(db,"users"));
-  users.forEach(u=>{
-    if(u.data().email===email){
-      updateDoc(doc(db,"users",u.id),{balance:(u.data().balance||0)+amt});
-    }
-  });
-  loadDeposits();loadDashboard();
-};
-window.rejectDeposit=async id=>{
-  await updateDoc(doc(db,"deposits",id),{status:"REJECTED"});
-  loadDeposits();loadDashboard();
-};
-
-/* ---------- WITHDRAWS ---------- */
-async function loadWithdraws(){
-  sec1.innerHTML="";
-  const snap=await getDocs(collection(db,"withdraws"));
-  snap.forEach(d=>{
-    const w=d.data();
-    if(w.status!=="PENDING")return;
-
-    let extra="";
-    if(w.method==="UPI"){
-      extra=`<div class="row"><span>UPI</span><span>${w.upiId}</span></div>`;
-    }else{
-      extra=`
-      <div class="row"><span>Holder</span><span>${w.bankDetails.holder}</span></div>
-      <div class="row"><span>Bank</span><span>${w.bankDetails.bank}</span></div>
-      <div class="row"><span>Account</span><span>${w.bankDetails.account}</span></div>
-      <div class="row"><span>IFSC</span><span>${w.bankDetails.ifsc}</span></div>`;
-    }
-
-    sec1.innerHTML+=`
-    <div class="card">
-      <div class="row"><span>${w.email}</span><span>₹${w.amount}</span></div>
-      <div class="row"><span>Order ID</span><span>${w.orderId||"NA"}</span></div>
-      ${extra}
-      <div class="row">
-        <button class="btn approve" onclick="approveWithdraw('${d.id}')">Approve</button>
-        <button class="btn reject" onclick="rejectWithdraw('${d.id}')">Reject</button>
-      </div>
-    </div>`;
-  });
-}
-
-window.approveWithdraw=async id=>{
-  await updateDoc(doc(db,"withdraws",id),{status:"APPROVED"});
-  loadWithdraws();loadDashboard();
-};
-window.rejectWithdraw=async id=>{
-  await updateDoc(doc(db,"withdraws",id),{status:"REJECTED"});
-  loadWithdraws();loadDashboard();
-};
-
-/* ---------- USERS ---------- */
+/* USERS */
 async function loadUsers(){
   sec2.innerHTML="";
   const snap=await getDocs(collection(db,"users"));
@@ -217,6 +124,7 @@ async function loadUsers(){
       <div class="row">
         <button class="btn approve" onclick="changeBal('${d.id}',100)">+100</button>
         <button class="btn reject" onclick="changeBal('${d.id}',-100)">-100</button>
+        <button class="btn reject" onclick="deleteUser('${d.id}','${u.email}')">Delete</button>
       </div>
     </div>`;
   });
@@ -233,7 +141,14 @@ window.changeBal=async(id,amt)=>{
   loadUsers();loadDashboard();
 };
 
-/* HOUSE EDGE LIVE */
+window.deleteUser = async (id,email)=>{
+  if(!confirm("Delete user?\n"+email)) return;
+  await deleteDoc(doc(db,"users",id));
+  alert("User deleted ✅");
+  loadUsers();loadDashboard();
+};
+
+/* HOUSE EDGE */
 document.querySelectorAll(".edge-item input").forEach(r=>{
   r.oninput=()=>r.nextElementSibling.innerText=r.value+"%";
 });
