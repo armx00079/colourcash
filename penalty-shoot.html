@@ -2,244 +2,213 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Penalty Shoot Betting Game</title>
+<title>91 Inspired – Color Game</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
+/* ===== RESET ===== */
+*{box-sizing:border-box}
 body{
   margin:0;
-  font-family:Arial, sans-serif;
-  background:radial-gradient(circle at top,#0b1c2d,#02080f);
+  font-family:Arial,Helvetica,sans-serif;
+  background:linear-gradient(180deg,#0b1c2d,#020a14);
   color:#fff;
-  text-align:center;
 }
 
 /* ===== HEADER ===== */
 .header{
   padding:15px;
+  text-align:center;
   font-size:22px;
   font-weight:bold;
-  background:linear-gradient(180deg,#1e2a3a,#0b1522);
+  background:linear-gradient(135deg,#ff9800,#ff5722);
 }
 
 /* ===== WALLET ===== */
 .wallet{
-  position:fixed;
-  bottom:15px;
-  right:15px;
-  background:#000;
-  padding:10px 16px;
-  border-radius:20px;
-  font-weight:bold;
+  display:flex;
+  justify-content:space-between;
+  padding:12px 15px;
+  background:#08121e;
+  font-size:16px;
 }
 
-/* ===== GAME AREA ===== */
-.game{
-  margin-top:20px;
+/* ===== TIMER ===== */
+.timer-box{
+  text-align:center;
+  padding:15px;
+}
+.timer{
+  font-size:36px;
+  color:#00e5ff;
+}
+.round{
+  color:#aaa;
+  font-size:14px;
 }
 
-.goal{
-  width:280px;
-  height:120px;
-  margin:20px auto;
-  background:#1a2f4a;
-  border-radius:12px;
-  position:relative;
-  overflow:hidden;
+/* ===== GAME CARD ===== */
+.card{
+  background:#0f2238;
+  margin:15px;
+  padding:15px;
+  border-radius:14px;
 }
 
-.keeper{
-  position:absolute;
-  bottom:10px;
-  left:50%;
-  transform:translateX(-50%);
-  font-size:40px;
-}
-
-.ball{
-  font-size:40px;
+/* ===== COLORS ===== */
+.colors{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
   margin-top:10px;
 }
-
-/* ===== POWER BAR ===== */
-.power-box{
-  width:260px;
-  height:16px;
-  background:#222;
-  border-radius:10px;
-  margin:15px auto;
-  overflow:hidden;
-}
-.power{
-  height:100%;
-  width:0%;
-  background:linear-gradient(90deg,#2ecc71,#f1c40f,#e74c3c);
-}
-
-/* ===== BUTTON ===== */
-.kick-btn{
-  margin-top:15px;
-  padding:10px 30px;
-  border-radius:20px;
-  background:#f1c40f;
-  color:#000;
+.color-btn{
+  padding:18px 0;
+  border-radius:12px;
+  font-size:18px;
   font-weight:bold;
-  display:inline-block;
-}
-
-/* ===== CHIPS ===== */
-.chips{
-  display:flex;
-  justify-content:center;
-  gap:10px;
-  margin:20px 0;
-}
-.chip{
-  width:50px;
-  height:50px;
-  border-radius:50%;
-  background:radial-gradient(circle,#ffd56a,#d4a018);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:bold;
-  color:#000;
+  text-align:center;
   cursor:pointer;
 }
-.chip.active{
-  outline:3px solid #fff;
+.green{background:#2ecc71}
+.violet{background:#9b59b6}
+.red{background:#e74c3c}
+
+/* ===== BET INPUT ===== */
+input{
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  font-size:18px;
+  text-align:center;
+  margin-top:10px;
 }
 
 /* ===== HISTORY ===== */
 .history{
-  margin-top:15px;
-  font-size:14px;
+  margin-top:10px;
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+}
+.h-dot{
+  width:22px;
+  height:22px;
+  border-radius:50%;
 }
 
-/* ===== POPUP ===== */
-.popup{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.7);
-  display:none;
-  align-items:center;
-  justify-content:center;
-}
-.popup-box{
-  background:#1e2f45;
-  padding:25px;
-  border-radius:16px;
-  animation:pop .4s ease;
-}
-@keyframes pop{
-  from{transform:scale(.6);opacity:0}
-  to{transform:scale(1);opacity:1}
+/* ===== BUTTON ===== */
+.btn{
+  margin-top:12px;
+  width:100%;
+  padding:12px;
+  background:linear-gradient(135deg,#ff9800,#ff5722);
+  border:none;
+  border-radius:10px;
+  font-size:18px;
+  color:#fff;
+  cursor:pointer;
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">⚽ Penalty Shoot – Betting Game</div>
+<div class="header">91 Inspired Game</div>
 
-<div class="game">
-  <div class="goal">
-    <div class="keeper" id="keeper">🧤</div>
-  </div>
-
-  <div class="ball">⚽</div>
-
-  <div class="power-box">
-    <div class="power" id="power"></div>
-  </div>
-
-  <div class="kick-btn" id="kickBtn">TAP TO KICK</div>
+<div class="wallet">
+  <div>Balance: ₹<span id="balance">1000</span></div>
+  <div>Demo Wallet</div>
 </div>
 
-<div class="chips">
-  <div class="chip">10</div>
-  <div class="chip">50</div>
-  <div class="chip">100</div>
-  <div class="chip">500</div>
-  <div class="chip">1K</div>
+<div class="timer-box">
+  <div class="timer" id="timer">30</div>
+  <div class="round">Round: <span id="round">1</span></div>
 </div>
 
-<div class="history" id="history"></div>
+<div class="card">
+  <h3>Choose Color</h3>
 
-<div class="wallet" id="wallet">💰 Wallet ₹0</div>
+  <input type="number" id="betAmount" placeholder="Enter Bet Amount">
 
-<div class="popup" id="popup">
-  <div class="popup-box" id="popupBox"></div>
+  <div class="colors">
+    <div class="color-btn green" onclick="placeBet('green')">Green</div>
+    <div class="color-btn violet" onclick="placeBet('violet')">Violet</div>
+    <div class="color-btn red" onclick="placeBet('red')">Red</div>
+  </div>
+
+  <button class="btn" onclick="placeBet()">Place Bet</button>
+
+  <div class="history" id="history"></div>
 </div>
 
 <script>
-/* ===== DATA ===== */
-let wallet = parseInt(localStorage.getItem("wallet")) || 5000;
-let bet = 0;
-let power = 0;
-let dir = 1;
-let moving;
-let history = JSON.parse(localStorage.getItem("history")) || [];
+let balance = 1000;
+let timer = 30;
+let round = 1;
+let selectedColor = null;
+let history = [];
 
-/* ===== ELEMENTS ===== */
-const powerBar = document.getElementById("power");
-const kickBtn = document.getElementById("kickBtn");
-const walletUI = document.getElementById("wallet");
-const keeper = document.getElementById("keeper");
-const historyBox = document.getElementById("history");
-const popup = document.getElementById("popup");
-const popupBox = document.getElementById("popupBox");
+function placeBet(color){
+  if(color) selectedColor = color;
 
-/* ===== INIT ===== */
-updateWallet();
-renderHistory();
-startPower();
+  const bet = Number(document.getElementById("betAmount").value);
+  if(!selectedColor){
+    alert("Select color");
+    return;
+  }
+  if(bet <= 0 || bet > balance){
+    alert("Invalid bet");
+    return;
+  }
+  balance -= bet;
+  document.getElementById("balance").innerText = balance;
 
-/* ===== CHIP SELECT ===== */
-document.querySelectorAll(".chip").forEach(c=>{
-  c.onclick=()=>{
-    document.querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));
-    c.classList.add("active");
-    bet = parseInt(c.innerText.replace("K","000"));
-  };
-});
+  // result after round end
+  setTimeout(()=>{
+    const colors = ["green","violet","red"];
+    const result = colors[Math.floor(Math.random()*3)];
 
-/* ===== POWER MOVE ===== */
-function startPower(){
-  clearInterval(moving);
-  moving = setInterval(()=>{
-    power += dir*2;
-    if(power>=100||power<=0) dir*=-1;
-    powerBar.style.width = power+"%";
-  },30);
+    history.unshift(result);
+    if(history.length > 10) history.pop();
+    renderHistory();
+
+    if(result === selectedColor){
+      let win = bet * 2;
+      balance += win;
+      alert("You Won ₹"+win+" ("+result+")");
+    }else{
+      alert("You Lost ("+result+")");
+    }
+    document.getElementById("balance").innerText = balance;
+    selectedColor = null;
+    document.getElementById("betAmount").value="";
+  }, timer*1000);
 }
 
-/* ===== KICK ===== */
-kickBtn.onclick=()=>{
-  if(bet<=0 || wallet<bet) return alert("Select bet amount");
-  clearInterval(moving);
+function renderHistory(){
+  const h = document.getElementById("history");
+  h.innerHTML="";
+  history.forEach(c=>{
+    const d=document.createElement("div");
+    d.className="h-dot";
+    d.style.background=c;
+    h.appendChild(d);
+  });
+}
 
-  wallet -= bet;
-
-  const keeperSide = ["L","C","R"][Math.floor(Math.random()*3)];
-  const shotSide = power<33?"L":power<66?"C":"R";
-
-  keeper.innerText = keeperSide==="L"?"🧤⬅️":keeperSide==="R"?"🧤➡️":"🧤";
-
-  let win = keeperSide !== shotSide;
-
-  if(win){
-    let winAmt = bet*2;
-    wallet += winAmt;
-    showPopup("GOAL! 🎉<br>+₹"+winAmt);
-    history.unshift("WIN ₹"+bet);
-  }else{
-    showPopup("SAVE! ❌<br>-₹"+bet);
-    history.unshift("LOSS ₹"+bet);
+// TIMER LOOP
+setInterval(()=>{
+  timer--;
+  if(timer<=0){
+    timer=30;
+    round++;
+    document.getElementById("round").innerText=round;
   }
+  document.getElementById("timer").innerText=timer;
+},1000);
+</script>
 
-  saveState();
-  updateWallet();
-  renderHistory();
-
-  setTimeout(resetRound
+</body>
+</html>
