@@ -179,10 +179,35 @@ window.approveWithdraw=async id=>{
   await updateDoc(doc(db,"withdraws",id),{status:"APPROVED"});  
   loadWithdraws();loadDashboard();  
 };  
-window.rejectWithdraw=async id=>{  
-  await updateDoc(doc(db,"withdraws",id),{status:"REJECTED"});  
-  loadWithdraws();loadDashboard();  
-};  
+window.rejectWithdraw = async (id) => {
+  const wRef = doc(db, "withdraws", id);
+  const wSnap = await getDocs(collection(db,"withdraws"));
+
+  let email="", amount=0;
+
+  wSnap.forEach(d=>{
+    if(d.id === id){
+      email = d.data().email;
+      amount = Number(d.data().amount || 0);
+    }
+  });
+
+  // Withdraw status reject
+  await updateDoc(wRef,{status:"REJECTED"});
+
+  // User wallet refund
+  const users = await getDocs(collection(db,"users"));
+  users.forEach(async u=>{
+    if(u.data().email === email){
+      await updateDoc(doc(db,"users",u.id),{
+        balance:(u.data().balance||0) + amount
+      });
+    }
+  });
+
+  loadWithdraws();
+  loadDashboard();
+};
   
 /* ---------- USERS ---------- */  
 async function loadUsers(){  
