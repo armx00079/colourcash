@@ -219,7 +219,26 @@ async function loadUsers(){
     <div class="card">  
       <div class="row"><span>${u.email}</span><span>₹${u.balance||0}</span></div>  
       <div class="row"><span>Password</span><span>${u.password||"N/A"}</span></div>  
-      <div class="row">  
+      <div class="row">
+  <span>Registered</span>
+  <span>
+    ${u.createdAt 
+      ? new Date(u.createdAt).toLocaleString() 
+      : "N/A"}
+  </span>
+</div>
+
+<div class="row">
+  <input id="amt-${d.id}" type="number" placeholder="Amount"
+   style="width:90px;padding:4px;border-radius:6px">
+  <button class="btn approve" onclick="addAmount('${d.id}')">ADD</button>
+</div>
+
+<div class="row">
+  <button class="btn reject" onclick="deleteUser('${d.id}')">
+    DELETE USER
+  </button>
+</div> 
         <button class="btn approve" onclick="changeBal('${d.id}',100)">+100</button>  
         <button class="btn reject" onclick="changeBal('${d.id}',-100)">-100</button>  
       </div>  
@@ -246,6 +265,34 @@ document.querySelectorAll(".edge-item input").forEach(r=>{
 loadDashboard();  
 loadDeposits();  
 loadWithdraws();  
-loadUsers();  
+loadUsers(); 
+  // ADD / MINUS AMOUNT
+window.addAmount = async(id)=>{
+  const input = document.getElementById("amt-"+id);
+  const amt = Number(input.value);
+  if(!amt) return alert("Enter amount");
+
+  const ref = doc(db,"users",id);
+  const snap = await getDocs(collection(db,"users"));
+
+  snap.forEach(d=>{
+    if(d.id===id){
+      updateDoc(ref,{
+        balance:(d.data().balance||0) + amt
+      });
+    }
+  });
+
+  loadUsers();
+  loadDashboard();
+};
+
+// DELETE USER
+window.deleteUser = async(id)=>{
+  if(!confirm("Delete this user?")) return;
+  await deleteDoc(doc(db,"users",id));
+  loadUsers();
+  loadDashboard();
+};
 </script>  </body>  
 </html>
