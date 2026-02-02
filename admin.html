@@ -76,7 +76,14 @@ header{background:linear-gradient(135deg,#ff6a6a,#ff8e8e);padding:18px;text-alig
   </div>  
 </div>  <script type="module">  
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";  
-import { getFirestore, collection, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";  
+import { 
+  getFirestore, 
+  collection, 
+  getDocs, 
+  updateDoc, 
+  doc,
+  deleteDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";  
   
 const app = initializeApp({  
   apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",  
