@@ -221,7 +221,10 @@ async function loadUsers(){
   sec2.innerHTML="";  
   const snap=await getDocs(collection(db,"users"));  
   snap.forEach(d=>{  
-    const u=d.data();  
+    const u=d.data();
+    const regDate = u.createdAt
+  ? new Date(u.createdAt.seconds * 1000).toLocaleString()
+  : "N/A";
     sec2.innerHTML+=`  
     <div class="card">  
       <div class="row"><span>${u.email}</span><span>₹${u.balance||0}</span></div>  
