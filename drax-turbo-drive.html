@@ -118,13 +118,15 @@ const db=getFirestore(app);
 const userEmail=localStorage.getItem("userEmail");
 let uid="",wallet=0;
 let HOUSE_EDGE=0.25;
-
+let TURBO_MODE = "AUTO"; // WIN | LOSS | AUTO
 /* 🔥 LOAD HOUSE EDGE */
 async function loadHouseEdge(){
-  const ref=doc(db,"settings","houseEdge");
-  const snap=await getDoc(ref);
+  const ref = doc(db,"settings","houseEdge");
+  const snap = await getDoc(ref);
+
   if(snap.exists()){
-    HOUSE_EDGE=snap.data().draxTurbo || 0.25;
+    HOUSE_EDGE = snap.data().draxTurbo || 0.25;
+    TURBO_MODE = snap.data().turboMode || "AUTO";
   }
 }
 
@@ -212,7 +214,19 @@ window.startRace=async ()=>{
 };
 
 function decideWinner(){
-  if(Math.random()<HOUSE_EDGE){
+
+  // 🔥 ADMIN FORCE WIN
+  if(TURBO_MODE === "WIN"){
+    return selected;
+  }
+
+  // 🔥 ADMIN FORCE LOSS
+  if(TURBO_MODE === "LOSS"){
+    return getOtherCar();
+  }
+
+  // 🔥 AUTO MODE (HOUSE EDGE)
+  if(Math.random() < HOUSE_EDGE){
     return selected;
   }else{
     return getOtherCar();
