@@ -110,7 +110,7 @@ body{
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
   getFirestore,collection,query,where,
-  getDocs,doc,updateDoc
+  getDocs,getDoc,doc,updateDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const app = initializeApp({
@@ -122,19 +122,54 @@ const db = getFirestore(app);
 
 const userEmail = localStorage.getItem("userEmail");
 let uid="", wallet=0;
+let HOUSE_EDGE = 0.25; // default house edge (25%)
+ async function loadHouseEdge(){
+  const ref = doc(db,"settings","houseEdge");
+  const snap = await getDoc(ref);
+  if(snap.exists()){
+    HOUSE_EDGE = snap.data().draxTurbo || 0.25;
+  }
+}
+// 🔥 LOAD HOUSE EDGE FROM ADMIN
+async function loadHouseEdge(){
+  const ref = doc(db,"settings","houseEdge");
+  const snap = await getDoc(ref);
 
+  if(snap.exists()){
+    HOUSE_EDGE = snap.data().draxTurbo || 0.25;
+  }
+}
+
+// 🔥 LOAD USER WALLET
 async function loadWallet(){
-  const q=query(collection(db,"users"),where("email","==",userEmail));
-  const snap=await getDocs(q);
+  const q = query(
+    collection(db,"users"),
+    where("email","==",userEmail)
+  );
+
+  const snap = await getDocs(q);
   snap.forEach(d=>{
-    uid=d.id;
-    wallet=Number(d.data().balance||0);
+    uid = d.id;
+    wallet = Number(d.data().balance || 0);
   });
+
   updateWallet();
 }
+
 async function saveWallet(){
-  if(uid) await updateDoc(doc(db,"users",uid),{balance:wallet});
+  if(uid){
+    await updateDoc(
+      doc(db,"users",uid),
+      { balance: wallet }
+    );
+  }
 }
+
+// 🔥 PAGE INIT (ORDER MATTERS)
+(async ()=>{
+  await loadHouseEdge(); // admin control first
+  await loadWallet();    // then wallet
+})();
 
 /* ===== GAME LOGIC ===== */
 let selected="";
@@ -196,27 +231,15 @@ window.startRace=async ()=>{
   startBtn.disabled=false;
  },1600);
 };
-
-function decideWinner(bet){
- let winChance=0.22;
- if(bet>300) winChance=0.18;
- if(bet>700) winChance=0.12;
- if(bet>1200) winChance=0.07;
-
- if(lastResult==="WIN"){
-  lastResult="LOSS";
-  localStorage.setItem("lastResult","LOSS");
-  return getOtherCar();
- }
- if(Math.random()<winChance){
-  lastResult="WIN";
-  localStorage.setItem("lastResult","WIN");
-  return selected;
- }
- lastResult="LOSS";
- localStorage.setItem("lastResult","LOSS");
- return getOtherCar();
+function decideWinner(){
+  // ADMIN CONTROLLED
+  if(Math.random() < HOUSE_EDGE){
+    return selected;      // user jeetega
+  }else{
+    return getOtherCar(); // user harega
+  }
 }
+
 
 function getOtherCar(){
  return Object.keys(cars).filter(c=>c!==selected)
