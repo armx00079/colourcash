@@ -267,10 +267,22 @@ window.changeBal=async(id,amt)=>{
   loadUsers();loadDashboard();  
 };  
   
-/* HOUSE EDGE LIVE */  
-document.querySelectorAll(".edge-item input").forEach(r=>{  
-  r.oninput=()=>r.nextElementSibling.innerText=r.value+"%";  
-});  
+/* HOUSE EDGE LIVE + SAVE TO FIREBASE */
+document.querySelectorAll(".edge-item input").forEach(r=>{
+  r.oninput = async () => {
+    // UI update
+    r.nextElementSibling.innerText = r.value + "%";
+
+    // 🔥 SAVE DRAX TURBO EDGE
+    await setDoc(
+      doc(db,"settings","houseEdge"),
+      {
+        draxTurbo: Number(r.value) / 100
+      }
+    );
+  };
+}); 
+
   
 loadDashboard();  
 loadDeposits();  
