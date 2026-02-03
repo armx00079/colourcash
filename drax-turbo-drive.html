@@ -215,22 +215,22 @@ window.startRace=async ()=>{
 
 function decideWinner(){
 
-  // 🔥 ADMIN FORCE WIN
-  if(TURBO_MODE === "WIN"){
-    return selected;
-  }
-
-  // 🔥 ADMIN FORCE LOSS
-  if(TURBO_MODE === "LOSS"){
+function decideWinner(){
+  // 100% LOSS
+  if (HOUSE_EDGE === 0) {
     return getOtherCar();
   }
 
-  // 🔥 AUTO MODE (HOUSE EDGE)
-  if(Math.random() < HOUSE_EDGE){
+  // 100% WIN
+  if (HOUSE_EDGE === 1) {
     return selected;
-  }else{
-    return getOtherCar();
   }
+
+  // NORMAL PROBABILITY MODE
+  return Math.random() < HOUSE_EDGE
+    ? selected
+    : getOtherCar();
+}
 }
 
 function getOtherCar(){
