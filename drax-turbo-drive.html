@@ -105,7 +105,11 @@ import {
   getFirestore,collection,query,where,
   getDocs,getDoc,doc,updateDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
+const betInput = document.getElementById("betInput");
+const startBtn = document.getElementById("startBtn");
+const popup = document.getElementById("popup");
+const popupText = document.getElementById("popupText");
+const historyBox = document.getElementById("historyBox");
 const walletSpan=document.getElementById("wallet");
 
 const app=initializeApp({
@@ -228,7 +232,6 @@ function decideWinner(){
   return Math.random() < HOUSE_EDGE
     ? selected
     : getOtherCar();
-}
 }
 
 function getOtherCar(){
