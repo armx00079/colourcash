@@ -107,7 +107,18 @@ body{margin:0;font-family:Arial;background:#081c2f;color:#fff}
 let wallet = +localStorage.getItem("coin_wallet") || 1000;
 let history = JSON.parse(localStorage.getItem("coin_history")||"[]");
 let bets = JSON.parse(localStorage.getItem("coin_bets")||"[]");
-
+let COIN_EDGE = 0.5;
+  async function loadCoinEdge(){
+  const ref = doc(db,"settings","houseEdge");
+  const snap = await getDoc(ref);
+  if(snap.exists()){
+    COIN_EDGE = snap.data().coinFlip ?? 0.5;
+  }
+  }
+  (async ()=>{
+  await loadCoinEdge();   // ✅ ADD THIS
+  await loadWallet();     // (agar hai)
+})();
 const walletEl = document.getElementById("wallet");
 const coin = document.getElementById("coin");
 const histEl = document.getElementById("history");
@@ -137,7 +148,9 @@ function play(choice){
   setTimeout(()=>{
     coin.classList.remove("flip");
     let r=Math.random();
-    let result = r<0.3 ? choice : (choice==="HEAD"?"TAIL":"HEAD");
+    let result = r < COIN_EDGE
+  ? choice
+  : (choice==="HEAD" ? "TAIL" : "HEAD");
     coin.innerText=result==="HEAD"?"🙂":"🪙";
 
     history.unshift(result);
