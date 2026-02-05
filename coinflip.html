@@ -103,103 +103,6 @@ body{margin:0;font-family:Arial;background:#081c2f;color:#fff}
   <div class="popup" id="popup"></div>
 </div>
 
-<script>
-let wallet = +localStorage.getItem("coin_wallet") || 1000;
-let history = JSON.parse(localStorage.getItem("coin_history")||"[]");
-let bets = JSON.parse(localStorage.getItem("coin_bets")||"[]");
-let COIN_EDGE = 0.5;
-  
-const walletEl = document.getElementById("wallet");
-const coin = document.getElementById("coin");
-const histEl = document.getElementById("history");
-const betsEl = document.getElementById("mybets");
-const popupBg = document.getElementById("popupBg");
-const popup = document.getElementById("popup");
-
-walletEl.innerText = wallet;
-renderHistory();
-renderBets();
-
-function chg(v){
-  let a=document.getElementById("amt");
-  a.value=Math.max(1,+a.value+v);
-}
-
-function play(choice){
-  let amt=+document.getElementById("amt").value;
-  if(wallet<amt) return showPopup("Low Balance","loss");
-
-  wallet-=amt;
-  walletEl.innerText=wallet;
-  saveWallet();
-
-  coin.classList.add("flip");
-
-  setTimeout(()=>{
-    coin.classList.remove("flip");
-    let result = decideCoinResult(choice);
-    coin.innerText=result==="HEAD"?"🙂":"🪙";
-
-    history.unshift(result);
-    history=history.slice(0,10);
-    renderHistory();
-    saveHistory();
-
-    let winAmt=0;
-    let status="LOSS";
-    if(result===choice){
-      winAmt=amt*2;
-      wallet+=winAmt;
-      walletEl.innerText=wallet;
-      saveWallet();
-      status="WIN";
-      showPopup("You Win ₹"+winAmt,"win");
-    }else{
-      showPopup("You Lose","loss");
-    }
-
-    bets.unshift({
-      time:new Date().toLocaleTimeString(),
-      choice,
-      result,
-      amt,
-      status
-    });
-    bets=bets.slice(0,20);
-    localStorage.setItem("coin_bets",JSON.stringify(bets));
-    renderBets();
-  },1000);
-}
-
-function renderHistory(){
-  histEl.innerHTML="";
-  history.forEach(h=>{
-    let s=document.createElement("span");
-    s.innerText=h==="HEAD"?"🙂 HEAD":"🪙 TAIL";
-    histEl.appendChild(s);
-  });
-}
-
-function renderBets(){
-  betsEl.innerHTML="";
-  bets.forEach(b=>{
-    let d=document.createElement("div");
-    d.innerText=`${b.time} | ${b.choice} | ₹${b.amt} | ${b.status}`;
-    betsEl.appendChild(d);
-  });
-}
-
-function showPopup(msg,type){
-  popup.className="popup "+type;
-  popup.innerText=msg;
-  popupBg.style.display="flex";
-  setTimeout(()=>popupBg.style.display="none",1500);
-}
-
-function saveWallet(){localStorage.setItem("coin_wallet",wallet);}
-function saveHistory(){localStorage.setItem("coin_history",JSON.stringify(history));}
-</script>
-
 <!-- FIREBASE WALLET CONNECT (ADDITION ONLY) -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -271,7 +174,7 @@ window.play = function(choice){
     history.unshift(result);
     history = history.slice(0,10);
     renderHistory();
-
+saveHistory();   // 🔥 YE MISSING THA
     if(result===choice){
       wallet+=amt*2;
       showPopup("You Win ₹"+amt*2,"win");
@@ -289,11 +192,13 @@ function renderHistory(){
   histEl.innerHTML="";
   history.forEach(h=>{
     let s=document.createElement("span");
-    s.innerText=h;
+    s.innerText = h==="HEAD" ? "🙂 HEAD" : "🪙 TAIL";
     histEl.appendChild(s);
   });
 }
-
+function saveHistory(){
+  localStorage.setItem("coin_history", JSON.stringify(history));
+      }
 /* 🔥 INIT */
 walletEl.innerText = wallet;
 renderHistory();
