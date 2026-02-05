@@ -29,9 +29,22 @@ body{margin:0;font-family:Arial;background:#ffeb3b;color:#fff}
 /* HEADER */
 .header{padding:15px;font-size:22px;font-weight:bold;text-align:center}
 
-/* TOP BANNER */
-.top-banner{margin:0 15px 10px;border-radius:16px;overflow:hidden}
-.top-banner img{width:100%;display:block}
+/* 🔥 BANNER SLIDER */
+.banner-slider{
+  margin:0 15px 10px;
+  border-radius:16px;
+  overflow:hidden;
+}
+.banner-track{
+  display:flex;
+  transition:transform .4s ease;
+}
+.banner-track img{
+  width:100%;
+  height:180px;
+  object-fit:cover;
+  flex-shrink:0;
+}
 
 /* MENU */
 .menu{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;padding:15px}
@@ -68,7 +81,7 @@ body{margin:0;font-family:Arial;background:#ffeb3b;color:#fff}
 .nav-btn.active{color:#4caf50;font-weight:bold}
 .nav-btn div{font-size:20px}
 .spacer{height:70px}
-  
+
 #supportIcon{
   position: fixed;
   right: 16px;
@@ -86,6 +99,7 @@ body{margin:0;font-family:Arial;background:#ffeb3b;color:#fff}
   cursor: pointer;
   z-index: 9999;
 }
+
 /* POPUP */
 .deposit-popup{
   position:fixed;inset:0;background:rgba(0,0,0,.75);
@@ -105,26 +119,26 @@ body{margin:0;font-family:Arial;background:#ffeb3b;color:#fff}
 
 <body>
 
-<!-- 🔥 REFERRAL → REGISTER REDIRECT (ONLY ADDITION) -->
 <script>
-  const params = new URLSearchParams(window.location.search);
-  const ref = params.get("ref");
-  const isLoggedIn = localStorage.getItem("userEmail");
-
-  if (ref && !isLoggedIn) {
-    window.location.replace("register.html");
-  }
+const params = new URLSearchParams(window.location.search);
+const ref = params.get("ref");
+const isLoggedIn = localStorage.getItem("userEmail");
+if (ref && !isLoggedIn) window.location.replace("register.html");
 </script>
 
 <div class="header">🏦DraxBet🏦</div>
 
-<div class="top-banner">
-  <img src="images/Picsart_26-01-29_15-47-46-060.png">
+<!-- 🔥 SLIDER -->
+<div class="banner-slider">
+  <div class="banner-track" id="bannerTrack">
+    <img src="images/file_000000001fa87208a7f51620e8c64b95.png">
+    <img src="images/file_00000000352c7208ae624a30d07574cd.png">
+  </div>
 </div>
 
+<!-- MENU (UNCHANGED) -->
 <div class="menu">
-
-<div class="game-card wingo" onclick="location.href='wingo.html'"><div class="icon">🎨</div><h3>WIN GO</h3><p>30s Colour Trading</p></div>
+  <div class="game-card wingo" onclick="location.href='wingo.html'"><div class="icon">🎨</div><h3>WIN GO</h3><p>30s Colour Trading</p></div>
 <div class="game-card mines" onclick="location.href='mines.html'"><div class="icon">💣</div><h3>MINES</h3><p>Spribe Style Game</p></div>
 <div class="game-card aviator" onclick="location.href='aviator.html'"><div class="icon">✈️</div><h3>AVIATOR</h3><p>Crash Multiplier</p></div>
 <div class="game-card goddevil" onclick="location.href='dragon-tiger.html'"><div class="icon">🐉</div><h3>DRAGON • TIGER</h3><p>High Card Battle</p></div>
@@ -145,7 +159,6 @@ body{margin:0;font-family:Arial;background:#ffeb3b;color:#fff}
 <div class="game-card dragontower" onclick="location.href='dragon-tower.html'"><div class="icon">🐲🏗️</div><h3>DRAGON TOWER</h3><p>Climb & Win • Risk Levels</p></div>
 <div class="game-card ballooncrash" onclick="location.href='balloon-crash.html'"><div class="icon">🎈💥</div><h3>BALLOON CRASH</h3><p>Cash Out Before Pop</p></div>
 <div class="game-card jilli all games" onclick="location.href=''"><div class="icon">🏦💰</div><h3>JILLI GAMES </h3><p>Cash Out Before Pop</p></div>
-  
 </div>
 
 <div class="spacer"></div>
@@ -157,55 +170,37 @@ body{margin:0;font-family:Arial;background:#ffeb3b;color:#fff}
   <div class="nav-btn" onclick="location.href='account.html'"><div>👤</div>Account</div>
 </div>
 
-<div class="deposit-popup" id="depositPopup">
-  <div class="deposit-box">
-    <h2>🚫 Access Locked</h2>
-    <p>First deposit <b>₹100</b><br>and then play games & earn lots of money 💰</p>
-    <button onclick="location.href='wallet.html'">Deposit Now</button>
-  </div>
-</div>
-
-<!-- 🔥 FIREBASE WALLET CHECK (UNCHANGED) -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, getDocs, collection, query, where }
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-const app = initializeApp({
-  apiKey:"AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
-  authDomain:"colourcash-ea60e.firebaseapp.com",
-  projectId:"colourcash-ea60e"
-});
-const db = getFirestore(app);
-
-const email = localStorage.getItem("userEmail");
-let wallet = 0;
-
-async function loadWallet(){
-  if(!email) return;
-  const q = query(collection(db,"users"), where("email","==",email));
-  const snap = await getDocs(q);
-  snap.forEach(d=>wallet = Number(d.data().balance || 0));
-}
-await loadWallet();
-
-document.addEventListener("click",e=>{
-  const card = e.target.closest(".game-card");
-  if(!card) return;
-  if(wallet < 100){
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    document.getElementById("depositPopup").style.display="flex";
-  }
-},true);
-</script>
 <div id="supportIcon" onclick="openSupportMail()">✉️</div>
-  <script>
+<script>
 function openSupportMail(){
-  window.location.href =
-    "mailto:supirtx4@gmail.com?subject=DraxBet Support&body=Hello Support Team,";
+  window.location.href="mailto:supirtx4@gmail.com?subject=DraxBet Support";
 }
-  </script>
-  
+</script>
+
+<!-- 🔥 SLIDER SCRIPT -->
+<script>
+const track = document.getElementById("bannerTrack");
+let index = 0;
+let startX = 0;
+const total = track.children.length;
+
+setInterval(()=>{
+  index = (index + 1) % total;
+  track.style.transform = `translateX(-${index * 100}%)`;
+},3000);
+
+track.addEventListener("touchstart",e=>{
+  startX = e.touches[0].clientX;
+});
+track.addEventListener("touchend",e=>{
+  const diff = startX - e.changedTouches[0].clientX;
+  if(diff > 50) index++;
+  if(diff < -50) index--;
+  if(index < 0) index = total-1;
+  if(index >= total) index = 0;
+  track.style.transform = `translateX(-${index * 100}%)`;
+});
+</script>
+
 </body>
 </html>
