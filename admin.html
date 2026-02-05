@@ -284,6 +284,20 @@ document.querySelectorAll(".edge-item input").forEach(r=>{
   };
 }); 
 
+document.querySelectorAll(".edge-item input").forEach(r=>{
+  r.oninput = async () => {
+    r.nextElementSibling.innerText = r.value + "%";
+
+    await setDoc(
+      doc(db,"settings","houseEdge"),
+      {
+        draxTurbo: Number(r.value) / 100,
+        coinFlip: Number(r.value) / 100   // ✅ ADD THIS
+      },
+      { merge:true }
+    );
+  };
+});  
   
 loadDashboard();  
 loadDeposits();  
