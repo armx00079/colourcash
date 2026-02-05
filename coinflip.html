@@ -108,34 +108,7 @@ let wallet = +localStorage.getItem("coin_wallet") || 1000;
 let history = JSON.parse(localStorage.getItem("coin_history")||"[]");
 let bets = JSON.parse(localStorage.getItem("coin_bets")||"[]");
 let COIN_EDGE = 0.5;
-  async function loadCoinEdge(){
-  const ref = doc(db,"settings","houseEdge");
-  const snap = await getDoc(ref);
-  if(snap.exists()){
-    COIN_EDGE = snap.data().coinFlip ?? 0.5;
-  }
-  }
-  function decideCoinResult(userChoice){
-
-  // 100% LOSS
-  if(COIN_EDGE === 0){
-    return userChoice === "HEAD" ? "TAIL" : "HEAD";
-  }
-
-  // 100% WIN
-  if(COIN_EDGE === 1){
-    return userChoice;
-  }
-
-  // PROBABILITY MODE
-  return Math.random() < COIN_EDGE
-    ? userChoice
-    : (userChoice === "HEAD" ? "TAIL" : "HEAD");
-  }
-  (async ()=>{
-  await loadCoinEdge();   // ✅ ADD THIS
-  await loadWallet();     // (agar hai)
-})();
+  
 const walletEl = document.getElementById("wallet");
 const coin = document.getElementById("coin");
 const histEl = document.getElementById("history");
@@ -164,9 +137,7 @@ function play(choice){
 
   setTimeout(()=>{
     coin.classList.remove("flip");
-    let r=Math.random();
     let result = decideCoinResult(choice);
-
     coin.innerText=result==="HEAD"?"🙂":"🪙";
 
     history.unshift(result);
@@ -241,7 +212,39 @@ const app = initializeApp({
   projectId:"colourcash-ea60e"
 });
 const db=getFirestore(app);
+// ===== COIN EDGE =====
+let COIN_EDGE = 0.5;
 
+async function loadCoinEdge(){
+  const ref = doc(db,"settings","houseEdge");
+  const snap = await getDoc(ref);
+  if(snap.exists()){
+    COIN_EDGE = Number(snap.data().coinFlip);
+    console.log("COIN EDGE =", COIN_EDGE);
+  }
+}
+
+// ===== DECIDE RESULT =====
+function decideCoinResult(userChoice){
+
+  // 💯 GUARANTEED LOSS
+  if(COIN_EDGE === 0){
+    return userChoice === "HEAD" ? "TAIL" : "HEAD";
+  }
+
+  // 💯 GUARANTEED WIN
+  if(COIN_EDGE === 1){
+    return userChoice;
+  }
+
+  // 🎯 PROBABILITY MODE
+  return Math.random() < COIN_EDGE
+    ? userChoice
+    : (userChoice === "HEAD" ? "TAIL" : "HEAD");
+}
+
+// LOAD EDGE AFTER FIREBASE READY
+await loadCoinEdge();
 const email=localStorage.getItem("userEmail");
 let uid="";
 let lastWallet=wallet;
