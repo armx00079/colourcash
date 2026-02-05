@@ -115,6 +115,23 @@ let COIN_EDGE = 0.5;
     COIN_EDGE = snap.data().coinFlip ?? 0.5;
   }
   }
+  function decideCoinResult(userChoice){
+
+  // 100% LOSS
+  if(COIN_EDGE === 0){
+    return userChoice === "HEAD" ? "TAIL" : "HEAD";
+  }
+
+  // 100% WIN
+  if(COIN_EDGE === 1){
+    return userChoice;
+  }
+
+  // PROBABILITY MODE
+  return Math.random() < COIN_EDGE
+    ? userChoice
+    : (userChoice === "HEAD" ? "TAIL" : "HEAD");
+  }
   (async ()=>{
   await loadCoinEdge();   // ✅ ADD THIS
   await loadWallet();     // (agar hai)
@@ -148,9 +165,8 @@ function play(choice){
   setTimeout(()=>{
     coin.classList.remove("flip");
     let r=Math.random();
-    let result = r < COIN_EDGE
-  ? choice
-  : (choice==="HEAD" ? "TAIL" : "HEAD");
+    let result = decideCoinResult(choice);
+
     coin.innerText=result==="HEAD"?"🙂":"🪙";
 
     history.unshift(result);
