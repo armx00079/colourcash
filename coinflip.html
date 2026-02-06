@@ -181,7 +181,17 @@ saveHistory();   // 🔥 YE MISSING THA
     }else{
       showPopup("You Lose","loss");
     }
+bets.unshift({
+  time: new Date().toLocaleTimeString(),
+  choice: choice,
+  result: result,
+  amt: amt,
+  status: result === choice ? "WIN" : "LOSS"
+});
 
+bets = bets.slice(0, 20);
+localStorage.setItem("coin_bets", JSON.stringify(bets));
+renderBets();
     walletEl.innerText=wallet;
     localStorage.setItem("coin_wallet",wallet);
   },1000);
@@ -197,9 +207,18 @@ saveHistory();   // 🔥 YE MISSING THA
 function saveHistory(){
   localStorage.setItem("coin_history", JSON.stringify(coinHistory));
       }
+  function renderBets(){
+  betsEl.innerHTML = "";
+  bets.forEach(b=>{
+    let d = document.createElement("div");
+    d.innerText = `${b.time} | ${b.choice} | ₹${b.amt} | ${b.status}`;
+    betsEl.appendChild(d);
+  });
+  }
 /* 🔥 INIT */
 walletEl.innerText = wallet;
 renderHistory();
+  renderBets();
 await loadCoinEdge();
 </script>
   
