@@ -119,7 +119,7 @@ const db = getFirestore(app);
 
 /* 🔥 GAME STATE */
 let wallet = +localStorage.getItem("coin_wallet") || 1000;
-let history = JSON.parse(localStorage.getItem("coin_history")||"[]");
+let coinHistory = JSON.parse(localStorage.getItem("coin_history")||"[]");
 let bets = JSON.parse(localStorage.getItem("coin_bets")||"[]");
 let COIN_EDGE = 0.5;
 
@@ -171,8 +171,8 @@ window.play = function(choice){
     let result = decideCoinResult(choice);
     coin.innerText = result==="HEAD"?"🙂":"🪙";
 
-    history.unshift(result);
-    history = history.slice(0,10);
+    coinHistory.unshift(result);
+    coinHistory = coinHistory.slice(0,10);
     renderHistory();
 saveHistory();   // 🔥 YE MISSING THA
     if(result===choice){
@@ -189,15 +189,15 @@ saveHistory();   // 🔥 YE MISSING THA
 
 /* 🔥 RENDER */
 function renderHistory(){
-  histEl.innerHTML="";
-  history.forEach(h=>{
-    let s=document.createElement("span");
-    s.innerText = h==="HEAD" ? "🙂 HEAD" : "🪙 TAIL";
+  histEl.innerHTML = "";
+  coinHistory.forEach(h=>{
+    let s = document.createElement("span");
+    s.innerText = h === "HEAD" ? "🙂 HEAD" : "🪙 TAIL";
     histEl.appendChild(s);
   });
 }
 function saveHistory(){
-  localStorage.setItem("coin_history", JSON.stringify(history));
+  localStorage.setItem("coin_history", JSON.stringify(coinHistory));
       }
 /* 🔥 INIT */
 walletEl.innerText = wallet;
