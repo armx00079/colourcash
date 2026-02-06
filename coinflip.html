@@ -130,7 +130,25 @@ const histEl = document.getElementById("history");
 const betsEl = document.getElementById("mybets");
 const popupBg = document.getElementById("popupBg");
 const popup = document.getElementById("popup");
+const email = localStorage.getItem("userEmail");
+let uid = "";
+let lastWallet = wallet;
+  async function loadWallet(){
+  if(!email) return;
 
+  const q = query(
+    collection(db,"users"),
+    where("email","==",email)
+  );
+
+  const snap = await getDocs(q);
+  snap.forEach(d=>{
+    uid = d.id;
+    wallet = d.data().balance ?? wallet;
+    walletEl.innerText = wallet;
+    localStorage.setItem("coin_wallet", wallet);
+  });
+  }
 /* 🔥 LOAD HOUSE EDGE */
 async function loadCoinEdge(){
   const ref = doc(db,"settings","houseEdge");
@@ -218,8 +236,19 @@ function saveHistory(){
 /* 🔥 INIT */
 walletEl.innerText = wallet;
 renderHistory();
-  renderBets();
+renderBets();
 await loadCoinEdge();
+await loadWallet();   // 🔥 IMPORTANT
+  setInterval(async ()=>{
+  if(!uid) return;
+  if(wallet !== lastWallet){
+    lastWallet = wallet;
+    await updateDoc(
+      doc(db,"users",uid),
+      { balance: wallet }
+    );
+  }
+}, 800);
 </script>
   
 </body>
