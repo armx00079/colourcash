@@ -195,7 +195,13 @@ function renderHistory(){
     s.innerText = h === "HEAD" ? "🙂 HEAD" : "🪙 TAIL";
     histEl.appendChild(s);
   });
+
+  // 🔥 AUTO SCROLL TO LATEST RESULT (MUST BE INSIDE FUNCTION)
+  histEl.scrollLeft = histEl.scrollWidth;
 }
+  // 🔥 AUTO SCROLL TO LATEST RESULT
+  histEl.scrollLeft = histEl.scrollWidth;
+  }
 function saveHistory(){
   localStorage.setItem("coin_history", JSON.stringify(coinHistory));
       }
