@@ -186,6 +186,14 @@ saveHistory();   // 🔥 YE MISSING THA
     localStorage.setItem("coin_wallet",wallet);
   },1000);
 };
+  function renderHistory(){
+  histEl.innerHTML = "";
+  coinHistory.forEach(h=>{
+    let s = document.createElement("span");
+    s.innerText = h === "HEAD" ? "🙂 HEAD" : "🪙 TAIL";
+    histEl.appendChild(s);
+  });
+  }
 function saveHistory(){
   localStorage.setItem("coin_history", JSON.stringify(coinHistory));
       }
