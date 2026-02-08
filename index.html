@@ -162,7 +162,27 @@ if (ref && !isLoggedIn) window.location.replace("register.html");
 </div>
 
 <div class="spacer"></div>
+<!-- 🔥 DEPOSIT POPUP -->
+<div class="deposit-popup" id="depositPopup">
+  <div class="deposit-box">
+    <h2>Minimum Deposit ₹100</h2>
+    <p>Play karne ke liye pehle ₹100 deposit karo</p>
+    <button onclick="location.href='wallet.html'">Deposit Now</button>
+  </div>
+</div>
+  <script>
+const userEmail = localStorage.getItem("userEmail");
+const walletAmt =
+  +localStorage.getItem("wallet") ||
+  +localStorage.getItem("coin_wallet") ||
+  0;
 
+window.addEventListener("load", ()=>{
+  if(userEmail && walletAmt < 100){
+    document.getElementById("depositPopup").style.display = "flex";
+  }
+});
+  </script>
 <div class="bottom-nav">
   <div class="nav-btn active"><div>🏠</div>Home</div>
   <div class="nav-btn" onclick="location.href='wallet.html'"><div>💰</div>Wallet</div>
