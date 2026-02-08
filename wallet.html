@@ -196,7 +196,12 @@ async function loadWallet(){
   userSnap.forEach(d=>{
     balance = d.data().balance || 0;
   });
+// 🔥 SYNC BALANCE TO LOCALSTORAGE (IMPORTANT)
+localStorage.setItem("wallet", balance);
+localStorage.setItem("coin_wallet", balance);
 
+// 🔥 FLAG FOR INDEX POPUP
+localStorage.setItem("walletUpdated", "1");
   /* DEPOSITS */
   const depSnap = await getDocs(
     query(collection(db,"deposits"), where("email","==",userEmail))
