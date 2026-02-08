@@ -171,6 +171,12 @@ if (ref && !isLoggedIn) window.location.replace("register.html");
   </div>
 </div>
   <script>
+function hideDepositPopup(){
+  const popup = document.getElementById("depositPopup");
+  if(popup) popup.style.display = "none";
+}
+  </script>
+  <script>
 const userEmail = localStorage.getItem("userEmail");
 const walletAmt =
   +localStorage.getItem("wallet") ||
