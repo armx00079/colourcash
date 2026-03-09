@@ -177,15 +177,20 @@ if (ref && !isLoggedIn) window.location.replace("register.html");
 <script>
 function openGame(url){
 
-const walletAmt =
+let walletAmt =
 +localStorage.getItem("wallet") ||
 +localStorage.getItem("coin_wallet") ||
 0;
 
+/* 🔥 अगर wallet update हुआ है तो popup hide */
+if(localStorage.getItem("walletUpdated") === "1"){
+walletAmt = +localStorage.getItem("wallet") || 0;
+}
+
 if(walletAmt < 100){
 document.getElementById("depositPopup").style.display="flex";
 }else{
-location.href=url;
+location.href = url;
 }
 
 }
