@@ -92,12 +92,31 @@ body{margin:0;font-family:Arial;background:#ffeb3b;color:#fff}
   color: #fff;
   font-size: 26px;
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 6px 14px rgba(0,0,0,0.4);
-  cursor: pointer;
-  z-index: 9999;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 6px 14px rgba(0,0,0,0.4);
+  cursor:pointer;
+  z-index:9999;
+}
+
+/* 🎁 GIFT ICON */
+#giftIcon{
+  position: fixed;
+  right: 16px;
+  bottom: 160px;
+  width: 56px;
+  height: 56px;
+  background:#ff3b3b;
+  color:#fff;
+  font-size:26px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 6px 14px rgba(0,0,0,0.4);
+  cursor:pointer;
+  z-index:9999;
 }
 
 /* POPUP */
@@ -114,17 +133,47 @@ body{margin:0;font-family:Arial;background:#ffeb3b;color:#fff}
   margin-top:14px;width:100%;padding:12px;border:none;
   border-radius:12px;background:#000;color:#fff;font-size:16px;font-weight:bold
 }
+
+/* 🎁 GIFT POPUP */
+.gift-popup{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.75);
+display:none;
+align-items:center;
+justify-content:center;
+z-index:99999
+}
+.gift-box{
+width:85%;
+max-width:320px;
+background:#fff;
+border-radius:16px;
+padding:20px;
+text-align:center;
+color:#000
+}
+.gift-box input{
+width:100%;
+padding:12px;
+margin-top:10px;
+border-radius:8px;
+border:1px solid #ccc;
+}
+.gift-box button{
+margin-top:12px;
+width:100%;
+padding:12px;
+border:none;
+border-radius:10px;
+background:#ff3b3b;
+color:#fff;
+font-size:16px;
+}
 </style>
 </head>
 
 <body>
-
-<script>
-const params = new URLSearchParams(window.location.search);
-const ref = params.get("ref");
-const isLoggedIn = localStorage.getItem("userEmail");
-if (ref && !isLoggedIn) window.location.replace("register.html");
-</script>
 
 <div class="header">🏦DraxBet🏦</div>
 
@@ -138,7 +187,6 @@ if (ref && !isLoggedIn) window.location.replace("register.html");
 
 <!-- MENU -->
 <div class="menu">
-
 <div class="game-card wingo" onclick="openGame('wingo.html')"><div class="icon">🎨</div><h3>WIN GO</h3><p>30s Colour Trading</p></div>
 <div class="game-card mines" onclick="openGame('mines.html')"><div class="icon">💣</div><h3>MINES</h3><p>Spribe Style Game</p></div>
 <div class="game-card aviator" onclick="openGame('aviator.html')"><div class="icon">✈️</div><h3>AVIATOR</h3><p>Crash Multiplier</p></div>
@@ -160,7 +208,6 @@ if (ref && !isLoggedIn) window.location.replace("register.html");
 <div class="game-card dragontower" onclick="openGame('dragon-tower.html')"><div class="icon">🐲🏗️</div><h3>DRAGON TOWER</h3><p>Climb & Win • Risk Levels</p></div>
 <div class="game-card ballooncrash" onclick="openGame('balloon-crash.html')"><div class="icon">🎈💥</div><h3>BALLOON CRASH</h3><p>Cash Out Before Pop</p></div>
 <div class="game-card jilli all games" onclick="openGame('jilli.html')"><div class="icon">🏦💰</div><h3>JILLI GAMES</h3><p>Cash Out Before Pop</p></div>
-
 </div>
 
 <div class="spacer"></div>
@@ -174,65 +221,49 @@ if (ref && !isLoggedIn) window.location.replace("register.html");
   </div>
 </div>
 
-<script>
-function openGame(url){
-
-let walletAmt =
-+localStorage.getItem("wallet") ||
-+localStorage.getItem("coin_wallet") ||
-0;
-
-/* 🔥 अगर wallet update हुआ है तो popup hide */
-if(localStorage.getItem("walletUpdated") === "1"){
-walletAmt = +localStorage.getItem("wallet") || 0;
-}
-
-if(walletAmt < 100){
-document.getElementById("depositPopup").style.display="flex";
-}else{
-location.href = url;
-}
-
-}
-</script>
-
-<div class="bottom-nav">
-  <div class="nav-btn active"><div>🏠</div>Home</div>
-  <div class="nav-btn" onclick="location.href='wallet.html'"><div>💰</div>Wallet</div>
-  <div class="nav-btn" onclick="location.href='promotion.html'"><div>🎁</div>Promotion</div>
-  <div class="nav-btn" onclick="location.href='account.html'"><div>👤</div>Account</div>
+<!-- 🎁 GIFT POPUP -->
+<div class="gift-popup" id="giftPopup">
+  <div class="gift-box">
+    <h2>🎁 Redeem Gift Code</h2>
+    <input type="text" id="giftCodeInput" placeholder="Enter Gift Code">
+    <button onclick="redeemCode()">Redeem</button>
+  </div>
 </div>
 
+<!-- 🎁 ICON -->
+<div id="giftIcon" onclick="openGiftBox()">🎁</div>
+
+<!-- MESSAGE ICON -->
 <div id="supportIcon" onclick="openSupportMail()">✉️</div>
 
 <script>
-function openSupportMail(){
-  window.location.href="mailto:supirtx4@gmail.com?subject=DraxBet Support";
+function openGiftBox(){
+document.getElementById("giftPopup").style.display="flex";
 }
-</script>
 
-<script>
-const track = document.getElementById("bannerTrack");
-let index = 0;
-let startX = 0;
-const total = track.children.length;
+function redeemCode(){
 
-setInterval(()=>{
-  index = (index + 1) % total;
-  track.style.transform = `translateX(-${index * 100}%)`;
-},3000);
+let code=document.getElementById("giftCodeInput").value;
 
-track.addEventListener("touchstart",e=>{
-  startX = e.touches[0].clientX;
-});
-track.addEventListener("touchend",e=>{
-  const diff = startX - e.changedTouches[0].clientX;
-  if(diff > 50) index++;
-  if(diff < -50) index--;
-  if(index < 0) index = total-1;
-  if(index >= total) index = 0;
-  track.style.transform = `translateX(-${index * 100}%)`;
-});
+let wallet=+localStorage.getItem("wallet")||0;
+
+if(code==="FREE100"){
+wallet+=100;
+alert("₹100 Added");
+}
+else if(code==="FREE500"){
+wallet+=500;
+alert("₹500 Added");
+}
+else{
+alert("Invalid Code");
+return;
+}
+
+localStorage.setItem("wallet",wallet);
+document.getElementById("giftPopup").style.display="none";
+
+}
 </script>
 
 </body>
