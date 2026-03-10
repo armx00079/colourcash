@@ -345,7 +345,8 @@ let wallet = +localStorage.getItem("wallet") || 0;
 wallet += Number(data.amount);
 
 localStorage.setItem("wallet",wallet);
-
+localStorage.setItem("coin_wallet",wallet);
+  
 await updateDoc(doc(db,"giftcodes",d.id),{used:true});
 
 alert("₹"+data.amount+" Added to Wallet");
