@@ -241,20 +241,7 @@ document.getElementById("giftPopup").style.display="flex";
 }  
   
 /* 🎁 REDEEM SYSTEM (LOCAL DEMO) */  
-function redeemCode(){  
-  
-const code=document.getElementById("giftCodeInput").value;  
-  
-if(code==="FREE100"){  
-let wallet = +localStorage.getItem("wallet") || 0;  
-wallet += 100;  
-localStorage.setItem("wallet",wallet);  
-alert("₹100 Added to Wallet");  
-}else{  
-alert("Invalid Code");  
-}  
-  
-}  
+
   
 /* SLIDER */  
 const track = document.getElementById("bannerTrack");  
@@ -265,6 +252,68 @@ setInterval(()=>{
 index = (index + 1) % total;  
 track.style.transform = `translateX(-${index * 100}%)`;  
 },3000);  
-  
+  <script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+getFirestore,
+collection,
+getDocs,
+query,
+where,
+updateDoc,
+doc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
+  authDomain: "colourcash-ea60e.firebaseapp.com",
+  projectId: "colourcash-ea60e",
+  storageBucket: "colourcash-ea60e.firebasestorage.app",
+  messagingSenderId: "403688058646",
+  appId: "1:403688058646:web:f1753360471528f275ea37"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+window.redeemCode = async function(){
+
+const code = document.getElementById("giftCodeInput").value.trim();
+
+const q = query(collection(db,"giftcodes"), where("code","==",code));
+const snap = await getDocs(q);
+
+if(snap.empty){
+alert("Invalid Code");
+return;
+}
+
+snap.forEach(async (d)=>{
+
+const data = d.data();
+
+if(data.used){
+alert("Code Already Used");
+return;
+}
+
+let wallet = +localStorage.getItem("wallet") || 0;
+wallet += Number(data.amount);
+
+localStorage.setItem("wallet",wallet);
+
+await updateDoc(doc(db,"giftcodes",d.id),{
+used:true
+});
+
+alert("₹"+data.amount+" Added to Wallet");
+
+});
+
+}
+
+</script>
 </script>  </body>  
 </html>  l
