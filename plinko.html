@@ -188,6 +188,7 @@ let wallet = 0;
 let bet = 100;
 let color = "green";
 let uid = "";
+  let dailyWin = parseInt(localStorage.getItem("dailyWin") || "0");
 
 /* MULTIPLIERS */
 const M = {
@@ -287,12 +288,30 @@ $("drop").onclick=()=>{
 
 /* RESULT */
 function finish(col,ball){
+
   const HOUSE=0.40;
-  const win=Math.round(bet*M[color][col]*(1-HOUSE));
-  wallet+=win; saveWallet(); render();
-  $("history").innerHTML+=` | ${color.toUpperCase()} ${M[color][col]}x`;
+  let win=Math.round(bet*M[color][col]*(1-HOUSE));
+
+  if(dailyWin >= 100){
+    win = 0; // force loss
+  }
+
+  if(dailyWin + win > 100){
+    win = 100 - dailyWin;
+  }
+
+  dailyWin += win;
+  localStorage.setItem("dailyWin", dailyWin);
+
+  wallet += win;
+  saveWallet();
+  render();
+
+  $("history").innerHTML += ` | ${color.toUpperCase()} ${M[color][col]}x`;
+
   setTimeout(()=>ball.remove(),400);
 }
+  
 
 loadWallet();
 </script>
