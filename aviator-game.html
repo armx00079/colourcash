@@ -188,15 +188,19 @@ function bet(n){
     document.getElementById("btn"+n).innerText="CASH OUT";
     showPopup("Bet Placed ₹"+amt,"betp");
   }
-  else if(state==="FLY" && active[i]){
-    active[i]=false;
-    let win=Math.floor(amt*multi);
-    wallet+=win;
-    wEl.innerText=wallet;
-    document.getElementById("btn"+n).innerText="BET";
-    showPopup("Cashed Out @ "+multi+"x","win");
-  }
-}
+ else if(state==="FLY" && active[i]){
+  active[i]=false;
+
+  let win = Math.floor(amt*multi);
+
+  win = addWinAmount(win);   // ⭐ daily limit apply
+
+  wallet += win;
+  wEl.innerText = wallet;
+
+  document.getElementById("btn"+n).innerText="BET";
+  showPopup("Cashed Out @ "+multi+"x","win");
+ } 
 
 function chg(n,v){
   let i=document.getElementById("amt"+n);
