@@ -6,51 +6,100 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
+
 body{
 margin:0;
 font-family:Arial;
-background:#0f172a;
-color:#fff;
-display:flex;
-justify-content:center;
-align-items:center;
+background:url("bd1af2ba1bab5df898ea0a2c8ccb4453.jpg") center/cover no-repeat;
 height:100vh;
+display:flex;
+align-items:center;
+justify-content:center;
+}
+
+/* dark overlay */
+body::before{
+content:"";
+position:fixed;
+inset:0;
+background:rgba(0,0,0,0.65);
 }
 
 .box{
-background:#1e293b;
+position:relative;
+z-index:1;
+width:340px;
 padding:25px;
-border-radius:16px;
-width:320px;
+border-radius:18px;
+background:rgba(30,41,59,0.9);
+backdrop-filter:blur(8px);
+box-shadow:0 15px 40px rgba(0,0,0,0.5);
 text-align:center;
+color:#fff;
+}
+
+.title{
+font-size:24px;
+font-weight:bold;
+margin-bottom:6px;
+}
+
+.subtitle{
+font-size:15px;
+color:#ddd;
+margin-bottom:20px;
+}
+
+.plan{
+background:linear-gradient(135deg,#22c55e,#4ade80);
+padding:12px;
+border-radius:12px;
+margin-bottom:18px;
+font-weight:bold;
+color:#000;
 }
 
 input{
 width:100%;
-padding:12px;
-margin-top:12px;
-border-radius:10px;
+padding:14px;
+border-radius:12px;
 border:none;
 font-size:16px;
+margin-bottom:12px;
+text-align:center;
 }
 
 button{
 width:100%;
-padding:12px;
-margin-top:15px;
+padding:14px;
 border:none;
-border-radius:10px;
+border-radius:12px;
 background:#22c55e;
 color:#000;
-font-size:16px;
+font-size:17px;
 font-weight:bold;
+cursor:pointer;
+transition:.2s;
+}
+
+button:hover{
+transform:scale(1.03);
+background:#16a34a;
 }
 
 .timer{
-margin-top:15px;
-font-size:18px;
+margin-top:18px;
+font-size:20px;
+font-weight:bold;
 color:#facc15;
 }
+
+.claim{
+background:#facc15;
+margin-top:10px;
+display:none;
+}
+
 </style>
 </head>
 
@@ -58,17 +107,20 @@ color:#facc15;
 
 <div class="box">
 
-<h2>💰 Invest Game</h2>
+<div class="title">💰 Invest Game</div>
+<div class="subtitle">Earn passive reward</div>
 
-<p>Invest ₹1000 → Receive ₹1500 after 10 hours</p>
+<div class="plan">
+Invest ₹1000 → Receive ₹1500 after 10 hours
+</div>
 
-<input type="number" id="amount" placeholder="Enter amount">
+<input type="number" id="amount" value="1000">
 
 <button onclick="invest()">Invest</button>
 
 <div class="timer" id="timer"></div>
 
-<button onclick="claim()" id="claimBtn" style="display:none">Claim Reward</button>
+<button class="claim" id="claimBtn" onclick="claim()">Claim Reward</button>
 
 </div>
 
@@ -78,28 +130,26 @@ function invest(){
 
 let amt = Number(document.getElementById("amount").value);
 
-if(amt <= 0){
-alert("Enter amount");
+if(amt < 100){
+alert("Minimum invest ₹100");
 return;
 }
 
-let unlock = Date.now() + (10 * 60 * 60 * 1000); // 10 hours
+let unlock = Date.now() + (10 * 60 * 60 * 1000);
 
 localStorage.setItem("investAmount", amt);
 localStorage.setItem("unlockTime", unlock);
 
-alert("Investment started");
+alert("Investment Started");
 
 }
 
 function claim(){
 
 let amt = Number(localStorage.getItem("investAmount")) || 0;
-
-let reward = amt * 1.5;
+let reward = Math.floor(amt * 1.5);
 
 let wallet = Number(localStorage.getItem("wallet")) || 0;
-
 wallet += reward;
 
 localStorage.setItem("wallet", wallet);
@@ -123,8 +173,7 @@ let diff = unlock - Date.now();
 
 if(diff <= 0){
 
-document.getElementById("timer").innerText="Ready to claim";
-
+document.getElementById("timer").innerText="Ready to Claim 🎉";
 document.getElementById("claimBtn").style.display="block";
 
 }else{
