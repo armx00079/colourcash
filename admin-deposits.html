@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Today Deposits</title>
+
+<style>
+
+body{
+background:#0e0e0e;
+font-family:Arial;
+color:#fff;
+padding:20px;
+}
+
+h1{
+text-align:center;
+}
+
+.box{
+background:#1b1b1b;
+padding:20px;
+border-radius:12px;
+max-width:500px;
+margin:auto;
+}
+
+.deposit{
+background:#2b2b2b;
+padding:12px;
+border-radius:8px;
+margin-top:10px;
+font-size:14px;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>💰 Today Deposits</h1>
+
+<div class="box" id="depositList">
+Loading deposits...
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+getFirestore,
+collection,
+getDocs
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+apiKey: "AIzaSyBx3J9aGn_98rTPgurMMKw_GR3puIMj4Ms",
+authDomain: "colourcash-ea60e.firebaseapp.com",
+projectId: "colourcash-ea60e",
+storageBucket: "colourcash-ea60e.firebasestorage.app",
+messagingSenderId: "403688058646",
+appId: "1:403688058646:web:f1753360471528f275ea37"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+async function loadDeposits(){
+
+const snap = await getDocs(collection(db,"deposits"));
+
+let today = new Date().toDateString();
+
+let html="";
+
+snap.forEach(d=>{
+
+let data = d.data();
+
+let date = new Date(data.time || Date.now());
+
+if(date.toDateString() === today){
+
+html += `
+<div class="deposit">
+👤 ${data.email}<br>
+💰 ₹${data.amount}<br>
+⏰ ${date.toLocaleTimeString()}
+</div>
+`;
+
+}
+
+});
+
+if(html==="") html="No Deposits Today";
+
+document.getElementById("depositList").innerHTML = html;
+
+}
+
+loadDeposits();
+
+</script>
+
+</body>
+</html>
