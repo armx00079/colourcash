@@ -61,6 +61,31 @@ flex-shrink:0;
 /* GAME COLORS */
 .wingo{background:linear-gradient(135deg,#2196f3,#21cbf3)}
 .mines{background:linear-gradient(135deg,#ff5252,#ff1744)}
+  .mines-card{
+background: url('images/file_0000000042a0720884aeeacdc62f0164.png') no-repeat center;
+background-size: cover;
+position: relative;
+overflow: hidden;
+}
+
+.mines-card .overlay{
+position:absolute;
+bottom:0;
+width:100%;
+padding:10px;
+background:linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+border-radius:0 0 16px 16px;
+}
+
+.mines-card h3{
+margin:0;
+font-size:18px;
+}
+
+.mines-card p{
+font-size:12px;
+opacity:0.9;
+}
 .aviator{background:linear-gradient(135deg,#ff9800,#ff5722)}
 .goddevil{background:linear-gradient(135deg,#5f2c82,#49a09d)}
 .chicken{background:linear-gradient(135deg,#f7971e,#ffd200)}
@@ -211,10 +236,11 @@ font-size:16px;
 
 <div class="game-card wingo" onclick="openGame('wingo.html')"><div class="icon">🎨</div><h3>WIN GO</h3><p>30s Colour Trading</p></div>
 
-<div class="game-card mines" onclick="openGame('mines.html')">
-  <img src="images/file_0000000042a0720884aeeacdc62f0164.png" class="game-img">
-  <h3>MINES</h3>
-  <p>Spribe Style Game</p>
+<div class="game-card mines-card" onclick="openGame('mines.html')">
+  <div class="overlay">
+    <h3>MINES</h3>
+    <p>Spribe Style Game</p>
+  </div>
 </div>
   
 <div class="game-card aviator" onclick="openGame('aviator.html')"><div class="icon">✈️</div><h3>AVIATOR</h3><p>Crash Multiplier</p></div>
